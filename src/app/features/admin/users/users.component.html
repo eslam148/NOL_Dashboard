@@ -1,18 +1,23 @@
 <div class="container" style="padding: 2rem 1rem;">
+      <!-- Language Switcher -->
+      <div class="flex justify-end mb-4">
+        <app-language-switcher></app-language-switcher>
+      </div>
+
       <div class="mb-8">
-        <h1 class="text-primary mb-2">User Management</h1>
-        <p class="text-secondary">Manage user accounts and permissions</p>
+        <h1 class="text-primary mb-2">{{ 'users.title' | translate }}</h1>
+        <p class="text-secondary">{{ 'users.subtitle' | translate }}</p>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 2rem;">
         <div class="flex gap-4 flex-col-mobile">
           <button class="btn btn-primary">
             <i class="bi bi-person-plus"></i>
-            Add New User
+            {{ 'users.addNewUser' | translate }}
           </button>
           <button class="btn btn-secondary">
             <i class="bi bi-download"></i>
-            Export Users
+            {{ 'users.exportUsers' | translate }}
           </button>
         </div>
 
@@ -20,94 +25,94 @@
           <table style="width: 100%; border-collapse: collapse;">
             <thead style="background-color: var(--gray-50);">
               <tr>
-                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">Name</th>
-                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">Email</th>
-                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">Role</th>
-                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">Status</th>
-                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">Actions</th>
+                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">{{ 'users.name' | translate }}</th>
+                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">{{ 'users.email' | translate }}</th>
+                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">{{ 'users.role' | translate }}</th>
+                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">{{ 'users.status' | translate }}</th>
+                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-light);">{{ 'users.actions' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid var(--border-light); transition: background-color var(--transition-fast);" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
-                <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary);">Admin User</td>
+                <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary);">{{ 'users.adminUser' | translate }}</td>
                 <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">admin&#64;nol.com</td>
                 <td style="padding: 1rem 1.5rem;">
                   <span class="badge badge-error">
                     <i class="bi bi-shield-fill-check" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
-                    Admin
+                    {{ 'login.admin' | translate }}
                   </span>
                 </td>
                 <td style="padding: 1rem 1.5rem;">
                   <span class="badge badge-success">
                     <i class="bi bi-check-circle-fill" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
-                    Active
+                    {{ 'users.active' | translate }}
                   </span>
                 </td>
                 <td style="padding: 1rem 1.5rem;">
                   <div class="flex gap-2">
                     <button class="btn btn-sm btn-ghost">
                       <i class="bi bi-pencil"></i>
-                      Edit
+                      {{ 'users.edit' | translate }}
                     </button>
                     <button class="btn btn-sm btn-outline">
                       <i class="bi bi-person-dash"></i>
-                      Disable
+                      {{ 'users.disable' | translate }}
                     </button>
                   </div>
                 </td>
               </tr>
               <tr style="border-bottom: 1px solid var(--border-light); transition: background-color var(--transition-fast);" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
-                <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary);">Manager User</td>
+                <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary);">{{ 'users.managerUser' | translate }}</td>
                 <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">manager&#64;nol.com</td>
                 <td style="padding: 1rem 1.5rem;">
                   <span class="badge badge-primary">
                     <i class="bi bi-person-gear" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
-                    Manager
+                    {{ 'login.manager' | translate }}
                   </span>
                 </td>
                 <td style="padding: 1rem 1.5rem;">
                   <span class="badge badge-success">
                     <i class="bi bi-check-circle-fill" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
-                    Active
+                    {{ 'users.active' | translate }}
                   </span>
                 </td>
                 <td style="padding: 1rem 1.5rem;">
                   <div class="flex gap-2">
                     <button class="btn btn-sm btn-ghost">
                       <i class="bi bi-pencil"></i>
-                      Edit
+                      {{ 'users.edit' | translate }}
                     </button>
                     <button class="btn btn-sm btn-outline">
                       <i class="bi bi-person-dash"></i>
-                      Disable
+                      {{ 'users.disable' | translate }}
                     </button>
                   </div>
                 </td>
               </tr>
               <tr style="border-bottom: 1px solid var(--border-light); transition: background-color var(--transition-fast);" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
-                <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary);">Regular User</td>
+                <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary);">{{ 'users.regularUser' | translate }}</td>
                 <td style="padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">user&#64;nol.com</td>
                 <td style="padding: 1rem 1.5rem;">
                   <span class="badge badge-gray">
                     <i class="bi bi-person" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
-                    User
+                    {{ 'login.user' | translate }}
                   </span>
                 </td>
                 <td style="padding: 1rem 1.5rem;">
                   <span class="badge badge-success">
                     <i class="bi bi-check-circle-fill" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>
-                    Active
+                    {{ 'users.active' | translate }}
                   </span>
                 </td>
                 <td style="padding: 1rem 1.5rem;">
                   <div class="flex gap-2">
                     <button class="btn btn-sm btn-ghost">
                       <i class="bi bi-pencil"></i>
-                      Edit
+                      {{ 'users.edit' | translate }}
                     </button>
                     <button class="btn btn-sm btn-outline">
                       <i class="bi bi-person-dash"></i>
-                      Disable
+                      {{ 'users.disable' | translate }}
                     </button>
                   </div>
                 </td>

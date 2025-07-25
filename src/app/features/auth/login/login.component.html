@@ -1,5 +1,10 @@
 <div class="min-h-screen flex items-center justify-center p-4" style="background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--white) 100%);">
   <div class="card card-elevated w-full" style="max-width: 28rem; padding: 2rem;">
+    <!-- Language Switcher -->
+    <div class="flex justify-end mb-4">
+      <app-language-switcher></app-language-switcher>
+    </div>
+
     <div class="text-center mb-8">
       <div class="mb-6">
         <img
@@ -9,36 +14,36 @@
           style="width: 6rem; height: 6rem; object-fit: contain;"
         />
       </div>
-      <h1 class="text-3xl font-bold mb-2" style="color: var(--brand-primary);">NOL Dashboard</h1>
-      <p class="text-secondary">Sign in to your account</p>
+      <h1 class="text-3xl font-bold mb-2" style="color: var(--brand-primary);">{{ 'login.title' | translate }}</h1>
+      <p class="text-secondary">{{ 'login.subtitle' | translate }}</p>
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 1.5rem;">
       <div class="form-group">
-        <label for="email" class="form-label required">Email</label>
+        <label for="email" class="form-label required">{{ 'login.email' | translate }}</label>
         <input
           id="email"
           type="email"
           formControlName="email"
           class="form-input focus-ring"
           [class.error]="isFieldInvalid('email')"
-          placeholder="Enter your email"
+          [placeholder]="'login.email' | translate"
         />
         @if (isFieldInvalid('email')) {
           <div class="form-error">
             <i class="bi bi-exclamation-circle"></i>
             @if (loginForm.get('email')?.errors?.['required']) {
-              Email is required
+              {{ 'login.emailRequired' | translate }}
             }
             @if (loginForm.get('email')?.errors?.['email']) {
-              Please enter a valid email
+              {{ 'login.emailInvalid' | translate }}
             }
           </div>
         }
       </div>
 
       <div class="form-group">
-        <label for="password" class="form-label required">Password</label>
+        <label for="password" class="form-label required">{{ 'login.password' | translate }}</label>
         <div class="password-input-container" [class.password-visible]="showPassword()">
           <input
             id="password"
@@ -46,15 +51,15 @@
             formControlName="password"
             class="form-input focus-ring password-input"
             [class.error]="isFieldInvalid('password')"
-            placeholder="Enter your password"
+            [placeholder]="'login.password' | translate"
             [attr.aria-describedby]="showPassword() ? 'password-visible-desc' : 'password-hidden-desc'"
           />
           <button
             type="button"
             class="password-toggle-btn"
             (click)="togglePasswordVisibility()"
-            [attr.aria-label]="showPassword() ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'"
-            [attr.title]="showPassword() ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'"
+            [attr.aria-label]="showPassword() ? ('login.hidePassword' | translate) : ('login.showPassword' | translate)"
+            [attr.title]="showPassword() ? ('login.hidePassword' | translate) : ('login.showPassword' | translate)"
             [attr.aria-pressed]="showPassword()"
             tabindex="0"
           >
@@ -67,16 +72,16 @@
 
           <!-- وصف مخفي لقارئات الشاشة -->
           <span id="password-visible-desc" class="sr-only" [hidden]="!showPassword()">
-            كلمة المرور مرئية الآن
+            {{ 'login.hidePassword' | translate }}
           </span>
           <span id="password-hidden-desc" class="sr-only" [hidden]="showPassword()">
-            كلمة المرور مخفية
+            {{ 'login.showPassword' | translate }}
           </span>
         </div>
         @if (isFieldInvalid('password')) {
           <div class="form-error">
             <i class="bi bi-exclamation-circle"></i>
-            Password is required
+            {{ 'login.passwordRequired' | translate }}
           </div>
         }
       </div>
@@ -96,21 +101,21 @@
       >
         @if (authService.isLoading()) {
           <div class="spinner"></div>
-          Signing in...
+          {{ 'login.signingIn' | translate }}
         } @else {
           <i class="bi bi-box-arrow-in-right"></i>
-          Sign In
+          {{ 'login.signIn' | translate }}
         }
       </button>
     </form>
 
     <div class="mt-8 text-center">
-      <p class="text-muted text-sm mb-4">Demo Credentials:</p>
+      <p class="text-muted text-sm mb-4">{{ 'login.demoCredentials' | translate }}</p>
       <div class="card card-flat" style="background-color: var(--brand-secondary); padding: 1rem;">
         <div class="text-secondary text-sm" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <div><strong>Admin:</strong> admin&#64;nol.com / password123</div>
-          <div><strong>User:</strong> user&#64;nol.com / password123</div>
-          <div><strong>Manager:</strong> manager&#64;nol.com / password123</div>
+          <div><strong>{{ 'login.admin' | translate }}:</strong> admin&#64;nol.com / password123</div>
+          <div><strong>{{ 'login.user' | translate }}:</strong> user&#64;nol.com / password123</div>
+          <div><strong>{{ 'login.manager' | translate }}:</strong> manager&#64;nol.com / password123</div>
         </div>
       </div>
     </div>

@@ -367,6 +367,87 @@ button:hover .bi {
   }
 }
 
+/* ===== RTL SUPPORT ===== */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .justify-end {
+  justify-content: flex-start;
+}
+
+[dir="rtl"] .justify-start {
+  justify-content: flex-end;
+}
+
+/* RTL Form Elements */
+[dir="rtl"] .form-input,
+[dir="rtl"] .form-select,
+[dir="rtl"] .form-textarea {
+  text-align: right;
+}
+
+[dir="rtl"] .password-input-container .password-toggle-btn {
+  right: auto;
+  left: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+[dir="rtl"] .password-input {
+  padding-right: 1rem !important;
+  padding-left: 3.5rem !important;
+}
+
+/* RTL Table */
+[dir="rtl"] table th,
+[dir="rtl"] table td {
+  text-align: right;
+}
+
+/* RTL Buttons */
+[dir="rtl"] .btn {
+  flex-direction: row-reverse;
+}
+
+/* RTL Language Switcher */
+[dir="rtl"] .language-switcher {
+  flex-direction: row-reverse;
+}
+
+/* RTL Cards */
+[dir="rtl"] .card-footer {
+  justify-content: flex-start;
+}
+
+/* RTL Alerts */
+[dir="rtl"] .alert {
+  flex-direction: row-reverse;
+}
+
+/* RTL Badges */
+[dir="rtl"] .badge {
+  flex-direction: row-reverse;
+}
+
+/* Font for Arabic */
+[dir="rtl"] {
+  font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+/* RTL specific spacing adjustments */
+[dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+[dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+[dir="rtl"] .pr-3 { padding-right: 0; padding-left: 0.75rem; }
+[dir="rtl"] .pl-3 { padding-left: 0; padding-right: 0.75rem; }
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 640px) {
   .container {
