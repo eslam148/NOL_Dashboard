@@ -1,0 +1,382 @@
+<div class="advertisement-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <a routerLink="/car-rental/advertisements" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </a>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('advertisements.editAdvertisement' | translate) : ('advertisements.addAdvertisement' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('advertisements.editAdvertisementDesc' | translate) : ('advertisements.addAdvertisementDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="advertisementForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-info-circle"></i>
+            {{ 'advertisements.basicInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'advertisements.basicInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Title -->
+          <div class="form-group full-width">
+            <label class="form-label" for="title">
+              {{ 'advertisements.title' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="title"
+              formControlName="title"
+              class="form-input"
+              [class.error]="isFieldInvalid('title')"
+              [placeholder]="'advertisements.titlePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('title')">
+              {{ getFieldError('title') }}
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group full-width">
+            <label class="form-label" for="description">
+              {{ 'advertisements.description' | translate }} <span class="required">*</span>
+            </label>
+            <textarea
+              id="description"
+              formControlName="description"
+              class="form-textarea"
+              rows="4"
+              [class.error]="isFieldInvalid('description')"
+              [placeholder]="'advertisements.descriptionPlaceholder' | translate"
+            ></textarea>
+            <div class="error-message" *ngIf="isFieldInvalid('description')">
+              {{ getFieldError('description') }}
+            </div>
+          </div>
+
+          <!-- Type -->
+          <div class="form-group">
+            <label class="form-label" for="type">
+              {{ 'advertisements.type' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="type"
+              formControlName="type"
+              class="form-select"
+              [class.error]="isFieldInvalid('type')"
+            >
+              <option value="">{{ 'advertisements.selectType' | translate }}</option>
+              <option *ngFor="let type of advertisementTypes" [value]="type.value">
+                {{ type.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('type')">
+              {{ getFieldError('type') }}
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="form-group">
+            <label class="form-label" for="status">
+              {{ 'advertisements.status' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="status"
+              formControlName="status"
+              class="form-select"
+              [class.error]="isFieldInvalid('status')"
+            >
+              <option value="draft">{{ 'advertisements.draft' | translate }}</option>
+              <option value="active">{{ 'advertisements.active' | translate }}</option>
+              <option value="paused">{{ 'advertisements.paused' | translate }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('status')">
+              {{ getFieldError('status') }}
+            </div>
+          </div>
+
+          <!-- Priority -->
+          <div class="form-group">
+            <label class="form-label" for="priority">
+              {{ 'advertisements.priority' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="priority"
+              formControlName="priority"
+              class="form-input"
+              [class.error]="isFieldInvalid('priority')"
+              min="1"
+              max="10"
+              [placeholder]="'advertisements.priorityPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'advertisements.priorityHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('priority')">
+              {{ getFieldError('priority') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign Duration Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-calendar-range"></i>
+            {{ 'advertisements.campaignDuration' | translate }}
+          </h2>
+          <p class="section-description">{{ 'advertisements.campaignDurationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Start Date -->
+          <div class="form-group">
+            <label class="form-label" for="startDate">
+              {{ 'advertisements.startDate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              formControlName="startDate"
+              class="form-input"
+              [class.error]="isFieldInvalid('startDate')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('startDate')">
+              {{ getFieldError('startDate') }}
+            </div>
+          </div>
+
+          <!-- End Date -->
+          <div class="form-group">
+            <label class="form-label" for="endDate">
+              {{ 'advertisements.endDate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              formControlName="endDate"
+              class="form-input"
+              [class.error]="isFieldInvalid('endDate')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('endDate')">
+              {{ getFieldError('endDate') }}
+            </div>
+          </div>
+
+          <!-- Budget -->
+          <div class="form-group">
+            <label class="form-label" for="budget">
+              {{ 'advertisements.budget' | translate }}
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="budget"
+                formControlName="budget"
+                class="form-input with-currency"
+                [placeholder]="'advertisements.budgetPlaceholder' | translate"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-help">{{ 'advertisements.budgetHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Media Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-image"></i>
+            {{ 'advertisements.media' | translate }}
+          </h2>
+          <p class="section-description">{{ 'advertisements.mediaDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Image URL -->
+          <div class="form-group full-width">
+            <label class="form-label" for="imageUrl">
+              {{ 'advertisements.imageUrl' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="url"
+              id="imageUrl"
+              formControlName="imageUrl"
+              class="form-input"
+              [class.error]="isFieldInvalid('imageUrl')"
+              [placeholder]="'advertisements.imageUrlPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'advertisements.imageUrlHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('imageUrl')">
+              {{ getFieldError('imageUrl') }}
+            </div>
+          </div>
+
+          <!-- Target URL -->
+          <div class="form-group full-width">
+            <label class="form-label" for="targetUrl">
+              {{ 'advertisements.targetUrl' | translate }}
+            </label>
+            <input
+              type="url"
+              id="targetUrl"
+              formControlName="targetUrl"
+              class="form-input"
+              [placeholder]="'advertisements.targetUrlPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'advertisements.targetUrlHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Audience Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-people"></i>
+            {{ 'advertisements.targetAudience' | translate }}
+          </h2>
+          <p class="section-description">{{ 'advertisements.targetAudienceDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Age Range -->
+          <div class="form-group">
+            <label class="form-label" for="ageMin">
+              {{ 'advertisements.ageRange' | translate }}
+            </label>
+            <div class="age-range-inputs">
+              <input
+                type="number"
+                id="ageMin"
+                formControlName="ageMin"
+                class="form-input"
+                min="18"
+                max="100"
+                [placeholder]="'advertisements.minAge' | translate"
+              />
+              <span class="age-separator">-</span>
+              <input
+                type="number"
+                formControlName="ageMax"
+                class="form-input"
+                min="18"
+                max="100"
+                [placeholder]="'advertisements.maxAge' | translate"
+              />
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label class="form-label" for="gender">
+              {{ 'advertisements.gender' | translate }}
+            </label>
+            <select
+              id="gender"
+              formControlName="gender"
+              class="form-select"
+            >
+              <option *ngFor="let gender of genderOptions" [value]="gender.value">
+                {{ gender.label | translate }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Locations -->
+          <div class="form-group full-width">
+            <label class="form-label" for="locations">
+              {{ 'advertisements.locations' | translate }}
+            </label>
+            <input
+              type="text"
+              id="locations"
+              formControlName="locations"
+              class="form-input"
+              [placeholder]="'advertisements.locationsPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'advertisements.locationsHelp' | translate }}</div>
+          </div>
+
+          <!-- Interests -->
+          <div class="form-group full-width">
+            <label class="form-label" for="interests">
+              {{ 'advertisements.interests' | translate }}
+            </label>
+            <input
+              type="text"
+              id="interests"
+              formControlName="interests"
+              class="form-input"
+              [placeholder]="'advertisements.interestsPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'advertisements.interestsHelp' | translate }}</div>
+          </div>
+
+          <!-- Branch Selection -->
+          <div class="form-group full-width">
+            <label class="form-label" for="branchIds">
+              {{ 'advertisements.branches' | translate }}
+            </label>
+            <select
+              id="branchIds"
+              formControlName="branchIds"
+              class="form-select"
+              multiple
+            >
+              <option *ngFor="let branch of branches()" [value]="branch.id">
+                {{ branch.name }}
+              </option>
+            </select>
+            <div class="form-help">{{ 'advertisements.branchesHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      >
+        {{ 'common.cancel' | translate }}
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="advertisementForm.invalid || isSubmitting()"
+      >
+        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
+        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

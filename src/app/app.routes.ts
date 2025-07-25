@@ -129,6 +129,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/car-rental/advertisements/advertisements-list/advertisements-list.component').then(m => m.AdvertisementsListComponent)
       },
       {
+        path: 'advertisements/new',
+        loadComponent: () => import('./features/car-rental/advertisements/advertisement-form/advertisement-form.component').then(m => m.AdvertisementFormComponent)
+      },
+      {
+        path: 'advertisements/:id',
+        loadComponent: () => import('./features/car-rental/advertisements/advertisement-detail/advertisement-detail.component').then(m => m.AdvertisementDetailComponent)
+      },
+      {
+        path: 'advertisements/:id/edit',
+        loadComponent: () => import('./features/car-rental/advertisements/advertisement-form/advertisement-form.component').then(m => m.AdvertisementFormComponent)
+      },
+      {
         path: 'customers',
         loadComponent: () => import('./features/car-rental/customers/customers.component').then(m => m.CustomersComponent)
       },
