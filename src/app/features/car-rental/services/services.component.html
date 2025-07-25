@@ -1,0 +1,185 @@
+<div class="services-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ 'services.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'services.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="refreshList()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i>
+          {{ 'services.addService' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'common.search' | translate }}</label>
+        <div class="search-input-container">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            class="form-input search-input"
+            [placeholder]="'services.searchPlaceholder' | translate"
+            [value]="searchTerm()"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'services.category' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="categoryFilter()"
+          (change)="onCategoryFilterChange($any($event.target).value)"
+        >
+          <option *ngFor="let option of categoryOptions" [value]="option.value">
+            {{ option.label | translate }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Availability Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'services.availability' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="availabilityFilter()"
+          (change)="onAvailabilityFilterChange($any($event.target).value)"
+        >
+          <option *ngFor="let option of availabilityOptions" [value]="option.value">
+            {{ option.label | translate }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="!isLoading()">
+    <p class="text-secondary">
+      {{ 'services.showingResults' | translate }} 
+      <strong>{{ filteredServices().length }}</strong> 
+      {{ 'services.of' | translate }} 
+      <strong>{{ services().length }}</strong> 
+      {{ 'services.services' | translate }}
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Services Grid -->
+  <div class="services-grid" *ngIf="!isLoading() && filteredServices().length > 0">
+    <div class="service-card" *ngFor="let service of filteredServices()">
+      <!-- Service Header -->
+      <div class="service-header">
+        <div class="service-icon">
+          <i [class]="'bi ' + getCategoryIcon(service.category)"></i>
+        </div>
+        <div class="service-info">
+          <h3 class="service-name">{{ service.name }}</h3>
+          <span [class]="getCategoryBadgeClass(service.category)">
+            {{ 'services.' + service.category | translate }}
+          </span>
+        </div>
+        <div class="service-status">
+          <div class="availability-toggle">
+            <input
+              type="checkbox"
+              [id]="'availability-' + service.id"
+              [checked]="service.isAvailable"
+              (change)="toggleServiceAvailability(service)"
+              class="toggle-input"
+            />
+            <label [for]="'availability-' + service.id" class="toggle-label">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <span class="availability-text" [class.available]="service.isAvailable" [class.unavailable]="!service.isAvailable">
+            {{ service.isAvailable ? ('services.available' | translate) : ('services.unavailable' | translate) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Service Description -->
+      <div class="service-description">
+        <p>{{ service.description }}</p>
+      </div>
+
+      <!-- Service Details -->
+      <div class="service-details">
+        <div class="detail-row">
+          <div class="detail-item">
+            <i class="bi bi-box detail-icon"></i>
+            <div>
+              <span class="detail-label">{{ 'services.maxQuantity' | translate }}</span>
+              <span class="detail-value">{{ service.maxQuantity }} {{ 'services.units' | translate }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="service-pricing">
+        <div class="pricing-grid">
+          <div class="price-item">
+            <span class="price-label">{{ 'services.dailyRate' | translate }}</span>
+            <span class="price-value">{{ formatCurrency(service.dailyRate) }}</span>
+          </div>
+          <div class="price-item">
+            <span class="price-label">{{ 'services.weeklyRate' | translate }}</span>
+            <span class="price-value">{{ formatCurrency(service.weeklyRate) }}</span>
+          </div>
+          <div class="price-item">
+            <span class="price-label">{{ 'services.monthlyRate' | translate }}</span>
+            <span class="price-value">{{ formatCurrency(service.monthlyRate) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Actions -->
+      <div class="service-actions">
+        <div class="action-buttons">
+          <a [routerLink]="[service.id]" class="btn btn-ghost btn-sm" [title]="'common.view' | translate">
+            <i class="bi bi-eye"></i>
+          </a>
+          <a [routerLink]="[service.id, 'edit']" class="btn btn-ghost btn-sm" [title]="'common.edit' | translate">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteService(service)" [title]="'common.delete' | translate">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && filteredServices().length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-plus-circle"></i>
+    </div>
+    <h3 class="empty-title">{{ 'services.noServicesFound' | translate }}</h3>
+    <p class="empty-description">{{ 'services.noServicesDescription' | translate }}</p>
+    <a routerLink="new" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i>
+      {{ 'services.addFirstService' | translate }}
+    </a>
+  </div>
+</div>

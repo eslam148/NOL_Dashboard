@@ -40,12 +40,15 @@ export interface Vehicle {
   color: string;
   mileage: number;
   dailyRate: number;
-  weeklyRate: number;
-  monthlyRate: number;
+  weeklyRate?: number;
+  monthlyRate?: number;
   status: VehicleStatus;
   branchId: string;
-  features: string[];
-  images: string[];
+  features?: string[];
+  images?: string[];
+  notes?: string;
+  insuranceExpiry?: Date;
+  registrationExpiry?: Date;
   maintenanceHistory: MaintenanceRecord[];
   createdAt: Date;
   updatedAt: Date;
@@ -71,27 +74,50 @@ export interface Booking {
   customerId: string;
   customer: Customer;
   vehicleId: string;
-  vehicle: Vehicle;
-  branchId: string;
-  branch: Branch;
+  vehicle: {
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+    licensePlate: string;
+    category: VehicleCategory;
+    dailyRate: number;
+  };
   startDate: Date;
   endDate: Date;
-  pickupTime: string;
-  returnTime: string;
-  status: BookingStatus;
   totalDays: number;
-  baseRate: number;
-  additionalServices: BookedService[];
+  dailyRate: number;
+  subtotal: number;
+  taxes: number;
+  fees: number;
   totalAmount: number;
-  paidAmount: number;
+  status: BookingStatus;
   paymentStatus: PaymentStatus;
-  notes: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  pickupTime: string;
+  dropoffTime: string;
+  additionalServices: {
+    serviceId: string;
+    name: string;
+    dailyRate: number;
+    totalAmount: number;
+  }[];
+  specialRequests?: string;
+  driverLicense: string;
+  emergencyContact: {
+    name: string;
+    phone: string;
+  };
   createdAt: Date;
   updatedAt: Date;
+  createdBy: 'customer' | 'admin';
+  notes?: string;
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled' | 'no_show';
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded' | 'failed';
+export type CustomerType = 'regular' | 'premium' | 'corporate';
 
 export interface Customer {
   id: string;
@@ -100,18 +126,60 @@ export interface Customer {
   email: string;
   phone: string;
   dateOfBirth: Date;
+  nationality: string;
   licenseNumber: string;
   licenseExpiryDate: Date;
-  address: string;
-  city: string;
-  country: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode: string;
+  };
   emergencyContact: {
     name: string;
     phone: string;
     relationship: string;
   };
+  customerType: CustomerType;
+  loyaltyPoints: number;
+  totalRentals: number;
+  totalSpent: number;
+  averageRating: number;
+  isActive: boolean;
+  isBlacklisted: boolean;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
+  lastRentalDate?: Date;
+}
+
+export interface RentalHistory {
+  id: string;
+  customerId: string;
+  vehicleId: string;
+  vehicle: {
+    make: string;
+    model: string;
+    year: number;
+    licensePlate: string;
+  };
+  startDate: Date;
+  endDate: Date;
+  actualReturnDate?: Date;
+  totalDays: number;
+  dailyRate: number;
+  totalAmount: number;
+  status: 'active' | 'completed' | 'cancelled';
+  pickupLocation: string;
+  dropoffLocation: string;
+  mileageStart: number;
+  mileageEnd?: number;
+  fuelLevelStart: string;
+  fuelLevelEnd?: string;
+  damages: string[];
+  rating?: number;
+  review?: string;
 }
 
 export interface AdditionalService {
@@ -212,3 +280,5 @@ export interface BranchFilter {
   city?: string;
   country?: string;
 }
+
+

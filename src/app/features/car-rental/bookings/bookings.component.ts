@@ -1,163 +1,249 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { CarRentalService } from '../../../core/services/car-rental.service';
+import { Booking, BookingStatus, PaymentStatus } from '../../../core/models/car-rental.models';
 
 @Component({
   selector: 'app-bookings',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
-  template: `
-    <div class="bookings-container">
-      <div class="page-header">
-        <h1 class="page-title">{{ 'bookings.title' | translate }}</h1>
-        <p class="page-subtitle">{{ 'bookings.subtitle' | translate }}</p>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-icon">
-          <i class="bi bi-calendar-check"></i>
-        </div>
-        <h3>{{ 'bookings.comingSoon' | translate }}</h3>
-        <p>{{ 'bookings.comingSoonDesc' | translate }}</p>
-        <div class="features-preview">
-          <div class="feature-item">
-            <i class="bi bi-calendar-plus"></i>
-            <span>{{ 'bookings.newBookings' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-calendar-event"></i>
-            <span>{{ 'bookings.manageReservations' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-person-check"></i>
-            <span>{{ 'bookings.customerInfo' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-credit-card"></i>
-            <span>{{ 'bookings.paymentTracking' | translate }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .bookings-container {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .page-title {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .page-subtitle {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-    }
-    
-    .coming-soon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--white);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .coming-soon-icon {
-      width: 5rem;
-      height: 5rem;
-      border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-    
-    .coming-soon-icon i {
-      font-size: 2rem;
-      color: var(--gray-900);
-    }
-    
-    .coming-soon h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 1rem 0;
-    }
-    
-    .coming-soon p {
-      color: var(--text-secondary);
-      margin: 0 0 3rem 0;
-      max-width: 500px;
-      line-height: 1.6;
-    }
-    
-    .features-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 600px;
-    }
-    
-    .feature-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1.5rem;
-      background: var(--gray-50);
-      border-radius: var(--radius-lg);
-      transition: all var(--transition-normal);
-    }
-    
-    .feature-item:hover {
-      background: var(--brand-secondary);
-      transform: translateY(-2px);
-    }
-    
-    .feature-item i {
-      font-size: 1.5rem;
-      color: var(--brand-primary);
-    }
-    
-    .feature-item span {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      text-align: center;
-    }
-    
-    @media (max-width: 768px) {
-      .bookings-container {
-        padding: 1rem;
-      }
-      
-      .features-preview {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-      
-      .feature-item {
-        padding: 1rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .features-preview {
-        grid-template-columns: 1fr;
-      }
-    }
-  `]
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
+  templateUrl: './bookings.component.html',
+  styleUrls: ['./bookings.component.css']
 })
-export class BookingsComponent { }
+export class BookingsComponent implements OnInit {
+  private carRentalService = inject(CarRentalService);
+
+  bookings = signal<Booking[]>([]);
+  filteredBookings = signal<Booking[]>([]);
+  isLoading = signal(false);
+  searchTerm = signal('');
+  statusFilter = signal<string>('all');
+  paymentFilter = signal<string>('all');
+  selectedTab = signal<'bookings' | 'calendar' | 'analytics'>('bookings');
+
+  // Filter options
+  statusOptions = [
+    { value: 'all', label: 'bookings.allStatuses' },
+    { value: 'pending', label: 'bookings.pending' },
+    { value: 'confirmed', label: 'bookings.confirmed' },
+    { value: 'active', label: 'bookings.active' },
+    { value: 'completed', label: 'bookings.completed' },
+    { value: 'cancelled', label: 'bookings.cancelled' },
+    { value: 'no_show', label: 'bookings.noShow' }
+  ];
+
+  paymentOptions = [
+    { value: 'all', label: 'bookings.allPayments' },
+    { value: 'pending', label: 'bookings.paymentPending' },
+    { value: 'partial', label: 'bookings.paymentPartial' },
+    { value: 'paid', label: 'bookings.paymentPaid' },
+    { value: 'refunded', label: 'bookings.paymentRefunded' },
+    { value: 'failed', label: 'bookings.paymentFailed' }
+  ];
+
+  ngOnInit() {
+    this.loadBookings();
+  }
+
+  private loadBookings() {
+    this.isLoading.set(true);
+    this.carRentalService.getBookings().subscribe({
+      next: (bookings) => {
+        this.bookings.set(bookings);
+        this.applyFilters();
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading bookings:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.applyFilters();
+  }
+
+  onStatusFilterChange(status: string) {
+    this.statusFilter.set(status);
+    this.applyFilters();
+  }
+
+  onPaymentFilterChange(payment: string) {
+    this.paymentFilter.set(payment);
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let filtered = [...this.bookings()];
+
+    // Apply search filter
+    const search = this.searchTerm().toLowerCase();
+    if (search) {
+      filtered = filtered.filter(booking =>
+        booking.bookingNumber.toLowerCase().includes(search) ||
+        booking.customer.firstName.toLowerCase().includes(search) ||
+        booking.customer.lastName.toLowerCase().includes(search) ||
+        booking.customer.email.toLowerCase().includes(search) ||
+        booking.vehicle.make.toLowerCase().includes(search) ||
+        booking.vehicle.model.toLowerCase().includes(search) ||
+        booking.vehicle.licensePlate.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply status filter
+    if (this.statusFilter() !== 'all') {
+      filtered = filtered.filter(booking => booking.status === this.statusFilter());
+    }
+
+    // Apply payment filter
+    if (this.paymentFilter() !== 'all') {
+      filtered = filtered.filter(booking => booking.paymentStatus === this.paymentFilter());
+    }
+
+    this.filteredBookings.set(filtered);
+  }
+
+  getStatusBadgeClass(status: BookingStatus): string {
+    switch (status) {
+      case 'pending': return 'badge badge-warning';
+      case 'confirmed': return 'badge badge-info';
+      case 'active': return 'badge badge-success';
+      case 'completed': return 'badge badge-primary';
+      case 'cancelled': return 'badge badge-error';
+      case 'no_show': return 'badge badge-gray';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  getPaymentBadgeClass(status: PaymentStatus): string {
+    switch (status) {
+      case 'pending': return 'badge badge-warning';
+      case 'partial': return 'badge badge-info';
+      case 'paid': return 'badge badge-success';
+      case 'refunded': return 'badge badge-primary';
+      case 'failed': return 'badge badge-error';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  getStatusIcon(status: BookingStatus): string {
+    switch (status) {
+      case 'pending': return 'bi-clock';
+      case 'confirmed': return 'bi-check-circle';
+      case 'active': return 'bi-play-circle';
+      case 'completed': return 'bi-check-circle-fill';
+      case 'cancelled': return 'bi-x-circle';
+      case 'no_show': return 'bi-person-x';
+      default: return 'bi-question-circle';
+    }
+  }
+
+  updateBookingStatus(booking: Booking, newStatus: BookingStatus) {
+    this.carRentalService.updateBookingStatus(booking.id, newStatus).subscribe({
+      next: (updatedBooking) => {
+        // Update the booking in the list
+        const bookings = this.bookings();
+        const index = bookings.findIndex(b => b.id === booking.id);
+        if (index !== -1) {
+          bookings[index] = updatedBooking;
+          this.bookings.set([...bookings]);
+          this.applyFilters();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating booking status:', error);
+      }
+    });
+  }
+
+  updatePaymentStatus(booking: Booking, newStatus: PaymentStatus) {
+    this.carRentalService.updatePaymentStatus(booking.id, newStatus).subscribe({
+      next: (updatedBooking) => {
+        // Update the booking in the list
+        const bookings = this.bookings();
+        const index = bookings.findIndex(b => b.id === booking.id);
+        if (index !== -1) {
+          bookings[index] = updatedBooking;
+          this.bookings.set([...bookings]);
+          this.applyFilters();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating payment status:', error);
+      }
+    });
+  }
+
+  deleteBooking(booking: Booking) {
+    if (confirm(`Are you sure you want to delete booking "${booking.bookingNumber}"?`)) {
+      this.carRentalService.deleteBooking(booking.id).subscribe({
+        next: (success) => {
+          if (success) {
+            this.loadBookings();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting booking:', error);
+        }
+      });
+    }
+  }
+
+  switchTab(tab: 'bookings' | 'calendar' | 'analytics') {
+    this.selectedTab.set(tab);
+  }
+
+  refreshBookings() {
+    this.loadBookings();
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  formatDate(date: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+  }
+
+  formatDateTime(date: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+
+  getDaysUntil(date: Date): number {
+    const now = new Date();
+    const diffTime = date.getTime() - now.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  getBookingStats() {
+    const bookings = this.bookings();
+    return {
+      total: bookings.length,
+      pending: bookings.filter(b => b.status === 'pending').length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      active: bookings.filter(b => b.status === 'active').length,
+      completed: bookings.filter(b => b.status === 'completed').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+      totalRevenue: bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0),
+      pendingPayments: bookings.filter(b => b.paymentStatus === 'pending').reduce((sum, b) => sum + b.totalAmount, 0)
+    };
+  }
+}

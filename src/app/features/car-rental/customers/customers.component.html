@@ -1,0 +1,372 @@
+<div class="customers-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ 'customers.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'customers.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="refreshCustomers()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-person-plus"></i>
+          {{ 'customers.addCustomer' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'customers'"
+        (click)="switchTab('customers')"
+      >
+        <i class="bi bi-people"></i>
+        {{ 'customers.customerList' | translate }}
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'analytics'"
+        (click)="switchTab('analytics')"
+      >
+        <i class="bi bi-graph-up"></i>
+        {{ 'customers.analytics' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Customers Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'customers'">
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <!-- Search -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'common.search' | translate }}</label>
+          <div class="search-input-container">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              class="form-input search-input"
+              [placeholder]="'customers.searchPlaceholder' | translate"
+              [value]="searchTerm()"
+              (input)="onSearchChange($any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Type Filter -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'customers.type' | translate }}</label>
+          <select
+            class="form-select"
+            [value]="typeFilter()"
+            (change)="onTypeFilterChange($any($event.target).value)"
+          >
+            <option *ngFor="let option of typeOptions" [value]="option.value">
+              {{ option.label | translate }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'customers.status' | translate }}</label>
+          <select
+            class="form-select"
+            [value]="statusFilter()"
+            (change)="onStatusFilterChange($any($event.target).value)"
+          >
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label | translate }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary" *ngIf="!isLoading()">
+      <p class="text-secondary">
+        {{ 'customers.showingResults' | translate }} 
+        <strong>{{ filteredCustomers().length }}</strong> 
+        {{ 'customers.of' | translate }} 
+        <strong>{{ customers().length }}</strong> 
+        {{ 'customers.customers' | translate }}
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading()">
+      <div class="spinner"></div>
+      <p class="text-muted">{{ 'common.loading' | translate }}</p>
+    </div>
+
+    <!-- Customers Grid -->
+    <div class="customers-grid" *ngIf="!isLoading() && filteredCustomers().length > 0">
+      <div class="customer-card" *ngFor="let customer of filteredCustomers()">
+        <!-- Customer Header -->
+        <div class="customer-header">
+          <div class="customer-avatar">
+            <i [class]="'bi ' + getCustomerTypeIcon(customer.customerType)"></i>
+          </div>
+          <div class="customer-info">
+            <h3 class="customer-name">{{ customer.firstName }} {{ customer.lastName }}</h3>
+            <p class="customer-email">{{ customer.email }}</p>
+            <p class="customer-phone">{{ customer.phone }}</p>
+          </div>
+          <div class="customer-badges">
+            <span [class]="getCustomerTypeBadgeClass(customer.customerType)">
+              <i [class]="'bi ' + getCustomerTypeIcon(customer.customerType)"></i>
+              {{ 'customers.' + customer.customerType | translate }}
+            </span>
+            <span class="status-badge" [class.active]="customer.isActive && !customer.isBlacklisted" 
+                  [class.inactive]="!customer.isActive" [class.blacklisted]="customer.isBlacklisted">
+              {{ customer.isBlacklisted ? ('customers.blacklisted' | translate) : 
+                 (customer.isActive ? ('customers.active' | translate) : ('customers.inactive' | translate)) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Customer Stats -->
+        <div class="customer-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ customer.totalRentals }}</div>
+            <div class="stat-label">{{ 'customers.totalRentals' | translate }}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ formatCurrency(customer.totalSpent) }}</div>
+            <div class="stat-label">{{ 'customers.totalSpent' | translate }}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ customer.loyaltyPoints }}</div>
+            <div class="stat-label">{{ 'customers.loyaltyPoints' | translate }}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ customer.averageRating.toFixed(1) }}</div>
+            <div class="stat-label">{{ 'customers.rating' | translate }}</div>
+          </div>
+        </div>
+
+        <!-- Customer Details -->
+        <div class="customer-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="bi bi-card-text detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'customers.license' | translate }}</span>
+                <span class="detail-value">{{ customer.licenseNumber }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-geo-alt detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'customers.location' | translate }}</span>
+                <span class="detail-value">{{ customer.address.city }}, {{ customer.address.country }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="bi bi-calendar detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'customers.lastRental' | translate }}</span>
+                <span class="detail-value">{{ customer.lastRentalDate ? getTimeSince(customer.lastRentalDate) : 'Never' }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-person-check detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'customers.member' | translate }}</span>
+                <span class="detail-value">{{ getTimeSince(customer.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Actions -->
+        <div class="customer-actions">
+          <div class="action-buttons">
+            <button class="btn btn-ghost btn-sm" (click)="viewCustomerHistory(customer)" [title]="'customers.viewHistory' | translate">
+              <i class="bi bi-clock-history"></i>
+            </button>
+            <a [routerLink]="[customer.id]" class="btn btn-ghost btn-sm" [title]="'common.view' | translate">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a [routerLink]="[customer.id, 'edit']" class="btn btn-ghost btn-sm" [title]="'common.edit' | translate">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-ghost btn-sm" 
+                    [class.text-green-600]="!customer.isActive" 
+                    [class.text-orange-600]="customer.isActive"
+                    (click)="toggleCustomerStatus(customer)" 
+                    [title]="customer.isActive ? ('customers.deactivate' | translate) : ('customers.activate' | translate)">
+              <i [class]="customer.isActive ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+            </button>
+            <button class="btn btn-ghost btn-sm" 
+                    [class.text-red-600]="!customer.isBlacklisted" 
+                    [class.text-blue-600]="customer.isBlacklisted"
+                    (click)="toggleCustomerBlacklist(customer)" 
+                    [title]="customer.isBlacklisted ? ('customers.removeBlacklist' | translate) : ('customers.addBlacklist' | translate)">
+              <i [class]="customer.isBlacklisted ? 'bi-shield-check' : 'bi-shield-x'"></i>
+            </button>
+            <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteCustomer(customer)" [title]="'common.delete' | translate">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && filteredCustomers().length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <h3 class="empty-title">{{ 'customers.noCustomersFound' | translate }}</h3>
+      <p class="empty-description">{{ 'customers.noCustomersDescription' | translate }}</p>
+      <a routerLink="new" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i>
+        {{ 'customers.addFirstCustomer' | translate }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'analytics'">
+    <div class="analytics-grid">
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'customers.customerOverview' | translate }}</h3>
+          <i class="bi bi-people analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getCustomerStats().total }}</div>
+            <div class="stat-description">{{ 'customers.totalCustomers' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getCustomerStats().active }}</div>
+            <div class="stat-description">{{ 'customers.activeCustomers' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'customers.customerTypes' | translate }}</h3>
+          <i class="bi bi-diagram-3 analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getCustomerStats().premium }}</div>
+            <div class="stat-description">{{ 'customers.premium' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getCustomerStats().corporate }}</div>
+            <div class="stat-description">{{ 'customers.corporate' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'customers.revenue' | translate }}</h3>
+          <i class="bi bi-currency-dollar analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ formatCurrency(getCustomerStats().totalRevenue) }}</div>
+            <div class="stat-description">{{ 'customers.totalRevenue' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number">{{ formatCurrency(getCustomerStats().averageSpent) }}</div>
+            <div class="stat-description">{{ 'customers.averageSpent' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'customers.issues' | translate }}</h3>
+          <i class="bi bi-exclamation-triangle analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number text-red-600">{{ getCustomerStats().blacklisted }}</div>
+            <div class="stat-description">{{ 'customers.blacklistedCustomers' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rental History Modal -->
+<div class="modal-overlay" *ngIf="selectedCustomerId()" (click)="closeHistoryModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ 'customers.rentalHistory' | translate }}</h3>
+      <button class="modal-close" (click)="closeHistoryModal()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="loading-container" *ngIf="isLoadingHistory()">
+        <div class="spinner"></div>
+        <p class="text-muted">{{ 'common.loading' | translate }}</p>
+      </div>
+      
+      <div class="rental-history" *ngIf="!isLoadingHistory() && selectedCustomerHistory().length > 0">
+        <div class="rental-item" *ngFor="let rental of selectedCustomerHistory()">
+          <div class="rental-header">
+            <div class="rental-vehicle">
+              <strong>{{ rental.vehicle.make }} {{ rental.vehicle.model }}</strong>
+              <span class="rental-plate">{{ rental.vehicle.licensePlate }}</span>
+            </div>
+            <div class="rental-status">
+              <span class="status-badge" [class]="'status-' + rental.status">
+                {{ 'customers.' + rental.status | translate }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="rental-details">
+            <div class="rental-dates">
+              <i class="bi bi-calendar"></i>
+              {{ formatDate(rental.startDate) }} - {{ formatDate(rental.endDate) }}
+              <span class="rental-days">({{ rental.totalDays }} {{ 'customers.days' | translate }})</span>
+            </div>
+            
+            <div class="rental-amount">
+              <i class="bi bi-currency-dollar"></i>
+              {{ formatCurrency(rental.totalAmount) }}
+            </div>
+            
+            <div class="rental-rating" *ngIf="rental.rating">
+              <i class="bi bi-star-fill"></i>
+              {{ rental.rating }}/5
+            </div>
+          </div>
+          
+          <div class="rental-review" *ngIf="rental.review">
+            <p>"{{ rental.review }}"</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-history" *ngIf="!isLoadingHistory() && selectedCustomerHistory().length === 0">
+        <i class="bi bi-clock-history"></i>
+        <p>{{ 'customers.noRentalHistory' | translate }}</p>
+      </div>
+    </div>
+  </div>
+</div>

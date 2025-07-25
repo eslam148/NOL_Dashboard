@@ -1,163 +1,167 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { CarRentalService } from '../../../core/services/car-rental.service';
+import { AdditionalService, ServiceCategory } from '../../../core/models/car-rental.models';
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
-  template: `
-    <div class="services-container">
-      <div class="page-header">
-        <h1 class="page-title">{{ 'services.title' | translate }}</h1>
-        <p class="page-subtitle">{{ 'services.subtitle' | translate }}</p>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-icon">
-          <i class="bi bi-plus-circle"></i>
-        </div>
-        <h3>{{ 'services.comingSoon' | translate }}</h3>
-        <p>{{ 'services.comingSoonDesc' | translate }}</p>
-        <div class="features-preview">
-          <div class="feature-item">
-            <i class="bi bi-compass"></i>
-            <span>{{ 'services.gpsNavigation' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-shield-check"></i>
-            <span>{{ 'services.insurance' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-person-hearts"></i>
-            <span>{{ 'services.childSeats' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-tools"></i>
-            <span>{{ 'services.equipment' | translate }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .services-container {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .page-title {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .page-subtitle {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-    }
-    
-    .coming-soon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--white);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .coming-soon-icon {
-      width: 5rem;
-      height: 5rem;
-      border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-    
-    .coming-soon-icon i {
-      font-size: 2rem;
-      color: var(--gray-900);
-    }
-    
-    .coming-soon h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 1rem 0;
-    }
-    
-    .coming-soon p {
-      color: var(--text-secondary);
-      margin: 0 0 3rem 0;
-      max-width: 500px;
-      line-height: 1.6;
-    }
-    
-    .features-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 600px;
-    }
-    
-    .feature-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1.5rem;
-      background: var(--gray-50);
-      border-radius: var(--radius-lg);
-      transition: all var(--transition-normal);
-    }
-    
-    .feature-item:hover {
-      background: var(--brand-secondary);
-      transform: translateY(-2px);
-    }
-    
-    .feature-item i {
-      font-size: 1.5rem;
-      color: var(--brand-primary);
-    }
-    
-    .feature-item span {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      text-align: center;
-    }
-    
-    @media (max-width: 768px) {
-      .services-container {
-        padding: 1rem;
-      }
-      
-      .features-preview {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-      
-      .feature-item {
-        padding: 1rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .features-preview {
-        grid-template-columns: 1fr;
-      }
-    }
-  `]
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
+  templateUrl: './services.component.html',
+  styleUrls: ['./services.component.css']
 })
-export class ServicesComponent { }
+export class ServicesComponent implements OnInit {
+  private carRentalService = inject(CarRentalService);
+
+  services = signal<AdditionalService[]>([]);
+  filteredServices = signal<AdditionalService[]>([]);
+  isLoading = signal(false);
+  searchTerm = signal('');
+  categoryFilter = signal<string>('all');
+  availabilityFilter = signal<string>('all');
+
+  // Filter options
+  categoryOptions = [
+    { value: 'all', label: 'services.allCategories' },
+    { value: 'navigation', label: 'services.navigation' },
+    { value: 'safety', label: 'services.safety' },
+    { value: 'comfort', label: 'services.comfort' },
+    { value: 'insurance', label: 'services.insurance' },
+    { value: 'equipment', label: 'services.equipment' }
+  ];
+
+  availabilityOptions = [
+    { value: 'all', label: 'services.allAvailability' },
+    { value: 'available', label: 'services.available' },
+    { value: 'unavailable', label: 'services.unavailable' }
+  ];
+
+  ngOnInit() {
+    this.loadServices();
+  }
+
+  private loadServices() {
+    this.isLoading.set(true);
+    this.carRentalService.getAdditionalServices().subscribe({
+      next: (services) => {
+        this.services.set(services);
+        this.applyFilters();
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading services:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.applyFilters();
+  }
+
+  onCategoryFilterChange(category: string) {
+    this.categoryFilter.set(category);
+    this.applyFilters();
+  }
+
+  onAvailabilityFilterChange(availability: string) {
+    this.availabilityFilter.set(availability);
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let filtered = [...this.services()];
+
+    // Apply search filter
+    const search = this.searchTerm().toLowerCase();
+    if (search) {
+      filtered = filtered.filter(service =>
+        service.name.toLowerCase().includes(search) ||
+        service.description.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply category filter
+    if (this.categoryFilter() !== 'all') {
+      filtered = filtered.filter(service => service.category === this.categoryFilter());
+    }
+
+    // Apply availability filter
+    if (this.availabilityFilter() !== 'all') {
+      const isAvailable = this.availabilityFilter() === 'available';
+      filtered = filtered.filter(service => service.isAvailable === isAvailable);
+    }
+
+    this.filteredServices.set(filtered);
+  }
+
+  getCategoryIcon(category: ServiceCategory): string {
+    switch (category) {
+      case 'navigation': return 'bi-compass';
+      case 'safety': return 'bi-shield-check';
+      case 'comfort': return 'bi-star';
+      case 'insurance': return 'bi-shield-fill-check';
+      case 'equipment': return 'bi-tools';
+      default: return 'bi-plus-circle';
+    }
+  }
+
+  getCategoryBadgeClass(category: ServiceCategory): string {
+    switch (category) {
+      case 'navigation': return 'badge badge-info';
+      case 'safety': return 'badge badge-success';
+      case 'comfort': return 'badge badge-purple';
+      case 'insurance': return 'badge badge-warning';
+      case 'equipment': return 'badge badge-primary';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  toggleServiceAvailability(service: AdditionalService) {
+    this.carRentalService.toggleServiceAvailability(service.id).subscribe({
+      next: (updatedService) => {
+        // Update the service in the list
+        const services = this.services();
+        const index = services.findIndex(s => s.id === service.id);
+        if (index !== -1) {
+          services[index] = updatedService;
+          this.services.set([...services]);
+          this.applyFilters();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating service availability:', error);
+      }
+    });
+  }
+
+  deleteService(service: AdditionalService) {
+    if (confirm(`Are you sure you want to delete "${service.name}"?`)) {
+      this.carRentalService.deleteService(service.id).subscribe({
+        next: (success) => {
+          if (success) {
+            this.loadServices();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting service:', error);
+        }
+      });
+    }
+  }
+
+  refreshList() {
+    this.loadServices();
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+}

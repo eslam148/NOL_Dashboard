@@ -105,7 +105,7 @@
       <!-- Vehicle Image -->
       <div class="vehicle-image">
         <img 
-          [src]="vehicle.images[0] || 'assets/placeholder-car.jpg'" 
+          [src]="vehicle.images?.[0] || 'assets/placeholder-car.jpg'"
           [alt]="vehicle.make + ' ' + vehicle.model"
           class="vehicle-img"
         />
@@ -171,7 +171,7 @@
         </div>
         <div class="price-item">
           <span class="price-label">{{ 'vehicles.weeklyRate' | translate }}</span>
-          <span class="price-value">{{ formatCurrency(vehicle.weeklyRate) }}</span>
+          <span class="price-value">{{ vehicle.weeklyRate ? formatCurrency(vehicle.weeklyRate) : 'N/A' }}</span>
         </div>
       </div>
 

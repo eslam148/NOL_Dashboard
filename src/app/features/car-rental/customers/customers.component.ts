@@ -1,163 +1,258 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { CarRentalService } from '../../../core/services/car-rental.service';
+import { Customer, CustomerType, RentalHistory } from '../../../core/models/car-rental.models';
 
 @Component({
   selector: 'app-customers',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
-  template: `
-    <div class="customers-container">
-      <div class="page-header">
-        <h1 class="page-title">{{ 'customers.title' | translate }}</h1>
-        <p class="page-subtitle">{{ 'customers.subtitle' | translate }}</p>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-icon">
-          <i class="bi bi-people"></i>
-        </div>
-        <h3>{{ 'customers.comingSoon' | translate }}</h3>
-        <p>{{ 'customers.comingSoonDesc' | translate }}</p>
-        <div class="features-preview">
-          <div class="feature-item">
-            <i class="bi bi-person-plus"></i>
-            <span>{{ 'customers.addCustomers' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-person-lines-fill"></i>
-            <span>{{ 'customers.customerProfiles' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-clock-history"></i>
-            <span>{{ 'customers.rentalHistory' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-telephone"></i>
-            <span>{{ 'customers.contactInfo' | translate }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .customers-container {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .page-title {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .page-subtitle {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-    }
-    
-    .coming-soon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--white);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .coming-soon-icon {
-      width: 5rem;
-      height: 5rem;
-      border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-    
-    .coming-soon-icon i {
-      font-size: 2rem;
-      color: var(--gray-900);
-    }
-    
-    .coming-soon h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 1rem 0;
-    }
-    
-    .coming-soon p {
-      color: var(--text-secondary);
-      margin: 0 0 3rem 0;
-      max-width: 500px;
-      line-height: 1.6;
-    }
-    
-    .features-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 600px;
-    }
-    
-    .feature-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1.5rem;
-      background: var(--gray-50);
-      border-radius: var(--radius-lg);
-      transition: all var(--transition-normal);
-    }
-    
-    .feature-item:hover {
-      background: var(--brand-secondary);
-      transform: translateY(-2px);
-    }
-    
-    .feature-item i {
-      font-size: 1.5rem;
-      color: var(--brand-primary);
-    }
-    
-    .feature-item span {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      text-align: center;
-    }
-    
-    @media (max-width: 768px) {
-      .customers-container {
-        padding: 1rem;
-      }
-      
-      .features-preview {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-      
-      .feature-item {
-        padding: 1rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .features-preview {
-        grid-template-columns: 1fr;
-      }
-    }
-  `]
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
+  templateUrl: './customers.component.html',
+  styleUrls: ['./customers.component.css']
 })
-export class CustomersComponent { }
+export class CustomersComponent implements OnInit {
+  private carRentalService = inject(CarRentalService);
+
+  customers = signal<Customer[]>([]);
+  filteredCustomers = signal<Customer[]>([]);
+  selectedCustomerHistory = signal<RentalHistory[]>([]);
+  isLoading = signal(false);
+  isLoadingHistory = signal(false);
+  searchTerm = signal('');
+  typeFilter = signal<string>('all');
+  statusFilter = signal<string>('all');
+  selectedTab = signal<'customers' | 'analytics'>('customers');
+  selectedCustomerId = signal<string | null>(null);
+
+  // Filter options
+  typeOptions = [
+    { value: 'all', label: 'customers.allTypes' },
+    { value: 'regular', label: 'customers.regular' },
+    { value: 'premium', label: 'customers.premium' },
+    { value: 'corporate', label: 'customers.corporate' }
+  ];
+
+  statusOptions = [
+    { value: 'all', label: 'customers.allStatuses' },
+    { value: 'active', label: 'customers.active' },
+    { value: 'inactive', label: 'customers.inactive' },
+    { value: 'blacklisted', label: 'customers.blacklisted' }
+  ];
+
+  ngOnInit() {
+    this.loadCustomers();
+  }
+
+  private loadCustomers() {
+    this.isLoading.set(true);
+    this.carRentalService.getCustomers().subscribe({
+      next: (customers) => {
+        this.customers.set(customers);
+        this.applyFilters();
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading customers:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.applyFilters();
+  }
+
+  onTypeFilterChange(type: string) {
+    this.typeFilter.set(type);
+    this.applyFilters();
+  }
+
+  onStatusFilterChange(status: string) {
+    this.statusFilter.set(status);
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let filtered = [...this.customers()];
+
+    // Apply search filter
+    const search = this.searchTerm().toLowerCase();
+    if (search) {
+      filtered = filtered.filter(customer =>
+        customer.firstName.toLowerCase().includes(search) ||
+        customer.lastName.toLowerCase().includes(search) ||
+        customer.email.toLowerCase().includes(search) ||
+        customer.phone.toLowerCase().includes(search) ||
+        customer.licenseNumber.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply type filter
+    if (this.typeFilter() !== 'all') {
+      filtered = filtered.filter(customer => customer.customerType === this.typeFilter());
+    }
+
+    // Apply status filter
+    if (this.statusFilter() !== 'all') {
+      if (this.statusFilter() === 'blacklisted') {
+        filtered = filtered.filter(customer => customer.isBlacklisted);
+      } else {
+        const isActive = this.statusFilter() === 'active';
+        filtered = filtered.filter(customer => customer.isActive === isActive && !customer.isBlacklisted);
+      }
+    }
+
+    this.filteredCustomers.set(filtered);
+  }
+
+  getCustomerTypeBadgeClass(type: CustomerType): string {
+    switch (type) {
+      case 'premium': return 'badge badge-gold';
+      case 'corporate': return 'badge badge-primary';
+      case 'regular': return 'badge badge-success';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  getCustomerTypeIcon(type: CustomerType): string {
+    switch (type) {
+      case 'premium': return 'bi-gem';
+      case 'corporate': return 'bi-building';
+      case 'regular': return 'bi-person';
+      default: return 'bi-person';
+    }
+  }
+
+  toggleCustomerStatus(customer: Customer) {
+    this.carRentalService.toggleCustomerStatus(customer.id).subscribe({
+      next: (updatedCustomer) => {
+        // Update the customer in the list
+        const customers = this.customers();
+        const index = customers.findIndex(c => c.id === customer.id);
+        if (index !== -1) {
+          customers[index] = updatedCustomer;
+          this.customers.set([...customers]);
+          this.applyFilters();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating customer status:', error);
+      }
+    });
+  }
+
+  toggleCustomerBlacklist(customer: Customer) {
+    if (confirm(`Are you sure you want to ${customer.isBlacklisted ? 'remove from' : 'add to'} blacklist?`)) {
+      this.carRentalService.toggleCustomerBlacklist(customer.id).subscribe({
+        next: (updatedCustomer) => {
+          // Update the customer in the list
+          const customers = this.customers();
+          const index = customers.findIndex(c => c.id === customer.id);
+          if (index !== -1) {
+            customers[index] = updatedCustomer;
+            this.customers.set([...customers]);
+            this.applyFilters();
+          }
+        },
+        error: (error) => {
+          console.error('Error updating customer blacklist status:', error);
+        }
+      });
+    }
+  }
+
+  viewCustomerHistory(customer: Customer) {
+    this.selectedCustomerId.set(customer.id);
+    this.isLoadingHistory.set(true);
+    this.carRentalService.getCustomerRentalHistory(customer.id).subscribe({
+      next: (history) => {
+        this.selectedCustomerHistory.set(history);
+        this.isLoadingHistory.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading rental history:', error);
+        this.isLoadingHistory.set(false);
+      }
+    });
+  }
+
+  closeHistoryModal() {
+    this.selectedCustomerId.set(null);
+    this.selectedCustomerHistory.set([]);
+  }
+
+  deleteCustomer(customer: Customer) {
+    if (confirm(`Are you sure you want to delete customer "${customer.firstName} ${customer.lastName}"?`)) {
+      this.carRentalService.deleteCustomer(customer.id).subscribe({
+        next: (success) => {
+          if (success) {
+            this.loadCustomers();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting customer:', error);
+        }
+      });
+    }
+  }
+
+  switchTab(tab: 'customers' | 'analytics') {
+    this.selectedTab.set(tab);
+  }
+
+  refreshCustomers() {
+    this.loadCustomers();
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  formatDate(date: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+  }
+
+  getTimeSince(date: Date): string {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) {
+      return 'Today';
+    } else if (diffInDays === 1) {
+      return 'Yesterday';
+    } else if (diffInDays < 30) {
+      return `${diffInDays} days ago`;
+    } else if (diffInDays < 365) {
+      const months = Math.floor(diffInDays / 30);
+      return `${months} month${months > 1 ? 's' : ''} ago`;
+    } else {
+      const years = Math.floor(diffInDays / 365);
+      return `${years} year${years > 1 ? 's' : ''} ago`;
+    }
+  }
+
+  getCustomerStats() {
+    const customers = this.customers();
+    return {
+      total: customers.length,
+      active: customers.filter(c => c.isActive && !c.isBlacklisted).length,
+      premium: customers.filter(c => c.customerType === 'premium').length,
+      corporate: customers.filter(c => c.customerType === 'corporate').length,
+      blacklisted: customers.filter(c => c.isBlacklisted).length,
+      totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
+      averageSpent: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length : 0
+    };
+  }
+}

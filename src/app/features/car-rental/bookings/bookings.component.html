@@ -1,0 +1,358 @@
+<div class="bookings-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ 'bookings.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'bookings.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="refreshBookings()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-calendar-plus"></i>
+          {{ 'bookings.newBooking' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'bookings'"
+        (click)="switchTab('bookings')"
+      >
+        <i class="bi bi-calendar-check"></i>
+        {{ 'bookings.bookingsList' | translate }}
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'calendar'"
+        (click)="switchTab('calendar')"
+      >
+        <i class="bi bi-calendar-event"></i>
+        {{ 'bookings.calendar' | translate }}
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'analytics'"
+        (click)="switchTab('analytics')"
+      >
+        <i class="bi bi-graph-up"></i>
+        {{ 'bookings.analytics' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Bookings Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'bookings'">
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <!-- Search -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'common.search' | translate }}</label>
+          <div class="search-input-container">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              class="form-input search-input"
+              [placeholder]="'bookings.searchPlaceholder' | translate"
+              [value]="searchTerm()"
+              (input)="onSearchChange($any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'bookings.status' | translate }}</label>
+          <select
+            class="form-select"
+            [value]="statusFilter()"
+            (change)="onStatusFilterChange($any($event.target).value)"
+          >
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label | translate }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Payment Filter -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'bookings.payment' | translate }}</label>
+          <select
+            class="form-select"
+            [value]="paymentFilter()"
+            (change)="onPaymentFilterChange($any($event.target).value)"
+          >
+            <option *ngFor="let option of paymentOptions" [value]="option.value">
+              {{ option.label | translate }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary" *ngIf="!isLoading()">
+      <p class="text-secondary">
+        {{ 'bookings.showingResults' | translate }} 
+        <strong>{{ filteredBookings().length }}</strong> 
+        {{ 'bookings.of' | translate }} 
+        <strong>{{ bookings().length }}</strong> 
+        {{ 'bookings.bookings' | translate }}
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading()">
+      <div class="spinner"></div>
+      <p class="text-muted">{{ 'common.loading' | translate }}</p>
+    </div>
+
+    <!-- Bookings Grid -->
+    <div class="bookings-grid" *ngIf="!isLoading() && filteredBookings().length > 0">
+      <div class="booking-card" *ngFor="let booking of filteredBookings()">
+        <!-- Booking Header -->
+        <div class="booking-header">
+          <div class="booking-number">
+            <h3>{{ booking.bookingNumber }}</h3>
+            <div class="booking-badges">
+              <span [class]="getStatusBadgeClass(booking.status)">
+                <i [class]="'bi ' + getStatusIcon(booking.status)"></i>
+                {{ 'bookings.' + booking.status | translate }}
+              </span>
+              <span [class]="getPaymentBadgeClass(booking.paymentStatus)">
+                <i class="bi bi-credit-card"></i>
+                {{ 'bookings.' + booking.paymentStatus | translate }}
+              </span>
+            </div>
+          </div>
+          <div class="booking-amount">
+            <div class="amount-value">{{ formatCurrency(booking.totalAmount) }}</div>
+            <div class="amount-label">{{ 'bookings.totalAmount' | translate }}</div>
+          </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="booking-customer">
+          <div class="customer-avatar">
+            <i class="bi bi-person"></i>
+          </div>
+          <div class="customer-details">
+            <h4>{{ booking.customer.firstName }} {{ booking.customer.lastName }}</h4>
+            <p>{{ booking.customer.email }}</p>
+            <p>{{ booking.customer.phone }}</p>
+          </div>
+        </div>
+
+        <!-- Vehicle Info -->
+        <div class="booking-vehicle">
+          <div class="vehicle-icon">
+            <i class="bi bi-car-front"></i>
+          </div>
+          <div class="vehicle-details">
+            <h4>{{ booking.vehicle.make }} {{ booking.vehicle.model }}</h4>
+            <p>{{ booking.vehicle.year }} • {{ booking.vehicle.licensePlate }}</p>
+            <p class="vehicle-category">{{ 'vehicles.' + booking.vehicle.category | translate }}</p>
+          </div>
+        </div>
+
+        <!-- Booking Details -->
+        <div class="booking-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="bi bi-calendar detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'bookings.duration' | translate }}</span>
+                <span class="detail-value">
+                  {{ formatDate(booking.startDate) }} - {{ formatDate(booking.endDate) }}
+                  ({{ booking.totalDays }} {{ 'bookings.days' | translate }})
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="bi bi-geo-alt detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'bookings.pickup' | translate }}</span>
+                <span class="detail-value">{{ booking.pickupLocation }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-geo-alt-fill detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'bookings.dropoff' | translate }}</span>
+                <span class="detail-value">{{ booking.dropoffLocation }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="booking.additionalServices.length > 0">
+            <div class="detail-item">
+              <i class="bi bi-plus-circle detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'bookings.additionalServices' | translate }}</span>
+                <div class="services-list">
+                  <span class="service-item" *ngFor="let service of booking.additionalServices">
+                    {{ service.name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Actions -->
+        <div class="booking-actions">
+          <div class="action-buttons">
+            <a [routerLink]="[booking.id]" class="btn btn-ghost btn-sm" [title]="'common.view' | translate">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a [routerLink]="[booking.id, 'edit']" class="btn btn-ghost btn-sm" [title]="'common.edit' | translate">
+              <i class="bi bi-pencil"></i>
+            </a>
+            
+            <!-- Status Actions -->
+            <div class="dropdown">
+              <button class="btn btn-ghost btn-sm dropdown-toggle" [title]="'bookings.changeStatus' | translate">
+                <i class="bi bi-gear"></i>
+              </button>
+              <div class="dropdown-menu">
+                <button class="dropdown-item" (click)="updateBookingStatus(booking, 'confirmed')" 
+                        *ngIf="booking.status === 'pending'">
+                  <i class="bi bi-check-circle"></i>
+                  {{ 'bookings.confirm' | translate }}
+                </button>
+                <button class="dropdown-item" (click)="updateBookingStatus(booking, 'active')" 
+                        *ngIf="booking.status === 'confirmed'">
+                  <i class="bi bi-play-circle"></i>
+                  {{ 'bookings.activate' | translate }}
+                </button>
+                <button class="dropdown-item" (click)="updateBookingStatus(booking, 'completed')" 
+                        *ngIf="booking.status === 'active'">
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ 'bookings.complete' | translate }}
+                </button>
+                <button class="dropdown-item text-red-600" (click)="updateBookingStatus(booking, 'cancelled')" 
+                        *ngIf="booking.status !== 'completed' && booking.status !== 'cancelled'">
+                  <i class="bi bi-x-circle"></i>
+                  {{ 'bookings.cancel' | translate }}
+                </button>
+              </div>
+            </div>
+
+            <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteBooking(booking)" [title]="'common.delete' | translate">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && filteredBookings().length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-calendar-check"></i>
+      </div>
+      <h3 class="empty-title">{{ 'bookings.noBookingsFound' | translate }}</h3>
+      <p class="empty-description">{{ 'bookings.noBookingsDescription' | translate }}</p>
+      <a routerLink="new" class="btn btn-primary">
+        <i class="bi bi-calendar-plus"></i>
+        {{ 'bookings.createFirstBooking' | translate }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Calendar Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'calendar'">
+    <div class="calendar-placeholder">
+      <div class="placeholder-icon">
+        <i class="bi bi-calendar-event"></i>
+      </div>
+      <h3>{{ 'bookings.calendarComingSoon' | translate }}</h3>
+      <p>{{ 'bookings.calendarComingSoonDesc' | translate }}</p>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'analytics'">
+    <div class="analytics-grid">
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'bookings.bookingOverview' | translate }}</h3>
+          <i class="bi bi-calendar-check analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getBookingStats().total }}</div>
+            <div class="stat-description">{{ 'bookings.totalBookings' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getBookingStats().active }}</div>
+            <div class="stat-description">{{ 'bookings.activeBookings' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'bookings.bookingStatus' | translate }}</h3>
+          <i class="bi bi-pie-chart analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getBookingStats().pending }}</div>
+            <div class="stat-description">{{ 'bookings.pending' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getBookingStats().confirmed }}</div>
+            <div class="stat-description">{{ 'bookings.confirmed' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'bookings.revenue' | translate }}</h3>
+          <i class="bi bi-currency-dollar analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ formatCurrency(getBookingStats().totalRevenue) }}</div>
+            <div class="stat-description">{{ 'bookings.totalRevenue' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number">{{ formatCurrency(getBookingStats().pendingPayments) }}</div>
+            <div class="stat-description">{{ 'bookings.pendingPayments' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <h3>{{ 'bookings.completion' | translate }}</h3>
+          <i class="bi bi-check-circle analytics-icon"></i>
+        </div>
+        <div class="analytics-stats">
+          <div class="analytics-stat">
+            <div class="stat-number">{{ getBookingStats().completed }}</div>
+            <div class="stat-description">{{ 'bookings.completed' | translate }}</div>
+          </div>
+          <div class="analytics-stat">
+            <div class="stat-number text-red-600">{{ getBookingStats().cancelled }}</div>
+            <div class="stat-description">{{ 'bookings.cancelled' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

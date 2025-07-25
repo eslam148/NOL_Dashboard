@@ -1,0 +1,275 @@
+<div class="admin-users-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ 'adminUsers.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'adminUsers.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="selectedTab() === 'users' ? refreshUsers() : refreshLogs()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-person-plus"></i>
+          {{ 'adminUsers.addAdmin' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'users'"
+        (click)="switchTab('users')"
+      >
+        <i class="bi bi-people"></i>
+        {{ 'adminUsers.adminUsers' | translate }}
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="selectedTab() === 'logs'"
+        (click)="switchTab('logs')"
+      >
+        <i class="bi bi-activity"></i>
+        {{ 'adminUsers.activityLogs' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'users'">
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <!-- Search -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'common.search' | translate }}</label>
+          <div class="search-input-container">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              class="form-input search-input"
+              [placeholder]="'adminUsers.searchPlaceholder' | translate"
+              [value]="searchTerm()"
+              (input)="onSearchChange($any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Role Filter -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'adminUsers.role' | translate }}</label>
+          <select
+            class="form-select"
+            [value]="roleFilter()"
+            (change)="onRoleFilterChange($any($event.target).value)"
+          >
+            <option *ngFor="let option of roleOptions" [value]="option.value">
+              {{ option.label | translate }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="filter-group">
+          <label class="filter-label">{{ 'adminUsers.status' | translate }}</label>
+          <select
+            class="form-select"
+            [value]="statusFilter()"
+            (change)="onStatusFilterChange($any($event.target).value)"
+          >
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label | translate }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary" *ngIf="!isLoading()">
+      <p class="text-secondary">
+        {{ 'adminUsers.showingResults' | translate }} 
+        <strong>{{ filteredUsers().length }}</strong> 
+        {{ 'adminUsers.of' | translate }} 
+        <strong>{{ adminUsers().length }}</strong> 
+        {{ 'adminUsers.users' | translate }}
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading()">
+      <div class="spinner"></div>
+      <p class="text-muted">{{ 'common.loading' | translate }}</p>
+    </div>
+
+    <!-- Users Grid -->
+    <div class="users-grid" *ngIf="!isLoading() && filteredUsers().length > 0">
+      <div class="user-card" *ngFor="let user of filteredUsers()">
+        <!-- User Header -->
+        <div class="user-header">
+          <div class="user-avatar">
+            <i [class]="'bi ' + getRoleIcon(user.role)"></i>
+          </div>
+          <div class="user-info">
+            <h3 class="user-name">{{ user.firstName }} {{ user.lastName }}</h3>
+            <p class="user-username">{{ '@' + user.username }}</p>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <div class="user-status">
+            <div class="status-toggle">
+              <input
+                type="checkbox"
+                [id]="'status-' + user.id"
+                [checked]="user.isActive"
+                (change)="toggleUserStatus(user)"
+                class="toggle-input"
+              />
+              <label [for]="'status-' + user.id" class="toggle-label">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <span class="status-text" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+              {{ user.isActive ? ('adminUsers.active' | translate) : ('adminUsers.inactive' | translate) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- User Details -->
+        <div class="user-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <span [class]="getRoleBadgeClass(user.role)">
+                <i [class]="'bi ' + getRoleIcon(user.role)"></i>
+                {{ 'adminUsers.' + user.role | translate }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-clock detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'adminUsers.lastLogin' | translate }}</span>
+                <span class="detail-value">{{ getTimeSince(user.lastLogin) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="bi bi-building detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'adminUsers.branches' | translate }}</span>
+                <span class="detail-value">
+                  {{ user.branchIds.length === 0 ? ('adminUsers.allBranches' | translate) : user.branchIds.length + ' branches' }}
+                </span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-calendar detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'adminUsers.joined' | translate }}</span>
+                <span class="detail-value">{{ formatDate(user.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permissions Preview -->
+        <div class="permissions-preview">
+          <h4 class="permissions-title">{{ 'adminUsers.permissions' | translate }}</h4>
+          <div class="permissions-list">
+            <div class="permission-item" *ngFor="let permission of user.permissions">
+              <span class="permission-resource">{{ permission.resource }}</span>
+              <div class="permission-actions">
+                <span class="permission-action" *ngFor="let action of permission.actions">
+                  {{ action }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Actions -->
+        <div class="user-actions">
+          <div class="action-buttons">
+            <a [routerLink]="[user.id]" class="btn btn-ghost btn-sm" [title]="'common.view' | translate">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a [routerLink]="[user.id, 'edit']" class="btn btn-ghost btn-sm" [title]="'common.edit' | translate">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteUser(user)" [title]="'common.delete' | translate">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && filteredUsers().length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-person-gear"></i>
+      </div>
+      <h3 class="empty-title">{{ 'adminUsers.noUsersFound' | translate }}</h3>
+      <p class="empty-description">{{ 'adminUsers.noUsersDescription' | translate }}</p>
+      <a routerLink="new" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i>
+        {{ 'adminUsers.addFirstAdmin' | translate }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Activity Logs Tab -->
+  <div class="tab-content" *ngIf="selectedTab() === 'logs'">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoadingLogs()">
+      <div class="spinner"></div>
+      <p class="text-muted">{{ 'common.loading' | translate }}</p>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="activity-logs" *ngIf="!isLoadingLogs() && activityLogs().length > 0">
+      <div class="log-item" *ngFor="let log of activityLogs()">
+        <div class="log-icon">
+          <i [class]="'bi ' + getActionIcon(log.action)"></i>
+        </div>
+        <div class="log-content">
+          <div class="log-header">
+            <div class="log-user">
+              <strong>{{ log.user.firstName }} {{ log.user.lastName }}</strong>
+              <span class="log-username">{{ '@' + log.user.username }}</span>
+            </div>
+            <div class="log-meta">
+              <span [class]="getActionBadgeClass(log.action)">
+                {{ log.action }}
+              </span>
+              <span class="log-time">{{ getTimeSince(log.timestamp) }}</span>
+            </div>
+          </div>
+          <div class="log-description">
+            <span class="log-action">{{ log.action }}</span>
+            <span class="log-resource">{{ log.resource }}</span>
+            <span class="log-resource-id">#{{ log.resourceId }}</span>
+          </div>
+          <div class="log-details" *ngIf="log.details">
+            <small class="text-muted">{{ log.details | json }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty Logs State -->
+    <div class="empty-state" *ngIf="!isLoadingLogs() && activityLogs().length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-activity"></i>
+      </div>
+      <h3 class="empty-title">{{ 'adminUsers.noLogsFound' | translate }}</h3>
+      <p class="empty-description">{{ 'adminUsers.noLogsDescription' | translate }}</p>
+    </div>
+  </div>
+</div>

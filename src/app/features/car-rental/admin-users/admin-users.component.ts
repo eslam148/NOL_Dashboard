@@ -1,163 +1,231 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { CarRentalService } from '../../../core/services/car-rental.service';
+import { AdminUser, AdminRole, ActivityLog } from '../../../core/models/car-rental.models';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
-  template: `
-    <div class="admin-users-container">
-      <div class="page-header">
-        <h1 class="page-title">{{ 'adminUsers.title' | translate }}</h1>
-        <p class="page-subtitle">{{ 'adminUsers.subtitle' | translate }}</p>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-icon">
-          <i class="bi bi-person-gear"></i>
-        </div>
-        <h3>{{ 'adminUsers.comingSoon' | translate }}</h3>
-        <p>{{ 'adminUsers.comingSoonDesc' | translate }}</p>
-        <div class="features-preview">
-          <div class="feature-item">
-            <i class="bi bi-person-plus"></i>
-            <span>{{ 'adminUsers.addAdmins' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-shield-lock"></i>
-            <span>{{ 'adminUsers.roleManagement' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-activity"></i>
-            <span>{{ 'adminUsers.activityLogs' | translate }}</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-key"></i>
-            <span>{{ 'adminUsers.permissions' | translate }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .admin-users-container {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .page-title {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .page-subtitle {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-    }
-    
-    .coming-soon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--white);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .coming-soon-icon {
-      width: 5rem;
-      height: 5rem;
-      border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-    
-    .coming-soon-icon i {
-      font-size: 2rem;
-      color: var(--gray-900);
-    }
-    
-    .coming-soon h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 1rem 0;
-    }
-    
-    .coming-soon p {
-      color: var(--text-secondary);
-      margin: 0 0 3rem 0;
-      max-width: 500px;
-      line-height: 1.6;
-    }
-    
-    .features-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 600px;
-    }
-    
-    .feature-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1.5rem;
-      background: var(--gray-50);
-      border-radius: var(--radius-lg);
-      transition: all var(--transition-normal);
-    }
-    
-    .feature-item:hover {
-      background: var(--brand-secondary);
-      transform: translateY(-2px);
-    }
-    
-    .feature-item i {
-      font-size: 1.5rem;
-      color: var(--brand-primary);
-    }
-    
-    .feature-item span {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      text-align: center;
-    }
-    
-    @media (max-width: 768px) {
-      .admin-users-container {
-        padding: 1rem;
-      }
-      
-      .features-preview {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-      
-      .feature-item {
-        padding: 1rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .features-preview {
-        grid-template-columns: 1fr;
-      }
-    }
-  `]
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
+  templateUrl: './admin-users.component.html',
+  styleUrls: ['./admin-users.component.css']
 })
-export class AdminUsersComponent { }
+export class AdminUsersComponent implements OnInit {
+  private carRentalService = inject(CarRentalService);
+
+  adminUsers = signal<AdminUser[]>([]);
+  filteredUsers = signal<AdminUser[]>([]);
+  activityLogs = signal<ActivityLog[]>([]);
+  isLoading = signal(false);
+  isLoadingLogs = signal(false);
+  searchTerm = signal('');
+  roleFilter = signal<string>('all');
+  statusFilter = signal<string>('all');
+  selectedTab = signal<'users' | 'logs'>('users');
+
+  // Filter options
+  roleOptions = [
+    { value: 'all', label: 'adminUsers.allRoles' },
+    { value: 'super_admin', label: 'adminUsers.superAdmin' },
+    { value: 'branch_manager', label: 'adminUsers.branchManager' },
+    { value: 'staff', label: 'adminUsers.staff' },
+    { value: 'viewer', label: 'adminUsers.viewer' }
+  ];
+
+  statusOptions = [
+    { value: 'all', label: 'adminUsers.allStatuses' },
+    { value: 'active', label: 'adminUsers.active' },
+    { value: 'inactive', label: 'adminUsers.inactive' }
+  ];
+
+  ngOnInit() {
+    this.loadAdminUsers();
+    this.loadActivityLogs();
+  }
+
+  private loadAdminUsers() {
+    this.isLoading.set(true);
+    this.carRentalService.getAdminUsers().subscribe({
+      next: (users) => {
+        this.adminUsers.set(users);
+        this.applyFilters();
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading admin users:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private loadActivityLogs() {
+    this.isLoadingLogs.set(true);
+    this.carRentalService.getActivityLogs().subscribe({
+      next: (logs) => {
+        this.activityLogs.set(logs);
+        this.isLoadingLogs.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading activity logs:', error);
+        this.isLoadingLogs.set(false);
+      }
+    });
+  }
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.applyFilters();
+  }
+
+  onRoleFilterChange(role: string) {
+    this.roleFilter.set(role);
+    this.applyFilters();
+  }
+
+  onStatusFilterChange(status: string) {
+    this.statusFilter.set(status);
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let filtered = [...this.adminUsers()];
+
+    // Apply search filter
+    const search = this.searchTerm().toLowerCase();
+    if (search) {
+      filtered = filtered.filter(user =>
+        user.firstName.toLowerCase().includes(search) ||
+        user.lastName.toLowerCase().includes(search) ||
+        user.username.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply role filter
+    if (this.roleFilter() !== 'all') {
+      filtered = filtered.filter(user => user.role === this.roleFilter());
+    }
+
+    // Apply status filter
+    if (this.statusFilter() !== 'all') {
+      const isActive = this.statusFilter() === 'active';
+      filtered = filtered.filter(user => user.isActive === isActive);
+    }
+
+    this.filteredUsers.set(filtered);
+  }
+
+  getRoleBadgeClass(role: AdminRole): string {
+    switch (role) {
+      case 'super_admin': return 'badge badge-error';
+      case 'branch_manager': return 'badge badge-primary';
+      case 'staff': return 'badge badge-success';
+      case 'viewer': return 'badge badge-gray';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  getRoleIcon(role: AdminRole): string {
+    switch (role) {
+      case 'super_admin': return 'bi-shield-fill-check';
+      case 'branch_manager': return 'bi-person-gear';
+      case 'staff': return 'bi-person-check';
+      case 'viewer': return 'bi-eye';
+      default: return 'bi-person';
+    }
+  }
+
+  getActionIcon(action: string): string {
+    switch (action.toLowerCase()) {
+      case 'create': return 'bi-plus-circle';
+      case 'update': return 'bi-pencil';
+      case 'delete': return 'bi-trash';
+      case 'read': return 'bi-eye';
+      default: return 'bi-activity';
+    }
+  }
+
+  getActionBadgeClass(action: string): string {
+    switch (action.toLowerCase()) {
+      case 'create': return 'badge badge-success';
+      case 'update': return 'badge badge-warning';
+      case 'delete': return 'badge badge-error';
+      case 'read': return 'badge badge-info';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  toggleUserStatus(user: AdminUser) {
+    this.carRentalService.toggleAdminUserStatus(user.id).subscribe({
+      next: (updatedUser) => {
+        // Update the user in the list
+        const users = this.adminUsers();
+        const index = users.findIndex(u => u.id === user.id);
+        if (index !== -1) {
+          users[index] = updatedUser;
+          this.adminUsers.set([...users]);
+          this.applyFilters();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating user status:', error);
+      }
+    });
+  }
+
+  deleteUser(user: AdminUser) {
+    if (confirm(`Are you sure you want to delete user "${user.username}"?`)) {
+      this.carRentalService.deleteAdminUser(user.id).subscribe({
+        next: (success) => {
+          if (success) {
+            this.loadAdminUsers();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting user:', error);
+        }
+      });
+    }
+  }
+
+  switchTab(tab: 'users' | 'logs') {
+    this.selectedTab.set(tab);
+  }
+
+  refreshUsers() {
+    this.loadAdminUsers();
+  }
+
+  refreshLogs() {
+    this.loadActivityLogs();
+  }
+
+  formatDate(date: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+
+  getTimeSince(date: Date): string {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInDays > 0) {
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    } else if (diffInHours > 0) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else {
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    }
+  }
+}

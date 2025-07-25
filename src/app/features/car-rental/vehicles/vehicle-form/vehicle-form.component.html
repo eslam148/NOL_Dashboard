@@ -1,0 +1,530 @@
+<div class="vehicle-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <a routerLink="/car-rental/vehicles" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </a>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('vehicles.editVehicle' | translate) : ('vehicles.addVehicle' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('vehicles.editVehicleDesc' | translate) : ('vehicles.addVehicleDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="vehicleForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-info-circle"></i>
+            {{ 'vehicles.basicInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'vehicles.basicInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Make -->
+          <div class="form-group">
+            <label class="form-label" for="make">
+              {{ 'vehicles.make' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="make"
+              formControlName="make"
+              class="form-input"
+              [class.error]="isFieldInvalid('make')"
+              [placeholder]="'vehicles.makePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('make')">
+              {{ getFieldError('make') }}
+            </div>
+          </div>
+
+          <!-- Model -->
+          <div class="form-group">
+            <label class="form-label" for="model">
+              {{ 'vehicles.model' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="model"
+              formControlName="model"
+              class="form-input"
+              [class.error]="isFieldInvalid('model')"
+              [placeholder]="'vehicles.modelPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('model')">
+              {{ getFieldError('model') }}
+            </div>
+          </div>
+
+          <!-- Year -->
+          <div class="form-group">
+            <label class="form-label" for="year">
+              {{ 'vehicles.year' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="year"
+              formControlName="year"
+              class="form-input"
+              [class.error]="isFieldInvalid('year')"
+              [placeholder]="'vehicles.yearPlaceholder' | translate"
+              min="2000"
+              [max]="2025"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('year')">
+              {{ getFieldError('year') }}
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="category">
+              {{ 'vehicles.category' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="category"
+              formControlName="category"
+              class="form-select"
+              [class.error]="isFieldInvalid('category')"
+            >
+              <option value="">{{ 'vehicles.selectCategory' | translate }}</option>
+              <option *ngFor="let cat of categories" [value]="cat.value">
+                {{ cat.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('category')">
+              {{ getFieldError('category') }}
+            </div>
+          </div>
+
+          <!-- Color -->
+          <div class="form-group">
+            <label class="form-label" for="color">
+              {{ 'vehicles.color' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="color"
+              formControlName="color"
+              class="form-input"
+              [class.error]="isFieldInvalid('color')"
+              [placeholder]="'vehicles.colorPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('color')">
+              {{ getFieldError('color') }}
+            </div>
+          </div>
+
+          <!-- Branch -->
+          <div class="form-group">
+            <label class="form-label" for="branchId">
+              {{ 'vehicles.branch' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="branchId"
+              formControlName="branchId"
+              class="form-select"
+              [class.error]="isFieldInvalid('branchId')"
+            >
+              <option value="">{{ 'vehicles.selectBranch' | translate }}</option>
+              <option *ngFor="let branch of branches()" [value]="branch.id">
+                {{ branch.name }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('branchId')">
+              {{ getFieldError('branchId') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Identification Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-card-text"></i>
+            {{ 'vehicles.identification' | translate }}
+          </h2>
+          <p class="section-description">{{ 'vehicles.identificationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- VIN -->
+          <div class="form-group">
+            <label class="form-label" for="vin">
+              {{ 'vehicles.vin' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="vin"
+              formControlName="vin"
+              class="form-input"
+              [class.error]="isFieldInvalid('vin')"
+              [placeholder]="'vehicles.vinPlaceholder' | translate"
+              maxlength="17"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('vin')">
+              {{ getFieldError('vin') }}
+            </div>
+          </div>
+
+          <!-- License Plate -->
+          <div class="form-group">
+            <label class="form-label" for="licensePlate">
+              {{ 'vehicles.licensePlate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="licensePlate"
+              formControlName="licensePlate"
+              class="form-input"
+              [class.error]="isFieldInvalid('licensePlate')"
+              [placeholder]="'vehicles.licensePlatePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('licensePlate')">
+              {{ getFieldError('licensePlate') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Specifications Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-gear"></i>
+            {{ 'vehicles.specifications' | translate }}
+          </h2>
+          <p class="section-description">{{ 'vehicles.specificationsDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Fuel Type -->
+          <div class="form-group">
+            <label class="form-label" for="fuelType">
+              {{ 'vehicles.fuelType' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="fuelType"
+              formControlName="fuelType"
+              class="form-select"
+              [class.error]="isFieldInvalid('fuelType')"
+            >
+              <option value="">{{ 'vehicles.selectFuelType' | translate }}</option>
+              <option *ngFor="let fuel of fuelTypes" [value]="fuel.value">
+                {{ fuel.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('fuelType')">
+              {{ getFieldError('fuelType') }}
+            </div>
+          </div>
+
+          <!-- Transmission -->
+          <div class="form-group">
+            <label class="form-label" for="transmission">
+              {{ 'vehicles.transmission' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="transmission"
+              formControlName="transmission"
+              class="form-select"
+              [class.error]="isFieldInvalid('transmission')"
+            >
+              <option value="">{{ 'vehicles.selectTransmission' | translate }}</option>
+              <option *ngFor="let trans of transmissionTypes" [value]="trans.value">
+                {{ trans.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('transmission')">
+              {{ getFieldError('transmission') }}
+            </div>
+          </div>
+
+          <!-- Seats -->
+          <div class="form-group">
+            <label class="form-label" for="seats">
+              {{ 'vehicles.seats' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="seats"
+              formControlName="seats"
+              class="form-input"
+              [class.error]="isFieldInvalid('seats')"
+              [placeholder]="'vehicles.seatsPlaceholder' | translate"
+              min="2"
+              max="9"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('seats')">
+              {{ getFieldError('seats') }}
+            </div>
+          </div>
+
+          <!-- Doors -->
+          <div class="form-group">
+            <label class="form-label" for="doors">
+              {{ 'vehicles.doors' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="doors"
+              formControlName="doors"
+              class="form-input"
+              [class.error]="isFieldInvalid('doors')"
+              [placeholder]="'vehicles.doorsPlaceholder' | translate"
+              min="2"
+              max="5"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('doors')">
+              {{ getFieldError('doors') }}
+            </div>
+          </div>
+
+          <!-- Mileage -->
+          <div class="form-group">
+            <label class="form-label" for="mileage">
+              {{ 'vehicles.mileage' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="mileage"
+              formControlName="mileage"
+              class="form-input"
+              [class.error]="isFieldInvalid('mileage')"
+              [placeholder]="'vehicles.mileagePlaceholder' | translate"
+              min="0"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('mileage')">
+              {{ getFieldError('mileage') }}
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="form-group">
+            <label class="form-label" for="status">
+              {{ 'vehicles.status' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="status"
+              formControlName="status"
+              class="form-select"
+              [class.error]="isFieldInvalid('status')"
+            >
+              <option value="available">{{ 'vehicles.available' | translate }}</option>
+              <option value="rented">{{ 'vehicles.rented' | translate }}</option>
+              <option value="maintenance">{{ 'vehicles.maintenance' | translate }}</option>
+              <option value="out_of_service">{{ 'vehicles.outOfService' | translate }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('status')">
+              {{ getFieldError('status') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-currency-dollar"></i>
+            {{ 'vehicles.pricing' | translate }}
+          </h2>
+          <p class="section-description">{{ 'vehicles.pricingDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Daily Rate -->
+          <div class="form-group">
+            <label class="form-label" for="dailyRate">
+              {{ 'vehicles.dailyRate' | translate }} <span class="required">*</span>
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="dailyRate"
+                formControlName="dailyRate"
+                class="form-input with-currency"
+                [class.error]="isFieldInvalid('dailyRate')"
+                [placeholder]="'vehicles.dailyRatePlaceholder' | translate"
+                min="1"
+                step="0.01"
+              />
+            </div>
+            <div class="error-message" *ngIf="isFieldInvalid('dailyRate')">
+              {{ getFieldError('dailyRate') }}
+            </div>
+          </div>
+
+          <!-- Weekly Rate -->
+          <div class="form-group">
+            <label class="form-label" for="weeklyRate">
+              {{ 'vehicles.weeklyRate' | translate }}
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="weeklyRate"
+                formControlName="weeklyRate"
+                class="form-input with-currency"
+                [placeholder]="'vehicles.weeklyRatePlaceholder' | translate"
+                min="1"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <!-- Monthly Rate -->
+          <div class="form-group">
+            <label class="form-label" for="monthlyRate">
+              {{ 'vehicles.monthlyRate' | translate }}
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="monthlyRate"
+                formControlName="monthlyRate"
+                class="form-input with-currency"
+                [placeholder]="'vehicles.monthlyRatePlaceholder' | translate"
+                min="1"
+                step="0.01"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentation Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-file-earmark-text"></i>
+            {{ 'vehicles.documentation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'vehicles.documentationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Insurance Expiry -->
+          <div class="form-group">
+            <label class="form-label" for="insuranceExpiry">
+              {{ 'vehicles.insuranceExpiry' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="insuranceExpiry"
+              formControlName="insuranceExpiry"
+              class="form-input"
+              [class.error]="isFieldInvalid('insuranceExpiry')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('insuranceExpiry')">
+              {{ getFieldError('insuranceExpiry') }}
+            </div>
+          </div>
+
+          <!-- Registration Expiry -->
+          <div class="form-group">
+            <label class="form-label" for="registrationExpiry">
+              {{ 'vehicles.registrationExpiry' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="registrationExpiry"
+              formControlName="registrationExpiry"
+              class="form-input"
+              [class.error]="isFieldInvalid('registrationExpiry')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('registrationExpiry')">
+              {{ getFieldError('registrationExpiry') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-plus-circle"></i>
+            {{ 'vehicles.additionalInfo' | translate }}
+          </h2>
+          <p class="section-description">{{ 'vehicles.additionalInfoDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Features -->
+          <div class="form-group full-width">
+            <label class="form-label" for="features">
+              {{ 'vehicles.features' | translate }}
+            </label>
+            <textarea
+              id="features"
+              formControlName="features"
+              class="form-textarea"
+              rows="3"
+              [placeholder]="'vehicles.featuresPlaceholder' | translate"
+            ></textarea>
+            <div class="form-help">{{ 'vehicles.featuresHelp' | translate }}</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group full-width">
+            <label class="form-label" for="notes">
+              {{ 'vehicles.notes' | translate }}
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              class="form-textarea"
+              rows="4"
+              [placeholder]="'vehicles.notesPlaceholder' | translate"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      >
+        {{ 'common.cancel' | translate }}
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="vehicleForm.invalid || isSubmitting()"
+      >
+        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
+        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

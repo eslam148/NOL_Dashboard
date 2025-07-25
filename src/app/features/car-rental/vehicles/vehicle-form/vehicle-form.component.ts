@@ -1,92 +1,247 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { CarRentalService } from '../../../../core/services/car-rental.service';
+import { Vehicle, VehicleCategory, VehicleStatus, Branch } from '../../../../core/models/car-rental.models';
 
 @Component({
   selector: 'app-vehicle-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslatePipe],
-  template: `
-    <div class="vehicle-form-container">
-      <div class="page-header">
-        <h1 class="page-title">{{ 'vehicles.addVehicle' | translate }}</h1>
-        <p class="page-subtitle">{{ 'vehicles.addVehicleDesc' | translate }}</p>
-      </div>
-      
-      <div class="form-placeholder">
-        <div class="placeholder-icon">
-          <i class="bi bi-car-front"></i>
-        </div>
-        <h3>{{ 'vehicles.formComingSoon' | translate }}</h3>
-        <p>{{ 'vehicles.formComingSoonDesc' | translate }}</p>
-        <a routerLink="/car-rental/vehicles" class="btn btn-primary">
-          <i class="bi bi-arrow-left"></i>
-          {{ 'common.back' | translate }}
-        </a>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .vehicle-form-container {
-      padding: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .page-title {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .page-subtitle {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-    }
-    
-    .form-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--white);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .placeholder-icon {
-      width: 4rem;
-      height: 4rem;
-      border-radius: var(--radius-full);
-      background: var(--gray-100);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    .placeholder-icon i {
-      font-size: 1.5rem;
-      color: var(--text-muted);
-    }
-    
-    .form-placeholder h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 0.75rem 0;
-    }
-    
-    .form-placeholder p {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-      max-width: 400px;
-    }
-  `]
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslatePipe],
+  templateUrl: './vehicle-form.component.html',
+  styleUrls: ['./vehicle-form.component.css']
 })
-export class VehicleFormComponent { }
+export class VehicleFormComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private carRentalService = inject(CarRentalService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
+  vehicleForm!: FormGroup;
+  branches = signal<Branch[]>([]);
+  isLoading = signal(false);
+  isSubmitting = signal(false);
+  isEditMode = signal(false);
+  vehicleId = signal<string | null>(null);
+
+  // Vehicle categories and options
+  categories: { value: VehicleCategory; label: string }[] = [
+    { value: 'economy', label: 'vehicles.economy' },
+    { value: 'compact', label: 'vehicles.compact' },
+    { value: 'midsize', label: 'vehicles.midsize' },
+    { value: 'fullsize', label: 'vehicles.fullsize' },
+    { value: 'luxury', label: 'vehicles.luxury' },
+    { value: 'suv', label: 'vehicles.suv' },
+    { value: 'van', label: 'vehicles.van' },
+    { value: 'truck', label: 'vehicles.truck' }
+  ];
+
+  fuelTypes = [
+    { value: 'gasoline', label: 'vehicles.gasoline' },
+    { value: 'diesel', label: 'vehicles.diesel' },
+    { value: 'hybrid', label: 'vehicles.hybrid' },
+    { value: 'electric', label: 'vehicles.electric' }
+  ];
+
+  transmissionTypes = [
+    { value: 'manual', label: 'vehicles.manual' },
+    { value: 'automatic', label: 'vehicles.automatic' },
+    { value: 'cvt', label: 'vehicles.cvt' }
+  ];
+
+  ngOnInit() {
+    this.initializeForm();
+    this.loadBranches();
+    this.checkEditMode();
+  }
+
+  private initializeForm() {
+    this.vehicleForm = this.fb.group({
+      // Basic Information
+      make: ['', [Validators.required, Validators.minLength(2)]],
+      model: ['', [Validators.required, Validators.minLength(2)]],
+      year: ['', [Validators.required, Validators.min(2000), Validators.max(new Date().getFullYear() + 1)]],
+      category: ['', Validators.required],
+
+      // Identification
+      vin: ['', [Validators.required, Validators.minLength(17), Validators.maxLength(17)]],
+      licensePlate: ['', Validators.required],
+
+      // Specifications
+      fuelType: ['', Validators.required],
+      transmission: ['', Validators.required],
+      seats: ['', [Validators.required, Validators.min(2), Validators.max(9)]],
+      doors: ['', [Validators.required, Validators.min(2), Validators.max(5)]],
+
+      // Condition & Status
+      mileage: ['', [Validators.required, Validators.min(0)]],
+      color: ['', Validators.required],
+      status: ['available', Validators.required],
+
+      // Pricing
+      dailyRate: ['', [Validators.required, Validators.min(1)]],
+      weeklyRate: [''],
+      monthlyRate: [''],
+
+      // Location
+      branchId: ['', Validators.required],
+
+      // Additional Information
+      features: [''],
+      notes: [''],
+
+      // Insurance & Registration
+      insuranceExpiry: ['', Validators.required],
+      registrationExpiry: ['', Validators.required]
+    });
+  }
+
+  private loadBranches() {
+    this.carRentalService.getBranches().subscribe({
+      next: (branches) => {
+        this.branches.set(branches.filter(b => b.status === 'active'));
+      },
+      error: (error) => {
+        console.error('Error loading branches:', error);
+      }
+    });
+  }
+
+  private checkEditMode() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEditMode.set(true);
+      this.vehicleId.set(id);
+      this.loadVehicle(id);
+    }
+  }
+
+  private loadVehicle(id: string) {
+    this.isLoading.set(true);
+    this.carRentalService.getVehicleById(id).subscribe({
+      next: (vehicle) => {
+        if (vehicle) {
+          this.populateForm(vehicle);
+        }
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading vehicle:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private populateForm(vehicle: Vehicle) {
+    this.vehicleForm.patchValue({
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      category: vehicle.category,
+      vin: vehicle.vin,
+      licensePlate: vehicle.licensePlate,
+      fuelType: vehicle.fuelType,
+      transmission: vehicle.transmission,
+      seats: vehicle.seats,
+      doors: vehicle.doors,
+      mileage: vehicle.mileage,
+      color: vehicle.color,
+      status: vehicle.status,
+      dailyRate: vehicle.dailyRate,
+      weeklyRate: vehicle.weeklyRate || '',
+      monthlyRate: vehicle.monthlyRate || '',
+      branchId: vehicle.branchId,
+      features: vehicle.features?.join(', ') || '',
+      notes: vehicle.notes || '',
+      insuranceExpiry: vehicle.insuranceExpiry ? this.formatDateForInput(vehicle.insuranceExpiry) : '',
+      registrationExpiry: vehicle.registrationExpiry ? this.formatDateForInput(vehicle.registrationExpiry) : ''
+    });
+  }
+
+  private formatDateForInput(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  onSubmit() {
+    if (this.vehicleForm.valid) {
+      this.isSubmitting.set(true);
+      const formData = this.prepareFormData();
+
+      const operation = this.isEditMode()
+        ? this.carRentalService.updateVehicle(this.vehicleId()!, formData)
+        : this.carRentalService.createVehicle(formData);
+
+      operation.subscribe({
+        next: (vehicle) => {
+          this.isSubmitting.set(false);
+          this.router.navigate(['/car-rental/vehicles']);
+        },
+        error: (error) => {
+          console.error('Error saving vehicle:', error);
+          this.isSubmitting.set(false);
+        }
+      });
+    } else {
+      this.markFormGroupTouched();
+    }
+  }
+
+  private prepareFormData(): Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'> {
+    const formValue = this.vehicleForm.value;
+    return {
+      make: formValue.make,
+      model: formValue.model,
+      year: parseInt(formValue.year),
+      category: formValue.category,
+      vin: formValue.vin,
+      licensePlate: formValue.licensePlate,
+      fuelType: formValue.fuelType,
+      transmission: formValue.transmission,
+      seats: parseInt(formValue.seats),
+      doors: parseInt(formValue.doors),
+      mileage: parseInt(formValue.mileage),
+      color: formValue.color,
+      status: formValue.status,
+      dailyRate: parseFloat(formValue.dailyRate),
+      ...(formValue.weeklyRate && { weeklyRate: parseFloat(formValue.weeklyRate) }),
+      ...(formValue.monthlyRate && { monthlyRate: parseFloat(formValue.monthlyRate) }),
+      branchId: formValue.branchId,
+      ...(formValue.features && { features: formValue.features.split(',').map((f: string) => f.trim()).filter((f: string) => f) }),
+      ...(formValue.notes && { notes: formValue.notes }),
+      ...(formValue.insuranceExpiry && { insuranceExpiry: new Date(formValue.insuranceExpiry) }),
+      ...(formValue.registrationExpiry && { registrationExpiry: new Date(formValue.registrationExpiry) }),
+      images: [],
+      maintenanceHistory: []
+    };
+  }
+
+  private markFormGroupTouched() {
+    Object.keys(this.vehicleForm.controls).forEach(key => {
+      const control = this.vehicleForm.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.vehicleForm.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.vehicleForm.get(fieldName);
+    if (field?.errors) {
+      if (field.errors['required']) return `${fieldName} is required`;
+      if (field.errors['minlength']) return `${fieldName} is too short`;
+      if (field.errors['maxlength']) return `${fieldName} is too long`;
+      if (field.errors['min']) return `${fieldName} value is too low`;
+      if (field.errors['max']) return `${fieldName} value is too high`;
+    }
+    return '';
+  }
+
+  onCancel() {
+    this.router.navigate(['/car-rental/vehicles']);
+  }
+}
