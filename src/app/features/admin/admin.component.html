@@ -1,0 +1,82 @@
+<div class="admin-container">
+      <div class="admin-header">
+        <h1 class="text-primary">Admin Panel</h1>
+        <p class="text-secondary">Administrative tools and system management</p>
+      </div>
+
+      <div class="admin-content">
+        <div class="admin-grid">
+          <div class="card">
+            <h3 class="text-primary">System Overview</h3>
+            <div class="system-stats">
+              <div class="stat-item">
+                <span class="stat-value text-accent">156</span>
+                <span class="stat-label text-secondary">Total Users</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value text-accent">42</span>
+                <span class="stat-label text-secondary">Active Sessions</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value text-accent">99.9%</span>
+                <span class="stat-label text-secondary">Uptime</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="text-primary">Quick Actions</h3>
+            <div class="action-buttons">
+              <button class="btn btn-primary" routerLink="/admin/users">
+                Manage Users
+              </button>
+              <button class="btn btn-secondary">
+                System Settings
+              </button>
+              <button class="btn btn-secondary">
+                View Logs
+              </button>
+              <button class="btn btn-dark">
+                Backup Data
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="text-primary">Recent Activity</h3>
+            <div class="activity-list">
+              <div class="activity-item">
+                <span class="activity-time text-muted">2 min ago</span>
+                <!-- <span class="activity-text">User john@example.com logged in</span> -->
+              </div>
+              <div class="activity-item">
+                <span class="activity-time text-muted">15 min ago</span>
+                <span class="activity-text">System backup completed</span>
+              </div>
+              <div class="activity-item">
+                <span class="activity-time text-muted">1 hour ago</span>
+                <!-- <span class="activity-text">New user registered: jane@example.com</span> -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="text-primary">System Health</h3>
+            <div class="health-indicators">
+              <div class="health-item">
+                <span class="health-label">Database</span>
+                <span class="health-status status-good">Healthy</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">API Services</span>
+                <span class="health-status status-good">Operational</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">Storage</span>
+                <span class="health-status status-warning">75% Full</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
