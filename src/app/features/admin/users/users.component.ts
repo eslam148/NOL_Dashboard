@@ -6,8 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-users',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: `./users.component.html`,
-  styleUrl: `./users.component.css`
+  templateUrl: `./users.component.html`
 })
 export class UsersComponent {
   constructor(public authService: AuthService) {}
