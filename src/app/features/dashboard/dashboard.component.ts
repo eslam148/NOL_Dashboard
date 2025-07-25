@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="dashboard-container">
       <header class="dashboard-header">
@@ -50,6 +51,10 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="card actions-card">
             <h3 class="text-primary">Quick Actions</h3>
             <div class="action-buttons">
+              <a routerLink="/car-rental" class="btn btn-primary">
+                <i class="bi bi-car-front"></i>
+                Car Rental System
+              </a>
               @if (authService.hasPermission('read')) {
                 <button class="btn btn-primary">View Reports</button>
               }

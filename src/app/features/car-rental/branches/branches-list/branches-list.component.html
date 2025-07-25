@@ -1,0 +1,170 @@
+<div class="branches-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ 'branches.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'branches.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="refreshList()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i>
+          {{ 'branches.addBranch' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'common.search' | translate }}</label>
+        <div class="search-input-container">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            class="form-input search-input"
+            [placeholder]="'branches.searchPlaceholder' | translate"
+            [value]="searchTerm()"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'branches.status' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="statusFilter()"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label | translate }}
+          </option>
+        </select>
+      </div>
+
+      <!-- City Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'branches.city' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="cityFilter()"
+          (change)="onCityFilterChange($any($event.target).value)"
+        >
+          <option value="all">{{ 'branches.allCities' | translate }}</option>
+          <option *ngFor="let city of getUniqueCities()" [value]="city">
+            {{ city }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="!isLoading()">
+    <p class="text-secondary">
+      {{ 'branches.showingResults' | translate }} 
+      <strong>{{ filteredBranches().length }}</strong> 
+      {{ 'branches.of' | translate }} 
+      <strong>{{ branches().length }}</strong> 
+      {{ 'branches.branches' | translate }}
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Branches Grid -->
+  <div class="branches-grid" *ngIf="!isLoading() && filteredBranches().length > 0">
+    <div class="branch-card" *ngFor="let branch of filteredBranches()">
+      <!-- Branch Header -->
+      <div class="branch-header">
+        <div class="branch-info">
+          <h3 class="branch-name">{{ branch.name }}</h3>
+          <span [class]="getStatusBadgeClass(branch.status)">
+            <i class="bi bi-circle-fill status-icon"></i>
+            {{ 'branches.' + branch.status | translate }}
+          </span>
+        </div>
+        <div class="branch-actions">
+          <a [routerLink]="[branch.id]" class="btn btn-ghost btn-sm" [title]="'common.view' | translate">
+            <i class="bi bi-eye"></i>
+          </a>
+          <a [routerLink]="[branch.id, 'edit']" class="btn btn-ghost btn-sm" [title]="'common.edit' | translate">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteBranch(branch)" [title]="'common.delete' | translate">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Branch Details -->
+      <div class="branch-details">
+        <div class="detail-item">
+          <i class="bi bi-geo-alt detail-icon"></i>
+          <div>
+            <p class="detail-text">{{ branch.address }}</p>
+            <p class="detail-subtext">{{ branch.city }}, {{ branch.country }}</p>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <i class="bi bi-telephone detail-icon"></i>
+          <div>
+            <p class="detail-text">{{ branch.phone }}</p>
+            <p class="detail-subtext">{{ branch.email }}</p>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <i class="bi bi-person detail-icon"></i>
+          <div>
+            <p class="detail-text">{{ branch.manager }}</p>
+            <p class="detail-subtext">{{ 'branches.branchManager' | translate }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branch Footer -->
+      <div class="branch-footer">
+        <div class="operating-hours">
+          <i class="bi bi-clock"></i>
+          <span class="text-sm text-secondary">
+            {{ 'branches.operatingHours' | translate }}
+          </span>
+        </div>
+        <div class="branch-coordinates">
+          <i class="bi bi-pin-map"></i>
+          <span class="text-sm text-secondary">
+            {{ branch.coordinates.lat }}, {{ branch.coordinates.lng }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && filteredBranches().length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-building"></i>
+    </div>
+    <h3 class="empty-title">{{ 'branches.noBranchesFound' | translate }}</h3>
+    <p class="empty-description">{{ 'branches.noBranchesDescription' | translate }}</p>
+    <a routerLink="new" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i>
+      {{ 'branches.addFirstBranch' | translate }}
+    </a>
+  </div>
+</div>

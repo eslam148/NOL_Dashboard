@@ -60,6 +60,73 @@ export const routes: Routes = [
     title: 'Reports - NOL Dashboard'
   },
 
+  // Car Rental Management System
+  {
+    path: 'car-rental',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/car-rental/dashboard/dashboard.component').then(m => m.CarRentalDashboardComponent),
+    title: 'Car Rental Management - NOL Dashboard',
+    children: [
+      {
+        path: '',
+        redirectTo: 'overview',
+        pathMatch: 'full'
+      },
+      {
+        path: 'overview',
+        loadComponent: () => import('./features/car-rental/overview/overview.component').then(m => m.OverviewComponent)
+      },
+      {
+        path: 'branches',
+        loadComponent: () => import('./features/car-rental/branches/branches-list/branches-list.component').then(m => m.BranchesListComponent)
+      },
+      {
+        path: 'branches/new',
+        loadComponent: () => import('./features/car-rental/branches/branch-form/branch-form.component').then(m => m.BranchFormComponent)
+      },
+      {
+        path: 'branches/:id',
+        loadComponent: () => import('./features/car-rental/branches/branch-detail/branch-detail.component').then(m => m.BranchDetailComponent)
+      },
+      {
+        path: 'branches/:id/edit',
+        loadComponent: () => import('./features/car-rental/branches/branch-form/branch-form.component').then(m => m.BranchFormComponent)
+      },
+      {
+        path: 'vehicles',
+        loadComponent: () => import('./features/car-rental/vehicles/vehicles-list/vehicles-list.component').then(m => m.VehiclesListComponent)
+      },
+      {
+        path: 'vehicles/new',
+        loadComponent: () => import('./features/car-rental/vehicles/vehicle-form/vehicle-form.component').then(m => m.VehicleFormComponent)
+      },
+      {
+        path: 'vehicles/:id',
+        loadComponent: () => import('./features/car-rental/vehicles/vehicle-detail/vehicle-detail.component').then(m => m.VehicleDetailComponent)
+      },
+      {
+        path: 'vehicles/:id/edit',
+        loadComponent: () => import('./features/car-rental/vehicles/vehicle-form/vehicle-form.component').then(m => m.VehicleFormComponent)
+      },
+      {
+        path: 'bookings',
+        loadComponent: () => import('./features/car-rental/bookings/bookings.component').then(m => m.BookingsComponent)
+      },
+      {
+        path: 'customers',
+        loadComponent: () => import('./features/car-rental/customers/customers.component').then(m => m.CustomersComponent)
+      },
+      {
+        path: 'services',
+        loadComponent: () => import('./features/car-rental/services/services.component').then(m => m.ServicesComponent)
+      },
+      {
+        path: 'admin-users',
+        loadComponent: () => import('./features/car-rental/admin-users/admin-users.component').then(m => m.AdminUsersComponent)
+      }
+    ]
+  },
+
   // Catch-all route - must be last
   {
     path: '**',

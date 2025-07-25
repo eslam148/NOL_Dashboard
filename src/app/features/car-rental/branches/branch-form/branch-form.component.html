@@ -1,0 +1,313 @@
+<div class="branch-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <button class="btn btn-ghost btn-sm" (click)="onCancel()">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </button>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('branches.editBranch' | translate) : ('branches.addBranch' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('branches.editBranchDesc' | translate) : ('branches.addBranchDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-error" *ngIf="errorMessage()">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="branchForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h2 class="section-title">{{ 'branches.basicInfo' | translate }}</h2>
+        
+        <div class="form-grid">
+          <!-- Branch Name -->
+          <div class="form-group">
+            <label for="name" class="form-label required">{{ 'branches.name' | translate }}</label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('name')"
+              [placeholder]="'branches.namePlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('name')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('name') }}
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="form-group">
+            <label for="status" class="form-label required">{{ 'branches.status' | translate }}</label>
+            <select
+              id="status"
+              formControlName="status"
+              class="form-select focus-ring"
+              [class.error]="isFieldInvalid('status')"
+            >
+              <option value="active">{{ 'branches.active' | translate }}</option>
+              <option value="inactive">{{ 'branches.inactive' | translate }}</option>
+              <option value="maintenance">{{ 'branches.maintenance' | translate }}</option>
+            </select>
+            <div class="form-error" *ngIf="isFieldInvalid('status')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('status') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <!-- Address -->
+          <div class="form-group span-2">
+            <label for="address" class="form-label required">{{ 'branches.address' | translate }}</label>
+            <input
+              id="address"
+              type="text"
+              formControlName="address"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('address')"
+              [placeholder]="'branches.addressPlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('address')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('address') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <!-- City -->
+          <div class="form-group">
+            <label for="city" class="form-label required">{{ 'branches.city' | translate }}</label>
+            <input
+              id="city"
+              type="text"
+              formControlName="city"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('city')"
+              [placeholder]="'branches.cityPlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('city')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('city') }}
+            </div>
+          </div>
+
+          <!-- Country -->
+          <div class="form-group">
+            <label for="country" class="form-label required">{{ 'branches.country' | translate }}</label>
+            <input
+              id="country"
+              type="text"
+              formControlName="country"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('country')"
+              [placeholder]="'branches.countryPlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('country')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('country') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="form-section">
+        <h2 class="section-title">{{ 'branches.contactInfo' | translate }}</h2>
+        
+        <div class="form-grid">
+          <!-- Phone -->
+          <div class="form-group">
+            <label for="phone" class="form-label required">{{ 'branches.phone' | translate }}</label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('phone')"
+              [placeholder]="'branches.phonePlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('phone')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('phone') }}
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="form-label required">{{ 'branches.email' | translate }}</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('email')"
+              [placeholder]="'branches.emailPlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('email')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('email') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <!-- Manager -->
+          <div class="form-group span-2">
+            <label for="manager" class="form-label required">{{ 'branches.manager' | translate }}</label>
+            <input
+              id="manager"
+              type="text"
+              formControlName="manager"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('manager')"
+              [placeholder]="'branches.managerPlaceholder' | translate"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('manager')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('manager') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="form-section">
+        <h2 class="section-title">{{ 'branches.location' | translate }}</h2>
+        
+        <div class="form-grid">
+          <!-- Latitude -->
+          <div class="form-group">
+            <label for="lat" class="form-label required">{{ 'branches.latitude' | translate }}</label>
+            <input
+              id="lat"
+              type="number"
+              step="0.000001"
+              formControlName="coordinates.lat"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('coordinates.lat')"
+              placeholder="25.2048"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('coordinates.lat')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('coordinates.lat') }}
+            </div>
+          </div>
+
+          <!-- Longitude -->
+          <div class="form-group">
+            <label for="lng" class="form-label required">{{ 'branches.longitude' | translate }}</label>
+            <input
+              id="lng"
+              type="number"
+              step="0.000001"
+              formControlName="coordinates.lng"
+              class="form-input focus-ring"
+              [class.error]="isFieldInvalid('coordinates.lng')"
+              placeholder="55.2708"
+            />
+            <div class="form-error" *ngIf="isFieldInvalid('coordinates.lng')">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ getFieldError('coordinates.lng') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="location-actions">
+          <button type="button" class="btn btn-secondary" (click)="getCurrentLocation()">
+            <i class="bi bi-geo-alt"></i>
+            {{ 'branches.getCurrentLocation' | translate }}
+          </button>
+          <p class="text-sm text-secondary">{{ 'branches.mapInstructions' | translate }}</p>
+        </div>
+
+        <!-- Map Placeholder -->
+        <div class="map-container">
+          <div class="map-placeholder">
+            <i class="bi bi-map"></i>
+            <p>{{ 'branches.mapPlaceholder' | translate }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operating Hours -->
+      <div class="form-section">
+        <h2 class="section-title">{{ 'branches.operatingHours' | translate }}</h2>
+        
+        <div class="operating-hours-grid" formGroupName="operatingHours">
+          <div class="day-schedule" *ngFor="let day of daysOfWeek" [formGroupName]="day.key">
+            <div class="day-header">
+              <label class="day-label">{{ day.label | translate }}</label>
+              <div class="day-toggle">
+                <input
+                  type="checkbox"
+                  [id]="'isOpen-' + day.key"
+                  formControlName="isOpen"
+                  class="toggle-input"
+                />
+                <label [for]="'isOpen-' + day.key" class="toggle-label">
+                  {{ 'branches.isOpen' | translate }}
+                </label>
+              </div>
+            </div>
+            
+            <div class="time-inputs" *ngIf="branchForm.get('operatingHours.' + day.key + '.isOpen')?.value">
+              <div class="time-group">
+                <label class="time-label">{{ 'branches.openTime' | translate }}</label>
+                <input
+                  type="time"
+                  formControlName="open"
+                  class="form-input time-input"
+                />
+              </div>
+              <div class="time-group">
+                <label class="time-label">{{ 'branches.closeTime' | translate }}</label>
+                <input
+                  type="time"
+                  formControlName="close"
+                  class="form-input time-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        <i class="bi bi-x-circle"></i>
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="branchForm.invalid || isSaving()"
+      >
+        <div class="spinner" *ngIf="isSaving()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSaving()"></i>
+        {{ isSaving() ? ('common.saving' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

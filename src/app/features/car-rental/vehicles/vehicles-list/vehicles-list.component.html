@@ -1,0 +1,222 @@
+<div class="vehicles-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ 'vehicles.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'vehicles.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="refreshList()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i>
+          {{ 'vehicles.addVehicle' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'common.search' | translate }}</label>
+        <div class="search-input-container">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            class="form-input search-input"
+            [placeholder]="'vehicles.searchPlaceholder' | translate"
+            [value]="searchTerm()"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'vehicles.category' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="categoryFilter()"
+          (change)="onCategoryFilterChange($any($event.target).value)"
+        >
+          <option *ngFor="let option of categoryOptions" [value]="option.value">
+            {{ option.label | translate }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'vehicles.status' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="statusFilter()"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label | translate }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Make Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'vehicles.make' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="makeFilter()"
+          (change)="onMakeFilterChange($any($event.target).value)"
+        >
+          <option value="all">{{ 'vehicles.allMakes' | translate }}</option>
+          <option *ngFor="let make of getUniqueMakes()" [value]="make">
+            {{ make }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="!isLoading()">
+    <p class="text-secondary">
+      {{ 'vehicles.showingResults' | translate }} 
+      <strong>{{ filteredVehicles().length }}</strong> 
+      {{ 'vehicles.of' | translate }} 
+      <strong>{{ vehicles().length }}</strong> 
+      {{ 'vehicles.vehicles' | translate }}
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Vehicles Grid -->
+  <div class="vehicles-grid" *ngIf="!isLoading() && filteredVehicles().length > 0">
+    <div class="vehicle-card" *ngFor="let vehicle of filteredVehicles()">
+      <!-- Vehicle Image -->
+      <div class="vehicle-image">
+        <img 
+          [src]="vehicle.images[0] || 'assets/placeholder-car.jpg'" 
+          [alt]="vehicle.make + ' ' + vehicle.model"
+          class="vehicle-img"
+        />
+        <div class="vehicle-category">
+          <i [class]="'bi ' + getCategoryIcon(vehicle.category)"></i>
+          <span>{{ 'vehicles.' + vehicle.category | translate }}</span>
+        </div>
+      </div>
+
+      <!-- Vehicle Header -->
+      <div class="vehicle-header">
+        <div class="vehicle-info">
+          <h3 class="vehicle-name">{{ vehicle.make }} {{ vehicle.model }}</h3>
+          <p class="vehicle-year">{{ vehicle.year }}</p>
+        </div>
+        <span [class]="getStatusBadgeClass(vehicle.status)">
+          <i class="bi bi-circle-fill status-icon"></i>
+          {{ 'vehicles.' + vehicle.status | translate }}
+        </span>
+      </div>
+
+      <!-- Vehicle Details -->
+      <div class="vehicle-details">
+        <div class="detail-row">
+          <div class="detail-item">
+            <i class="bi bi-card-text detail-icon"></i>
+            <span class="detail-text">{{ vehicle.licensePlate }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="bi bi-fuel-pump detail-icon"></i>
+            <span class="detail-text">{{ 'vehicles.' + vehicle.fuelType | translate }}</span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-item">
+            <i class="bi bi-gear detail-icon"></i>
+            <span class="detail-text">{{ 'vehicles.' + vehicle.transmission | translate }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="bi bi-people detail-icon"></i>
+            <span class="detail-text">{{ vehicle.seats }} {{ 'vehicles.seats' | translate }}</span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-item">
+            <i class="bi bi-speedometer2 detail-icon"></i>
+            <span class="detail-text">{{ vehicle.mileage | number }} {{ 'vehicles.miles' | translate }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="bi bi-palette detail-icon"></i>
+            <span class="detail-text">{{ vehicle.color }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="vehicle-pricing">
+        <div class="price-item">
+          <span class="price-label">{{ 'vehicles.dailyRate' | translate }}</span>
+          <span class="price-value">{{ formatCurrency(vehicle.dailyRate) }}</span>
+        </div>
+        <div class="price-item">
+          <span class="price-label">{{ 'vehicles.weeklyRate' | translate }}</span>
+          <span class="price-value">{{ formatCurrency(vehicle.weeklyRate) }}</span>
+        </div>
+      </div>
+
+      <!-- Vehicle Actions -->
+      <div class="vehicle-actions">
+        <div class="action-buttons">
+          <a [routerLink]="[vehicle.id]" class="btn btn-ghost btn-sm" [title]="'common.view' | translate">
+            <i class="bi bi-eye"></i>
+          </a>
+          <a [routerLink]="[vehicle.id, 'edit']" class="btn btn-ghost btn-sm" [title]="'common.edit' | translate">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteVehicle(vehicle)" [title]="'common.delete' | translate">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+
+        <!-- Status Update Dropdown -->
+        <div class="status-dropdown">
+          <select
+            class="form-select form-select-sm"
+            [value]="vehicle.status"
+            (change)="updateVehicleStatus(vehicle, $any($event.target).value)"
+          >
+            <option value="available">{{ 'vehicles.available' | translate }}</option>
+            <option value="rented">{{ 'vehicles.rented' | translate }}</option>
+            <option value="maintenance">{{ 'vehicles.maintenance' | translate }}</option>
+            <option value="out_of_service">{{ 'vehicles.outOfService' | translate }}</option>
+            <option value="reserved">{{ 'vehicles.reserved' | translate }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && filteredVehicles().length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-car-front"></i>
+    </div>
+    <h3 class="empty-title">{{ 'vehicles.noVehiclesFound' | translate }}</h3>
+    <p class="empty-description">{{ 'vehicles.noVehiclesDescription' | translate }}</p>
+    <a routerLink="new" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i>
+      {{ 'vehicles.addFirstVehicle' | translate }}
+    </a>
+  </div>
+</div>
