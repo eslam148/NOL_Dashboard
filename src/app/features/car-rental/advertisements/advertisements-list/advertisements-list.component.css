@@ -465,6 +465,30 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Button Hover Fix */
+.btn:hover,
+.btn:hover span,
+.btn:hover i {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.btn-primary:hover {
+  color: var(--gray-900) !important;
+}
+
+.btn-ghost:hover {
+  color: var(--text-primary) !important;
+}
+
+.dropdown-item:hover {
+  color: var(--text-primary) !important;
+}
+
+.dropdown-item.text-danger:hover {
+  color: var(--red-500) !important;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .advertisements-container {

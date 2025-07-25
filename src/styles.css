@@ -2,6 +2,22 @@
 
 /* Bootstrap Icons are loaded via angular.json */
 
+/* Fix for disappearing text on hover - Global */
+*:hover {
+  text-decoration: none;
+}
+
+a:hover,
+button:hover,
+.btn:hover {
+  text-decoration: none !important;
+}
+
+/* Ensure all text elements remain visible */
+span, i, a, button {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
 /* Modern CSS Reset */
 *,
 *::before,
@@ -711,6 +727,27 @@ body {
   pointer-events: none;
 }
 
+.btn:disabled span,
+.btn:disabled i {
+  opacity: 0.6;
+  color: inherit;
+}
+
+/* Ensure button text is always visible */
+.btn * {
+  pointer-events: none;
+}
+
+.btn:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.btn:focus span,
+.btn:focus i {
+  color: inherit;
+}
+
 .btn:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(228, 182, 61, 0.2);
@@ -725,6 +762,7 @@ body {
 
 .btn-primary:hover {
   background-color: var(--brand-accent);
+  color: var(--gray-900);
   border-color: var(--brand-accent);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
@@ -738,6 +776,7 @@ body {
 
 .btn-secondary:hover {
   background-color: var(--gray-50);
+  color: var(--text-primary);
   border-color: var(--border-dark);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
@@ -773,7 +812,20 @@ body {
 
 .btn-danger:hover {
   background-color: var(--error-dark);
+  color: var(--white);
   border-color: var(--error-dark);
+}
+
+/* Button Hover Fix - Ensure text visibility */
+.btn:hover {
+  text-decoration: none !important;
+}
+
+.btn:hover span,
+.btn:hover i {
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: inherit !important;
 }
 
 /* Button Sizes */
