@@ -281,4 +281,69 @@ export interface BranchFilter {
   country?: string;
 }
 
+// Advertisement Management
+export interface Advertisement {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  targetUrl?: string;
+  type: AdvertisementType;
+  status: AdvertisementStatus;
+  startDate: Date;
+  endDate: Date;
+  targetAudience: TargetAudience;
+  budget?: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  priority: number;
+  branchIds?: string[];
+  vehicleCategories?: VehicleCategory[];
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type AdvertisementType = 'banner' | 'popup' | 'sidebar' | 'featured' | 'promotion';
+export type AdvertisementStatus = 'draft' | 'active' | 'paused' | 'expired' | 'archived';
+
+export interface TargetAudience {
+  ageRange?: {
+    min: number;
+    max: number;
+  };
+  gender?: 'male' | 'female' | 'all';
+  location?: string[];
+  interests?: string[];
+  customerType?: CustomerType[];
+}
+
+export interface AdvertisementAnalytics {
+  totalImpressions: number;
+  totalClicks: number;
+  totalConversions: number;
+  clickThroughRate: number;
+  conversionRate: number;
+  costPerClick?: number;
+  costPerConversion?: number;
+  revenueGenerated?: number;
+  topPerformingAds: Advertisement[];
+  performanceByType: {
+    type: AdvertisementType;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+  }[];
+}
+
+export interface AdvertisementFilter {
+  type?: AdvertisementType;
+  status?: AdvertisementStatus;
+  branchId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  createdBy?: string;
+}
+
 

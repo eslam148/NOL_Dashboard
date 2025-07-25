@@ -125,6 +125,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/car-rental/bookings/booking-form/booking-form.component').then(m => m.BookingFormComponent)
       },
       {
+        path: 'advertisements',
+        loadComponent: () => import('./features/car-rental/advertisements/advertisements-list/advertisements-list.component').then(m => m.AdvertisementsListComponent)
+      },
+      {
         path: 'customers',
         loadComponent: () => import('./features/car-rental/customers/customers.component').then(m => m.CustomersComponent)
       },

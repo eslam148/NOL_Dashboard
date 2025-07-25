@@ -3,7 +3,8 @@ import { Observable, of, delay, map } from 'rxjs';
 import {
   Branch, Vehicle, Booking, Customer, AdditionalService, AdminUser,
   DashboardStats, VehicleFilter, BookingFilter, BranchFilter,
-  VehicleStatus, BookingStatus, PaymentStatus, ActivityLog, CustomerType, RentalHistory
+  VehicleStatus, BookingStatus, PaymentStatus, ActivityLog, CustomerType, RentalHistory,
+  Advertisement, AdvertisementFilter, AdvertisementAnalytics, AdvertisementType, AdvertisementStatus
 } from '../models/car-rental.models';
 
 @Injectable({
@@ -1202,5 +1203,269 @@ export class CarRentalService {
       delay(600),
       map(bookings => bookings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
     );
+  }
+
+  // Advertisement Management Mock Data
+  private mockAdvertisements: Advertisement[] = [
+    {
+      id: '1',
+      title: 'Summer Car Rental Special',
+      description: 'Get 20% off on all luxury vehicles this summer. Book now and save big!',
+      imageUrl: 'assets/ads/summer-special.jpg',
+      targetUrl: '/car-rental/vehicles?category=luxury',
+      type: 'banner',
+      status: 'active',
+      startDate: new Date('2024-06-01'),
+      endDate: new Date('2024-08-31'),
+      targetAudience: {
+        ageRange: { min: 25, max: 55 },
+        gender: 'all',
+        location: ['Dubai', 'Abu Dhabi'],
+        interests: ['luxury', 'travel'],
+        customerType: ['premium', 'corporate']
+      },
+      budget: 5000,
+      impressions: 15420,
+      clicks: 892,
+      conversions: 67,
+      priority: 1,
+      branchIds: ['1', '2'],
+      vehicleCategories: ['luxury', 'suv'],
+      createdBy: '1',
+      createdAt: new Date('2024-05-15'),
+      updatedAt: new Date('2024-07-20')
+    },
+    {
+      id: '2',
+      title: 'Weekend Economy Deals',
+      description: 'Perfect for weekend getaways! Economy cars starting from $50/day.',
+      imageUrl: 'assets/ads/weekend-deals.jpg',
+      targetUrl: '/car-rental/vehicles?category=economy',
+      type: 'featured',
+      status: 'active',
+      startDate: new Date('2024-07-01'),
+      endDate: new Date('2024-12-31'),
+      targetAudience: {
+        ageRange: { min: 18, max: 35 },
+        gender: 'all',
+        location: ['Dubai', 'Sharjah', 'Ajman'],
+        interests: ['budget', 'weekend'],
+        customerType: ['regular']
+      },
+      budget: 2500,
+      impressions: 8750,
+      clicks: 445,
+      conversions: 28,
+      priority: 2,
+      branchIds: ['1', '3'],
+      vehicleCategories: ['economy', 'compact'],
+      createdBy: '2',
+      createdAt: new Date('2024-06-20'),
+      updatedAt: new Date('2024-07-18')
+    },
+    {
+      id: '3',
+      title: 'Corporate Fleet Solutions',
+      description: 'Streamline your business travel with our corporate fleet management.',
+      imageUrl: 'assets/ads/corporate-fleet.jpg',
+      targetUrl: '/car-rental/corporate',
+      type: 'sidebar',
+      status: 'paused',
+      startDate: new Date('2024-05-01'),
+      endDate: new Date('2024-10-31'),
+      targetAudience: {
+        ageRange: { min: 30, max: 60 },
+        gender: 'all',
+        location: ['Dubai', 'Abu Dhabi'],
+        interests: ['business', 'corporate'],
+        customerType: ['corporate']
+      },
+      budget: 8000,
+      impressions: 12300,
+      clicks: 567,
+      conversions: 89,
+      priority: 3,
+      branchIds: ['1', '2', '4'],
+      vehicleCategories: ['midsize', 'fullsize', 'luxury'],
+      createdBy: '1',
+      createdAt: new Date('2024-04-25'),
+      updatedAt: new Date('2024-07-15')
+    },
+    {
+      id: '4',
+      title: 'New Customer Welcome Offer',
+      description: 'First-time renters get 15% off + free GPS navigation!',
+      imageUrl: 'assets/ads/welcome-offer.jpg',
+      targetUrl: '/car-rental/signup',
+      type: 'popup',
+      status: 'active',
+      startDate: new Date('2024-07-15'),
+      endDate: new Date('2024-09-15'),
+      targetAudience: {
+        ageRange: { min: 21, max: 45 },
+        gender: 'all',
+        location: ['Dubai', 'Abu Dhabi', 'Sharjah'],
+        interests: ['new-customer', 'discount'],
+        customerType: ['regular']
+      },
+      budget: 3000,
+      impressions: 6890,
+      clicks: 234,
+      conversions: 19,
+      priority: 4,
+      vehicleCategories: ['economy', 'compact', 'midsize'],
+      createdBy: '3',
+      createdAt: new Date('2024-07-10'),
+      updatedAt: new Date('2024-07-22')
+    },
+    {
+      id: '5',
+      title: 'Holiday Season Promotion',
+      description: 'Make your holidays special with our premium vehicles. Book early!',
+      imageUrl: 'assets/ads/holiday-promo.jpg',
+      targetUrl: '/car-rental/vehicles?category=luxury',
+      type: 'banner',
+      status: 'draft',
+      startDate: new Date('2024-12-01'),
+      endDate: new Date('2025-01-15'),
+      targetAudience: {
+        ageRange: { min: 25, max: 65 },
+        gender: 'all',
+        location: ['Dubai', 'Abu Dhabi', 'Ras Al Khaimah'],
+        interests: ['holiday', 'luxury', 'family'],
+        customerType: ['premium', 'regular']
+      },
+      budget: 6000,
+      impressions: 0,
+      clicks: 0,
+      conversions: 0,
+      priority: 1,
+      branchIds: ['1', '2', '3', '4'],
+      vehicleCategories: ['luxury', 'suv', 'van'],
+      createdBy: '1',
+      createdAt: new Date('2024-07-25'),
+      updatedAt: new Date('2024-07-25')
+    }
+  ];
+
+  // Advertisement Management Methods
+  getAdvertisements(filter?: AdvertisementFilter): Observable<Advertisement[]> {
+    let filteredAds = [...this.mockAdvertisements];
+
+    if (filter) {
+      if (filter.type) {
+        filteredAds = filteredAds.filter(ad => ad.type === filter.type);
+      }
+      if (filter.status) {
+        filteredAds = filteredAds.filter(ad => ad.status === filter.status);
+      }
+      if (filter.branchId) {
+        filteredAds = filteredAds.filter(ad => ad.branchIds?.includes(filter.branchId!));
+      }
+      if (filter.startDate) {
+        filteredAds = filteredAds.filter(ad => ad.startDate >= filter.startDate!);
+      }
+      if (filter.endDate) {
+        filteredAds = filteredAds.filter(ad => ad.endDate <= filter.endDate!);
+      }
+      if (filter.createdBy) {
+        filteredAds = filteredAds.filter(ad => ad.createdBy === filter.createdBy);
+      }
+    }
+
+    return of(filteredAds).pipe(
+      delay(800),
+      map(ads => ads.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()))
+    );
+  }
+
+  getAdvertisementById(id: string): Observable<Advertisement | null> {
+    const advertisement = this.mockAdvertisements.find(ad => ad.id === id) || null;
+    return of(advertisement).pipe(delay(500));
+  }
+
+  createAdvertisement(advertisement: Omit<Advertisement, 'id' | 'createdAt' | 'updatedAt' | 'impressions' | 'clicks' | 'conversions'>): Observable<Advertisement> {
+    const newAdvertisement: Advertisement = {
+      ...advertisement,
+      id: Date.now().toString(),
+      impressions: 0,
+      clicks: 0,
+      conversions: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    this.mockAdvertisements.unshift(newAdvertisement);
+    return of(newAdvertisement).pipe(delay(1000));
+  }
+
+  updateAdvertisement(id: string, advertisement: Partial<Advertisement>): Observable<Advertisement | null> {
+    const index = this.mockAdvertisements.findIndex(ad => ad.id === id);
+    if (index !== -1) {
+      this.mockAdvertisements[index] = {
+        ...this.mockAdvertisements[index],
+        ...advertisement,
+        updatedAt: new Date()
+      };
+      return of(this.mockAdvertisements[index]).pipe(delay(1000));
+    }
+    return of(null).pipe(delay(1000));
+  }
+
+  deleteAdvertisement(id: string): Observable<boolean> {
+    const index = this.mockAdvertisements.findIndex(ad => ad.id === id);
+    if (index !== -1) {
+      this.mockAdvertisements.splice(index, 1);
+      return of(true).pipe(delay(1000));
+    }
+    return of(false).pipe(delay(1000));
+  }
+
+  getAdvertisementAnalytics(): Observable<AdvertisementAnalytics> {
+    const totalImpressions = this.mockAdvertisements.reduce((sum, ad) => sum + ad.impressions, 0);
+    const totalClicks = this.mockAdvertisements.reduce((sum, ad) => sum + ad.clicks, 0);
+    const totalConversions = this.mockAdvertisements.reduce((sum, ad) => sum + ad.conversions, 0);
+
+    const analytics: AdvertisementAnalytics = {
+      totalImpressions,
+      totalClicks,
+      totalConversions,
+      clickThroughRate: totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0,
+      conversionRate: totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0,
+      costPerClick: 2.5,
+      costPerConversion: 45.8,
+      revenueGenerated: 125000,
+      topPerformingAds: this.mockAdvertisements
+        .filter(ad => ad.status === 'active')
+        .sort((a, b) => b.conversions - a.conversions)
+        .slice(0, 5),
+      performanceByType: [
+        { type: 'banner', impressions: 28120, clicks: 1459, conversions: 156 },
+        { type: 'featured', impressions: 8750, clicks: 445, conversions: 28 },
+        { type: 'sidebar', impressions: 12300, clicks: 567, conversions: 89 },
+        { type: 'popup', impressions: 6890, clicks: 234, conversions: 19 },
+        { type: 'promotion', impressions: 4200, clicks: 189, conversions: 12 }
+      ]
+    };
+
+    return of(analytics).pipe(delay(1200));
+  }
+
+  updateAdvertisementStatus(id: string, status: AdvertisementStatus): Observable<Advertisement | null> {
+    return this.updateAdvertisement(id, { status });
+  }
+
+  getActiveAdvertisements(): Observable<Advertisement[]> {
+    const activeAds = this.mockAdvertisements.filter(ad =>
+      ad.status === 'active' &&
+      ad.startDate <= new Date() &&
+      ad.endDate >= new Date()
+    );
+    return of(activeAds).pipe(delay(400));
+  }
+
+  getAdvertisementsByType(type: AdvertisementType): Observable<Advertisement[]> {
+    const typeAds = this.mockAdvertisements.filter(ad => ad.type === type);
+    return of(typeAds).pipe(delay(500));
   }
 }

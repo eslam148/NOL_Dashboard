@@ -1,0 +1,283 @@
+<div class="advertisements-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="page-title">{{ 'advertisements.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'advertisements.subtitle' | translate }}</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost" (click)="onRefresh()" [disabled]="isLoading()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'common.refresh' | translate }}
+        </button>
+        <a routerLink="new" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i>
+          {{ 'advertisements.addAdvertisement' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="search-input-container">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          type="text"
+          class="form-input search-input"
+          [placeholder]="'advertisements.searchPlaceholder' | translate"
+          [value]="searchQuery()"
+          (input)="onSearchChange($event)"
+        />
+      </div>
+
+      <!-- Type Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'advertisements.type' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="selectedType()"
+          (change)="selectedType.set($any($event.target).value); onTypeChange()"
+        >
+          <option *ngFor="let type of advertisementTypes" [value]="type.value">
+            {{ type.label | translate }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'advertisements.status' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="selectedStatus()"
+          (change)="selectedStatus.set($any($event.target).value); onStatusChange()"
+        >
+          <option *ngFor="let status of advertisementStatuses" [value]="status.value">
+            {{ status.label | translate }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary">
+    <p class="text-muted">
+      {{ 'advertisements.showingResults' | translate }} 
+      <strong>{{ filteredAdvertisements().length }}</strong> 
+      {{ 'advertisements.of' | translate }} 
+      <strong>{{ advertisements().length }}</strong> 
+      {{ 'advertisements.advertisements' | translate }}
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && filteredAdvertisements().length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-megaphone"></i>
+    </div>
+    <h3 class="empty-title">{{ 'advertisements.noAdvertisementsFound' | translate }}</h3>
+    <p class="empty-description">{{ 'advertisements.noAdvertisementsDescription' | translate }}</p>
+    <a routerLink="new" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i>
+      {{ 'advertisements.createFirstAdvertisement' | translate }}
+    </a>
+  </div>
+
+  <!-- Advertisements Grid -->
+  <div class="advertisements-grid" *ngIf="!isLoading() && filteredAdvertisements().length > 0">
+    <div class="advertisement-card" *ngFor="let advertisement of filteredAdvertisements()">
+      
+      <!-- Advertisement Header -->
+      <div class="advertisement-header">
+        <div class="advertisement-info">
+          <h3>{{ advertisement.title }}</h3>
+          <div class="advertisement-badges">
+            <span class="badge" [class]="getTypeBadgeClass(advertisement.type)">
+              {{ ('advertisements.' + advertisement.type) | translate }}
+            </span>
+            <span class="badge" [class]="getStatusBadgeClass(advertisement.status)">
+              <i class="bi bi-circle-fill" *ngIf="isActive(advertisement)"></i>
+              {{ ('advertisements.' + advertisement.status) | translate }}
+            </span>
+            <span class="badge badge-warning" *ngIf="isExpired(advertisement.endDate)">
+              <i class="bi bi-clock"></i>
+              {{ 'advertisements.expired' | translate }}
+            </span>
+          </div>
+        </div>
+        <div class="advertisement-priority">
+          <span class="priority-badge">
+            <i class="bi bi-star-fill"></i>
+            {{ advertisement.priority }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Advertisement Image -->
+      <div class="advertisement-image">
+        <img 
+          [src]="advertisement.imageUrl || 'assets/placeholder-ad.jpg'" 
+          [alt]="advertisement.title"
+          class="ad-image"
+        />
+        <div class="image-overlay" *ngIf="advertisement.status !== 'active'">
+          <span class="overlay-text">{{ ('advertisements.' + advertisement.status) | translate }}</span>
+        </div>
+      </div>
+
+      <!-- Advertisement Content -->
+      <div class="advertisement-content">
+        <p class="advertisement-description">{{ advertisement.description }}</p>
+        
+        <!-- Campaign Details -->
+        <div class="campaign-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <i class="bi bi-calendar-event detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'advertisements.duration' | translate }}</span>
+                <span class="detail-value">
+                  {{ formatDate(advertisement.startDate) }} - {{ formatDate(advertisement.endDate) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="advertisement.budget">
+            <div class="detail-item">
+              <i class="bi bi-currency-dollar detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'advertisements.budget' | translate }}</span>
+                <span class="detail-value">{{ formatCurrency(advertisement.budget) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="advertisement.targetUrl">
+            <div class="detail-item">
+              <i class="bi bi-link-45deg detail-icon"></i>
+              <div>
+                <span class="detail-label">{{ 'advertisements.targetUrl' | translate }}</span>
+                <span class="detail-value target-url">{{ advertisement.targetUrl }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="performance-metrics" *ngIf="advertisement.impressions > 0">
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <span class="metric-value">{{ advertisement.impressions | number }}</span>
+              <span class="metric-label">{{ 'advertisements.impressions' | translate }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">{{ advertisement.clicks | number }}</span>
+              <span class="metric-label">{{ 'advertisements.clicks' | translate }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">{{ advertisement.conversions | number }}</span>
+              <span class="metric-label">{{ 'advertisements.conversions' | translate }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">{{ calculateCTR(advertisement.clicks, advertisement.impressions) | number:'1.2-2' }}%</span>
+              <span class="metric-label">{{ 'advertisements.ctr' | translate }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target Audience -->
+        <div class="target-audience" *ngIf="advertisement.targetAudience">
+          <h4>{{ 'advertisements.targetAudience' | translate }}</h4>
+          <div class="audience-tags">
+            <span class="audience-tag" *ngIf="advertisement.targetAudience.ageRange">
+              <i class="bi bi-person"></i>
+              {{ advertisement.targetAudience.ageRange.min }}-{{ advertisement.targetAudience.ageRange.max }} {{ 'advertisements.years' | translate }}
+            </span>
+            <span class="audience-tag" *ngIf="advertisement.targetAudience.gender && advertisement.targetAudience.gender !== 'all'">
+              <i class="bi bi-gender-ambiguous"></i>
+              {{ ('advertisements.' + advertisement.targetAudience.gender) | translate }}
+            </span>
+            <span class="audience-tag" *ngFor="let location of advertisement.targetAudience.location">
+              <i class="bi bi-geo-alt"></i>
+              {{ location }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advertisement Actions -->
+      <div class="advertisement-actions">
+        <div class="action-buttons">
+          <a [routerLink]="[advertisement.id]" class="btn btn-ghost btn-sm">
+            <i class="bi bi-eye"></i>
+            {{ 'common.view' | translate }}
+          </a>
+          <a [routerLink]="[advertisement.id, 'edit']" class="btn btn-ghost btn-sm">
+            <i class="bi bi-pencil"></i>
+            {{ 'common.edit' | translate }}
+          </a>
+          
+          <!-- Status Actions -->
+          <div class="dropdown">
+            <button class="btn btn-ghost btn-sm dropdown-toggle">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <div class="dropdown-menu">
+              <button 
+                class="dropdown-item" 
+                *ngIf="advertisement.status === 'draft'"
+                (click)="updateAdvertisementStatus(advertisement, 'active')"
+              >
+                <i class="bi bi-play-circle"></i>
+                {{ 'advertisements.activate' | translate }}
+              </button>
+              <button 
+                class="dropdown-item" 
+                *ngIf="advertisement.status === 'active'"
+                (click)="updateAdvertisementStatus(advertisement, 'paused')"
+              >
+                <i class="bi bi-pause-circle"></i>
+                {{ 'advertisements.pause' | translate }}
+              </button>
+              <button 
+                class="dropdown-item" 
+                *ngIf="advertisement.status === 'paused'"
+                (click)="updateAdvertisementStatus(advertisement, 'active')"
+              >
+                <i class="bi bi-play-circle"></i>
+                {{ 'advertisements.resume' | translate }}
+              </button>
+              <button 
+                class="dropdown-item" 
+                *ngIf="advertisement.status !== 'archived'"
+                (click)="updateAdvertisementStatus(advertisement, 'archived')"
+              >
+                <i class="bi bi-archive"></i>
+                {{ 'advertisements.archive' | translate }}
+              </button>
+              <button 
+                class="dropdown-item text-danger" 
+                (click)="deleteAdvertisement(advertisement)"
+              >
+                <i class="bi bi-trash"></i>
+                {{ 'common.delete' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
