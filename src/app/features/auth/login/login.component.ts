@@ -8,12 +8,12 @@ import { AuthService, LoginCredentials } from '../../../core/services/auth.servi
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  templateUrl: './login.component.html'
 })
 export class LoginComponent {
   loginForm: FormGroup;
   errorMessage = signal<string>('');
+  showPassword = signal<boolean>(false);
 
   constructor(
     private fb: FormBuilder,
@@ -54,6 +54,29 @@ export class LoginComponent {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.loginForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.set(!this.showPassword());
+
+    // إضافة تأثير بصري عند النقر
+    const button = document.querySelector('.password-toggle-btn');
+    if (button) {
+      button.classList.add('clicked');
+      setTimeout(() => {
+        button.classList.remove('clicked');
+      }, 200);
+    }
+
+    // تحديث حالة الحاوية
+    const container = document.querySelector('.password-input-container');
+    if (container) {
+      if (this.showPassword()) {
+        container.classList.add('password-visible');
+      } else {
+        container.classList.remove('password-visible');
+      }
+    }
   }
 
   private markFormGroupTouched(): void {
