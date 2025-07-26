@@ -192,7 +192,7 @@ export class BookingFormComponent implements OnInit {
       status: booking.status,
       paymentStatus: booking.paymentStatus,
       totalAmount: booking.totalAmount,
-      paidAmount: booking.paidAmount || 0,
+      paidAmount: booking.paidAmount,
       notes: booking.notes || '',
       specialRequests: booking.specialRequests || ''
     });
