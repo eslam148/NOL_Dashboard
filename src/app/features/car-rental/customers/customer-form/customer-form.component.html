@@ -1,0 +1,731 @@
+<div class="customer-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <a routerLink="/car-rental/customers" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </a>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('customers.editCustomer' | translate) : ('customers.addCustomer' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('customers.editCustomerDesc' | translate) : ('customers.addCustomerDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      
+      <!-- Personal Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-person"></i>
+            {{ 'customers.personalInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.personalInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- First Name -->
+          <div class="form-group">
+            <label class="form-label" for="firstName">
+              {{ 'customers.firstName' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              formControlName="firstName"
+              class="form-input"
+              [class.error]="isFieldInvalid('firstName')"
+              [placeholder]="'customers.firstNamePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('firstName')">
+              {{ getFieldError('firstName') }}
+            </div>
+          </div>
+
+          <!-- Last Name -->
+          <div class="form-group">
+            <label class="form-label" for="lastName">
+              {{ 'customers.lastName' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              formControlName="lastName"
+              class="form-input"
+              [class.error]="isFieldInvalid('lastName')"
+              [placeholder]="'customers.lastNamePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('lastName')">
+              {{ getFieldError('lastName') }}
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">
+              {{ 'customers.email' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-input"
+              [class.error]="isFieldInvalid('email')"
+              [placeholder]="'customers.emailPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('email')">
+              {{ getFieldError('email') }}
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label class="form-label" for="phone">
+              {{ 'customers.phone' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              class="form-input"
+              [class.error]="isFieldInvalid('phone')"
+              [placeholder]="'customers.phonePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('phone')">
+              {{ getFieldError('phone') }}
+            </div>
+          </div>
+
+          <!-- Alternate Phone -->
+          <div class="form-group">
+            <label class="form-label" for="alternatePhone">
+              {{ 'customers.alternatePhone' | translate }}
+            </label>
+            <input
+              type="tel"
+              id="alternatePhone"
+              formControlName="alternatePhone"
+              class="form-input"
+              [class.error]="isFieldInvalid('alternatePhone')"
+              [placeholder]="'customers.alternatePhonePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('alternatePhone')">
+              {{ getFieldError('alternatePhone') }}
+            </div>
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="form-group">
+            <label class="form-label" for="dateOfBirth">
+              {{ 'customers.dateOfBirth' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              formControlName="dateOfBirth"
+              class="form-input"
+              [class.error]="isFieldInvalid('dateOfBirth')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('dateOfBirth')">
+              {{ getFieldError('dateOfBirth') }}
+            </div>
+          </div>
+
+          <!-- Nationality -->
+          <div class="form-group">
+            <label class="form-label" for="nationality">
+              {{ 'customers.nationality' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="nationality"
+              formControlName="nationality"
+              class="form-input"
+              [class.error]="isFieldInvalid('nationality')"
+              [placeholder]="'customers.nationalityPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('nationality')">
+              {{ getFieldError('nationality') }}
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label class="form-label" for="gender">
+              {{ 'customers.gender' | translate }}
+            </label>
+            <select
+              id="gender"
+              formControlName="gender"
+              class="form-select"
+            >
+              <option value="">{{ 'customers.selectGender' | translate }}</option>
+              <option *ngFor="let gender of genderOptions" [value]="gender.value">
+                {{ gender.label | translate }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Preferred Language -->
+          <div class="form-group">
+            <label class="form-label" for="preferredLanguage">
+              {{ 'customers.preferredLanguage' | translate }}
+            </label>
+            <select
+              id="preferredLanguage"
+              formControlName="preferredLanguage"
+              class="form-select"
+            >
+              <option *ngFor="let lang of languageOptions" [value]="lang.value">
+                {{ lang.label | translate }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Driver License Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-card-text"></i>
+            {{ 'customers.driverLicenseInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.driverLicenseInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- License Number -->
+          <div class="form-group">
+            <label class="form-label" for="licenseNumber">
+              {{ 'customers.licenseNumber' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="licenseNumber"
+              formControlName="licenseNumber"
+              class="form-input"
+              [class.error]="isFieldInvalid('licenseNumber')"
+              [placeholder]="'customers.licenseNumberPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('licenseNumber')">
+              {{ getFieldError('licenseNumber') }}
+            </div>
+          </div>
+
+          <!-- Issuing Country -->
+          <div class="form-group">
+            <label class="form-label" for="issuingCountry">
+              {{ 'customers.issuingCountry' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="issuingCountry"
+              formControlName="issuingCountry"
+              class="form-input"
+              [class.error]="isFieldInvalid('issuingCountry')"
+              [placeholder]="'customers.issuingCountryPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('issuingCountry')">
+              {{ getFieldError('issuingCountry') }}
+            </div>
+          </div>
+
+          <!-- Issue Date -->
+          <div class="form-group">
+            <label class="form-label" for="issueDate">
+              {{ 'customers.issueDate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="issueDate"
+              formControlName="issueDate"
+              class="form-input"
+              [class.error]="isFieldInvalid('issueDate')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('issueDate')">
+              {{ getFieldError('issueDate') }}
+            </div>
+          </div>
+
+          <!-- Expiry Date -->
+          <div class="form-group">
+            <label class="form-label" for="expiryDate">
+              {{ 'customers.expiryDate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="expiryDate"
+              formControlName="expiryDate"
+              class="form-input"
+              [class.error]="isFieldInvalid('expiryDate')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('expiryDate')">
+              {{ getFieldError('expiryDate') }}
+            </div>
+          </div>
+
+          <!-- License Class -->
+          <div class="form-group">
+            <label class="form-label" for="licenseClass">
+              {{ 'customers.licenseClass' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="licenseClass"
+              formControlName="licenseClass"
+              class="form-select"
+              [class.error]="isFieldInvalid('licenseClass')"
+            >
+              <option value="">{{ 'customers.selectLicenseClass' | translate }}</option>
+              <option *ngFor="let licenseClass of licenseClasses" [value]="licenseClass.value">
+                {{ licenseClass.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('licenseClass')">
+              {{ getFieldError('licenseClass') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-geo-alt"></i>
+            {{ 'customers.addressInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.addressInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Street -->
+          <div class="form-group full-width">
+            <label class="form-label" for="street">
+              {{ 'customers.street' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="street"
+              formControlName="street"
+              class="form-input"
+              [class.error]="isFieldInvalid('street')"
+              [placeholder]="'customers.streetPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('street')">
+              {{ getFieldError('street') }}
+            </div>
+          </div>
+
+          <!-- City -->
+          <div class="form-group">
+            <label class="form-label" for="city">
+              {{ 'customers.city' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="city"
+              formControlName="city"
+              class="form-input"
+              [class.error]="isFieldInvalid('city')"
+              [placeholder]="'customers.cityPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('city')">
+              {{ getFieldError('city') }}
+            </div>
+          </div>
+
+          <!-- State -->
+          <div class="form-group">
+            <label class="form-label" for="state">
+              {{ 'customers.state' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="state"
+              formControlName="state"
+              class="form-input"
+              [class.error]="isFieldInvalid('state')"
+              [placeholder]="'customers.statePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('state')">
+              {{ getFieldError('state') }}
+            </div>
+          </div>
+
+          <!-- Zip Code -->
+          <div class="form-group">
+            <label class="form-label" for="zipCode">
+              {{ 'customers.zipCode' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="zipCode"
+              formControlName="zipCode"
+              class="form-input"
+              [class.error]="isFieldInvalid('zipCode')"
+              [placeholder]="'customers.zipCodePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('zipCode')">
+              {{ getFieldError('zipCode') }}
+            </div>
+          </div>
+
+          <!-- Country -->
+          <div class="form-group">
+            <label class="form-label" for="country">
+              {{ 'customers.country' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="country"
+              formControlName="country"
+              class="form-input"
+              [class.error]="isFieldInvalid('country')"
+              [placeholder]="'customers.countryPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('country')">
+              {{ getFieldError('country') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Contact Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-telephone"></i>
+            {{ 'customers.emergencyContact' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.emergencyContactDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Emergency Contact Name -->
+          <div class="form-group">
+            <label class="form-label" for="emergencyContactName">
+              {{ 'customers.emergencyContactName' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="emergencyContactName"
+              formControlName="emergencyContactName"
+              class="form-input"
+              [class.error]="isFieldInvalid('emergencyContactName')"
+              [placeholder]="'customers.emergencyContactNamePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('emergencyContactName')">
+              {{ getFieldError('emergencyContactName') }}
+            </div>
+          </div>
+
+          <!-- Emergency Contact Phone -->
+          <div class="form-group">
+            <label class="form-label" for="emergencyContactPhone">
+              {{ 'customers.emergencyContactPhone' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="tel"
+              id="emergencyContactPhone"
+              formControlName="emergencyContactPhone"
+              class="form-input"
+              [class.error]="isFieldInvalid('emergencyContactPhone')"
+              [placeholder]="'customers.emergencyContactPhonePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('emergencyContactPhone')">
+              {{ getFieldError('emergencyContactPhone') }}
+            </div>
+          </div>
+
+          <!-- Relationship -->
+          <div class="form-group">
+            <label class="form-label" for="emergencyContactRelationship">
+              {{ 'customers.relationship' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="emergencyContactRelationship"
+              formControlName="emergencyContactRelationship"
+              class="form-select"
+              [class.error]="isFieldInvalid('emergencyContactRelationship')"
+            >
+              <option value="">{{ 'customers.selectRelationship' | translate }}</option>
+              <option *ngFor="let rel of relationshipOptions" [value]="rel.value">
+                {{ rel.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('emergencyContactRelationship')">
+              {{ getFieldError('emergencyContactRelationship') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-star"></i>
+            {{ 'customers.customerDetails' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.customerDetailsDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Customer Type -->
+          <div class="form-group">
+            <label class="form-label" for="customerType">
+              {{ 'customers.customerType' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="customerType"
+              formControlName="customerType"
+              class="form-select"
+              [class.error]="isFieldInvalid('customerType')"
+            >
+              <option *ngFor="let type of customerTypes" [value]="type.value">
+                {{ type.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('customerType')">
+              {{ getFieldError('customerType') }}
+            </div>
+          </div>
+
+          <!-- Marketing Consent -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input
+                type="checkbox"
+                id="marketingConsent"
+                formControlName="marketingConsent"
+                class="form-checkbox"
+              />
+              <label class="checkbox-label" for="marketingConsent">
+                {{ 'customers.marketingConsent' | translate }}
+              </label>
+            </div>
+            <div class="form-help">{{ 'customers.marketingConsentHelp' | translate }}</div>
+          </div>
+
+          <!-- Profile Image -->
+          <div class="form-group full-width">
+            <label class="form-label" for="profileImage">
+              {{ 'customers.profileImage' | translate }}
+            </label>
+            <input
+              type="url"
+              id="profileImage"
+              formControlName="profileImage"
+              class="form-input"
+              [placeholder]="'customers.profileImagePlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'customers.profileImageHelp' | translate }}</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group full-width">
+            <label class="form-label" for="notes">
+              {{ 'customers.notes' | translate }}
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              class="form-textarea"
+              rows="4"
+              [placeholder]="'customers.notesPlaceholder' | translate"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document Upload Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-file-earmark-text"></i>
+            {{ 'customers.documentUpload' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.documentUploadDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Driver License Front -->
+          <div class="form-group">
+            <label class="form-label" for="driverLicenseFront">
+              {{ 'customers.driverLicenseFront' | translate }}
+            </label>
+            <input
+              type="url"
+              id="driverLicenseFront"
+              formControlName="driverLicenseFront"
+              class="form-input"
+              [placeholder]="'customers.driverLicenseFrontPlaceholder' | translate"
+            />
+          </div>
+
+          <!-- Driver License Back -->
+          <div class="form-group">
+            <label class="form-label" for="driverLicenseBack">
+              {{ 'customers.driverLicenseBack' | translate }}
+            </label>
+            <input
+              type="url"
+              id="driverLicenseBack"
+              formControlName="driverLicenseBack"
+              class="form-input"
+              [placeholder]="'customers.driverLicenseBackPlaceholder' | translate"
+            />
+          </div>
+
+          <!-- Passport -->
+          <div class="form-group">
+            <label class="form-label" for="passport">
+              {{ 'customers.passport' | translate }}
+            </label>
+            <input
+              type="url"
+              id="passport"
+              formControlName="passport"
+              class="form-input"
+              [placeholder]="'customers.passportPlaceholder' | translate"
+            />
+          </div>
+
+          <!-- National ID -->
+          <div class="form-group">
+            <label class="form-label" for="nationalId">
+              {{ 'customers.nationalId' | translate }}
+            </label>
+            <input
+              type="url"
+              id="nationalId"
+              formControlName="nationalId"
+              class="form-input"
+              [placeholder]="'customers.nationalIdPlaceholder' | translate"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-gear"></i>
+            {{ 'customers.preferences' | translate }}
+          </h2>
+          <p class="section-description">{{ 'customers.preferencesDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Preferred Vehicle Types -->
+          <div class="form-group full-width">
+            <label class="form-label" for="preferredVehicleTypes">
+              {{ 'customers.preferredVehicleTypes' | translate }}
+            </label>
+            <input
+              type="text"
+              id="preferredVehicleTypes"
+              formControlName="preferredVehicleTypes"
+              class="form-input"
+              [placeholder]="'customers.preferredVehicleTypesPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'customers.preferredVehicleTypesHelp' | translate }}</div>
+          </div>
+
+          <!-- Preferred Features -->
+          <div class="form-group full-width">
+            <label class="form-label" for="preferredFeatures">
+              {{ 'customers.preferredFeatures' | translate }}
+            </label>
+            <input
+              type="text"
+              id="preferredFeatures"
+              formControlName="preferredFeatures"
+              class="form-input"
+              [placeholder]="'customers.preferredFeaturesPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'customers.preferredFeaturesHelp' | translate }}</div>
+          </div>
+
+          <!-- Notification Preferences -->
+          <div class="form-group full-width">
+            <label class="form-label">{{ 'customers.notificationPreferences' | translate }}</label>
+            <div class="checkbox-grid">
+              <div class="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="emailNotifications"
+                  formControlName="emailNotifications"
+                  class="form-checkbox"
+                />
+                <label class="checkbox-label" for="emailNotifications">
+                  {{ 'customers.emailNotifications' | translate }}
+                </label>
+              </div>
+              <div class="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="smsNotifications"
+                  formControlName="smsNotifications"
+                  class="form-checkbox"
+                />
+                <label class="checkbox-label" for="smsNotifications">
+                  {{ 'customers.smsNotifications' | translate }}
+                </label>
+              </div>
+              <div class="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="pushNotifications"
+                  formControlName="pushNotifications"
+                  class="form-checkbox"
+                />
+                <label class="checkbox-label" for="pushNotifications">
+                  {{ 'customers.pushNotifications' | translate }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      >
+        {{ 'common.cancel' | translate }}
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="customerForm.invalid || isSubmitting()"
+      >
+        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
+        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

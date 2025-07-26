@@ -1,0 +1,426 @@
+<div class="booking-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <a routerLink="/car-rental/bookings" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </a>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('bookings.editBooking' | translate) : ('bookings.addBooking' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('bookings.editBookingDesc' | translate) : ('bookings.addBookingDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      
+      <!-- Customer & Vehicle Selection -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-person-car"></i>
+            {{ 'bookings.customerVehicleSelection' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.customerVehicleSelectionDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Customer Selection -->
+          <div class="form-group">
+            <label class="form-label" for="customerId">
+              {{ 'bookings.customer' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="customerId"
+              formControlName="customerId"
+              class="form-select"
+              [class.error]="isFieldInvalid('customerId')"
+            >
+              <option value="">{{ 'bookings.selectCustomer' | translate }}</option>
+              <option *ngFor="let customer of customers()" [value]="customer.id">
+                {{ customer.firstName }} {{ customer.lastName }} - {{ customer.email }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('customerId')">
+              {{ getFieldError('customerId') }}
+            </div>
+          </div>
+
+          <!-- Vehicle Selection -->
+          <div class="form-group">
+            <label class="form-label" for="vehicleId">
+              {{ 'bookings.vehicle' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="vehicleId"
+              formControlName="vehicleId"
+              class="form-select"
+              [class.error]="isFieldInvalid('vehicleId')"
+            >
+              <option value="">{{ 'bookings.selectVehicle' | translate }}</option>
+              <option *ngFor="let vehicle of vehicles()" [value]="vehicle.id">
+                {{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }}) - ${{ vehicle.dailyRate }}/day
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('vehicleId')">
+              {{ getFieldError('vehicleId') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rental Period -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-calendar-range"></i>
+            {{ 'bookings.rentalPeriod' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.rentalPeriodDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Start Date -->
+          <div class="form-group">
+            <label class="form-label" for="startDate">
+              {{ 'bookings.startDate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              formControlName="startDate"
+              class="form-input"
+              [class.error]="isFieldInvalid('startDate')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('startDate')">
+              {{ getFieldError('startDate') }}
+            </div>
+          </div>
+
+          <!-- Start Time -->
+          <div class="form-group">
+            <label class="form-label" for="startTime">
+              {{ 'bookings.startTime' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="time"
+              id="startTime"
+              formControlName="startTime"
+              class="form-input"
+              [class.error]="isFieldInvalid('startTime')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('startTime')">
+              {{ getFieldError('startTime') }}
+            </div>
+          </div>
+
+          <!-- End Date -->
+          <div class="form-group">
+            <label class="form-label" for="endDate">
+              {{ 'bookings.endDate' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              formControlName="endDate"
+              class="form-input"
+              [class.error]="isFieldInvalid('endDate')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('endDate')">
+              {{ getFieldError('endDate') }}
+            </div>
+          </div>
+
+          <!-- End Time -->
+          <div class="form-group">
+            <label class="form-label" for="endTime">
+              {{ 'bookings.endTime' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="time"
+              id="endTime"
+              formControlName="endTime"
+              class="form-input"
+              [class.error]="isFieldInvalid('endTime')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('endTime')">
+              {{ getFieldError('endTime') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pickup & Dropoff Locations -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-geo-alt"></i>
+            {{ 'bookings.locations' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.locationsDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Pickup Location -->
+          <div class="form-group">
+            <label class="form-label" for="pickupLocation">
+              {{ 'bookings.pickupLocation' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="pickupLocation"
+              formControlName="pickupLocation"
+              class="form-input"
+              [class.error]="isFieldInvalid('pickupLocation')"
+              [placeholder]="'bookings.pickupLocationPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('pickupLocation')">
+              {{ getFieldError('pickupLocation') }}
+            </div>
+          </div>
+
+          <!-- Dropoff Location -->
+          <div class="form-group">
+            <label class="form-label" for="dropoffLocation">
+              {{ 'bookings.dropoffLocation' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="dropoffLocation"
+              formControlName="dropoffLocation"
+              class="form-input"
+              [class.error]="isFieldInvalid('dropoffLocation')"
+              [placeholder]="'bookings.dropoffLocationPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('dropoffLocation')">
+              {{ getFieldError('dropoffLocation') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Services -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-plus-circle"></i>
+            {{ 'bookings.additionalServices' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.additionalServicesDesc' | translate }}</p>
+        </div>
+        
+        <div class="services-grid">
+          <div 
+            *ngFor="let service of additionalServices()" 
+            class="service-card"
+            [class.selected]="bookingForm.get('selectedServices')?.value?.includes(service.id)"
+          >
+            <div class="service-checkbox">
+              <input
+                type="checkbox"
+                [id]="'service-' + service.id"
+                [value]="service.id"
+                (change)="onServiceToggle(service.id, $event)"
+                [checked]="bookingForm.get('selectedServices')?.value?.includes(service.id)"
+                class="form-checkbox"
+              />
+            </div>
+            <div class="service-info">
+              <div class="service-header">
+                <h4 class="service-name">{{ service.name }}</h4>
+                <span class="service-price">${{ service.dailyRate }}/day</span>
+              </div>
+              <p class="service-description">{{ service.description }}</p>
+              <div class="service-category">
+                <span class="category-badge" [class]="'category-' + service.category">
+                  {{ service.category }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Status -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-info-circle"></i>
+            {{ 'bookings.bookingStatus' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.bookingStatusDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Status -->
+          <div class="form-group">
+            <label class="form-label" for="status">
+              {{ 'bookings.status' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="status"
+              formControlName="status"
+              class="form-select"
+              [class.error]="isFieldInvalid('status')"
+            >
+              <option *ngFor="let status of statusOptions" [value]="status.value">
+                {{ status.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('status')">
+              {{ getFieldError('status') }}
+            </div>
+          </div>
+
+          <!-- Payment Status -->
+          <div class="form-group">
+            <label class="form-label" for="paymentStatus">
+              {{ 'bookings.paymentStatus' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="paymentStatus"
+              formControlName="paymentStatus"
+              class="form-select"
+              [class.error]="isFieldInvalid('paymentStatus')"
+            >
+              <option *ngFor="let status of paymentStatusOptions" [value]="status.value">
+                {{ status.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('paymentStatus')">
+              {{ getFieldError('paymentStatus') }}
+            </div>
+          </div>
+
+          <!-- Paid Amount -->
+          <div class="form-group">
+            <label class="form-label" for="paidAmount">
+              {{ 'bookings.paidAmount' | translate }}
+            </label>
+            <input
+              type="number"
+              id="paidAmount"
+              formControlName="paidAmount"
+              class="form-input"
+              min="0"
+              step="0.01"
+              [placeholder]="'bookings.paidAmountPlaceholder' | translate"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-chat-text"></i>
+            {{ 'bookings.additionalInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.additionalInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Special Requests -->
+          <div class="form-group full-width">
+            <label class="form-label" for="specialRequests">
+              {{ 'bookings.specialRequests' | translate }}
+            </label>
+            <textarea
+              id="specialRequests"
+              formControlName="specialRequests"
+              class="form-textarea"
+              rows="3"
+              [placeholder]="'bookings.specialRequestsPlaceholder' | translate"
+            ></textarea>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group full-width">
+            <label class="form-label" for="notes">
+              {{ 'bookings.notes' | translate }}
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              class="form-textarea"
+              rows="3"
+              [placeholder]="'bookings.notesPlaceholder' | translate"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Summary -->
+      <div class="form-section pricing-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-calculator"></i>
+            {{ 'bookings.pricingSummary' | translate }}
+          </h2>
+          <p class="section-description">{{ 'bookings.pricingSummaryDesc' | translate }}</p>
+        </div>
+        
+        <div class="pricing-details">
+          <div class="pricing-row">
+            <span class="pricing-label">{{ 'bookings.rentalDays' | translate }}:</span>
+            <span class="pricing-value">{{ totalDays() }} {{ 'bookings.days' | translate }}</span>
+          </div>
+          
+          <div class="pricing-row" *ngIf="selectedVehicle()">
+            <span class="pricing-label">
+              {{ 'bookings.vehicleRental' | translate }} 
+              ({{ getVehicleName(bookingForm.get('vehicleId')?.value) }}):
+            </span>
+            <span class="pricing-value">${{ vehicleTotal() }}</span>
+          </div>
+          
+          <div class="pricing-row" *ngIf="servicesTotal() > 0">
+            <span class="pricing-label">{{ 'bookings.additionalServices' | translate }}:</span>
+            <span class="pricing-value">${{ servicesTotal() }}</span>
+          </div>
+          
+          <div class="pricing-row total-row">
+            <span class="pricing-label">{{ 'bookings.totalAmount' | translate }}:</span>
+            <span class="pricing-value total-amount">${{ grandTotal() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      >
+        {{ 'common.cancel' | translate }}
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="bookingForm.invalid || isSubmitting()"
+      >
+        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
+        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

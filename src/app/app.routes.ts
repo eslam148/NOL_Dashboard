@@ -117,6 +117,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/car-rental/bookings/booking-form/booking-form.component').then(m => m.BookingFormComponent)
       },
       {
+        path: 'bookings/:id/edit',
+        loadComponent: () => import('./features/car-rental/bookings/booking-form/booking-form.component').then(m => m.BookingFormComponent)
+      },
+      {
+        path: 'bookings/new',
+        loadComponent: () => import('./features/car-rental/bookings/booking-form/booking-form.component').then(m => m.BookingFormComponent)
+      },
+      {
         path: 'bookings/:id',
         loadComponent: () => import('./features/car-rental/bookings/booking-detail/booking-detail.component').then(m => m.BookingDetailComponent)
       },
@@ -157,6 +165,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/car-rental/customers/customer-form/customer-form.component').then(m => m.CustomerFormComponent)
       },
       {
+        path: 'customers/new',
+        loadComponent: () => import('./features/car-rental/customers/customer-form/customer-form.component').then(m => m.CustomerFormComponent)
+      },
+      {
+        path: 'customers/:id',
+        loadComponent: () => import('./features/car-rental/customers/customer-detail/customer-detail.component').then(m => m.CustomerDetailComponent)
+      },
+      {
+        path: 'customers/:id/edit',
+        loadComponent: () => import('./features/car-rental/customers/customer-form/customer-form.component').then(m => m.CustomerFormComponent)
+      },
+      {
         path: 'services',
         loadComponent: () => import('./features/car-rental/services/services.component').then(m => m.ServicesComponent)
       },
@@ -175,6 +195,18 @@ export const routes: Routes = [
       {
         path: 'admin-users',
         loadComponent: () => import('./features/car-rental/admin-users/admin-users.component').then(m => m.AdminUsersComponent)
+      },
+      {
+        path: 'admin-users/new',
+        loadComponent: () => import('./features/car-rental/admin-users/admin-user-form/admin-user-form.component').then(m => m.AdminUserFormComponent)
+      },
+      {
+        path: 'admin-users/:id',
+        loadComponent: () => import('./features/car-rental/admin-users/admin-user-detail/admin-user-detail.component').then(m => m.AdminUserDetailComponent)
+      },
+      {
+        path: 'admin-users/:id/edit',
+        loadComponent: () => import('./features/car-rental/admin-users/admin-user-form/admin-user-form.component').then(m => m.AdminUserFormComponent)
       },
       {
         path: 'admin-users/new',

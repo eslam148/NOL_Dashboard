@@ -111,8 +111,7 @@ export class AdminUsersComponent implements OnInit {
 
     // Apply status filter
     if (this.statusFilter() !== 'all') {
-      const isActive = this.statusFilter() === 'active';
-      filtered = filtered.filter(user => user.isActive === isActive);
+      filtered = filtered.filter(user => user.status === this.statusFilter());
     }
 
     this.filteredUsers.set(filtered);

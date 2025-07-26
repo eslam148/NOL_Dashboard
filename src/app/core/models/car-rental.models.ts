@@ -91,6 +91,7 @@ export interface Booking {
   taxes: number;
   fees: number;
   totalAmount: number;
+  paidAmount: number;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
   pickupLocation: string;
@@ -125,10 +126,17 @@ export interface Customer {
   lastName: string;
   email: string;
   phone: string;
+  alternatePhone?: string;
   dateOfBirth: Date;
   nationality: string;
-  licenseNumber: string;
-  licenseExpiryDate: Date;
+  gender?: 'male' | 'female' | 'other';
+  driverLicense: {
+    number: string;
+    issuingCountry: string;
+    issueDate: Date;
+    expiryDate: Date;
+    licenseClass: string;
+  };
   address: {
     street: string;
     city: string;
@@ -142,16 +150,39 @@ export interface Customer {
     relationship: string;
   };
   customerType: CustomerType;
+  preferredLanguage?: 'en' | 'ar';
+  marketingConsent: boolean;
+  profileImage?: string;
   loyaltyPoints: number;
   totalRentals: number;
   totalSpent: number;
   averageRating: number;
-  isActive: boolean;
-  isBlacklisted: boolean;
+  status: 'active' | 'inactive' | 'blocked';
+  verificationStatus: 'pending' | 'verified' | 'rejected';
+  documents?: {
+    driverLicenseFront?: string;
+    driverLicenseBack?: string;
+    passport?: string;
+    nationalId?: string;
+  };
+  preferences?: {
+    vehicleType?: string[];
+    features?: string[];
+    notifications?: {
+      email: boolean;
+      sms: boolean;
+      push: boolean;
+    };
+  };
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
   lastRentalDate?: Date;
+  createdBy: string;
+  isActive: boolean;
+  isBlacklisted: boolean;
+  licenseNumber:string;
+
 }
 
 export interface RentalHistory {
@@ -193,8 +224,18 @@ export interface AdditionalService {
   isAvailable: boolean;
   maxQuantity: number;
   icon: string;
+  image?: string;
+  features?: string[];
+  restrictions?: string[];
+  minimumRentalDays?: number;
+  availableAtBranches?: string[];
+  popularityScore?: number;
+  discountPercentage?: number;
+  tags?: string[];
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
+  createdBy: string;
 }
 
 export type ServiceCategory = 'navigation' | 'safety' | 'comfort' | 'insurance' | 'equipment';
@@ -213,14 +254,36 @@ export interface AdminUser {
   email: string;
   firstName: string;
   lastName: string;
+  phone: string;
+  alternatePhone?: string;
   role: AdminRole;
   permissions: Permission[];
   branchIds: string[];
-  isActive: boolean;
-  lastLogin: Date;
+  status: 'active' | 'inactive' | 'suspended';
+  profileImage?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  employeeId?: string;
+  department?: string;
+  hireDate?: Date;
+  salary?: number;
+  notes?: string;
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
-}
+  createdBy: string;
+  isActive: boolean;
+ }
 
 export type AdminRole = 'super_admin' | 'branch_manager' | 'staff' | 'viewer';
 

@@ -147,12 +147,14 @@ export class BookingsComponent implements OnInit {
     this.carRentalService.updateBookingStatus(booking.id, newStatus).subscribe({
       next: (updatedBooking) => {
         // Update the booking in the list
-        const bookings = this.bookings();
-        const index = bookings.findIndex(b => b.id === booking.id);
-        if (index !== -1) {
-          bookings[index] = updatedBooking;
-          this.bookings.set([...bookings]);
-          this.applyFilters();
+        if (updatedBooking) {
+          const bookings = this.bookings();
+          const index = bookings.findIndex(b => b.id === booking.id);
+          if (index !== -1) {
+            bookings[index] = updatedBooking as Booking;
+            this.bookings.set([...bookings]);
+            this.applyFilters();
+          }
         }
       },
       error: (error) => {
@@ -165,12 +167,14 @@ export class BookingsComponent implements OnInit {
     this.carRentalService.updatePaymentStatus(booking.id, newStatus).subscribe({
       next: (updatedBooking) => {
         // Update the booking in the list
-        const bookings = this.bookings();
-        const index = bookings.findIndex(b => b.id === booking.id);
-        if (index !== -1) {
-          bookings[index] = updatedBooking;
-          this.bookings.set([...bookings]);
-          this.applyFilters();
+        if (updatedBooking) {
+          const bookings = this.bookings();
+          const index = bookings.findIndex(b => b.id === booking.id);
+          if (index !== -1) {
+            bookings[index] = updatedBooking as Booking;
+            this.bookings.set([...bookings]);
+            this.applyFilters();
+          }
         }
       },
       error: (error) => {

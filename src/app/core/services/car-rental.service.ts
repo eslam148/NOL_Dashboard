@@ -312,7 +312,8 @@ export class CarRentalService {
       maxQuantity: 50,
       icon: 'bi-compass',
       createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-07-20')
+      updatedAt: new Date('2024-07-20'),
+      createdBy: '1'
     },
     {
       id: '2',
@@ -326,7 +327,8 @@ export class CarRentalService {
       maxQuantity: 25,
       icon: 'bi-person-hearts',
       createdAt: new Date('2024-02-01'),
-      updatedAt: new Date('2024-07-18')
+      updatedAt: new Date('2024-07-18'),
+      createdBy: '1'
     },
     {
       id: '3',
@@ -340,7 +342,8 @@ export class CarRentalService {
       maxQuantity: 100,
       icon: 'bi-shield-check',
       createdAt: new Date('2024-03-01'),
-      updatedAt: new Date('2024-07-15')
+      updatedAt: new Date('2024-07-15'),
+      createdBy: '1'
     },
     {
       id: '4',
@@ -354,7 +357,8 @@ export class CarRentalService {
       maxQuantity: 15,
       icon: 'bi-snow2',
       createdAt: new Date('2024-04-01'),
-      updatedAt: new Date('2024-07-10')
+      updatedAt: new Date('2024-07-10'),
+      createdBy: '1'
     },
     {
       id: '5',
@@ -368,7 +372,8 @@ export class CarRentalService {
       maxQuantity: 30,
       icon: 'bi-star',
       createdAt: new Date('2024-05-01'),
-      updatedAt: new Date('2024-07-12')
+      updatedAt: new Date('2024-07-12'),
+      createdBy: '1'
     }
   ];
 
@@ -395,22 +400,25 @@ export class CarRentalService {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    this.mockServices.push(newService);
+
+    this.mockServices.unshift(newService);
     return of(newService).pipe(delay(1000));
   }
 
-  updateService(id: string, updates: Partial<AdditionalService>): Observable<AdditionalService> {
+  updateService(id: string, service: Partial<AdditionalService>): Observable<AdditionalService | null> {
     const index = this.mockServices.findIndex(s => s.id === id);
     if (index !== -1) {
       this.mockServices[index] = {
         ...this.mockServices[index],
-        ...updates,
+        ...service,
         updatedAt: new Date()
       };
       return of(this.mockServices[index]).pipe(delay(1000));
     }
-    throw new Error('Service not found');
+    return of(null).pipe(delay(1000));
   }
+
+
 
   deleteService(id: string): Observable<boolean> {
     const index = this.mockServices.findIndex(s => s.id === id);
@@ -447,10 +455,13 @@ export class CarRentalService {
         { resource: 'users', actions: ['create', 'read', 'update', 'delete'] }
       ],
       branchIds: [],
+      phone: '+971501234567',
+      status: 'active',
       isActive: true,
       lastLogin: new Date('2024-07-25T08:30:00'),
       createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-07-20')
+      updatedAt: new Date('2024-07-20'),
+      createdBy: '1'
     },
     {
       id: '2',
@@ -465,10 +476,13 @@ export class CarRentalService {
         { resource: 'bookings', actions: ['create', 'read', 'update'] }
       ],
       branchIds: ['1', '2'],
+      phone: '+971507654321',
+      status: 'active',
       isActive: true,
       lastLogin: new Date('2024-07-24T14:15:00'),
       createdAt: new Date('2024-02-01'),
-      updatedAt: new Date('2024-07-18')
+      updatedAt: new Date('2024-07-18'),
+      createdBy: '1'
     },
     {
       id: '3',
@@ -482,10 +496,13 @@ export class CarRentalService {
         { resource: 'bookings', actions: ['create', 'read', 'update'] }
       ],
       branchIds: ['1'],
+      phone: '+971509876543',
+      status: 'active',
       isActive: true,
       lastLogin: new Date('2024-07-25T09:45:00'),
       createdAt: new Date('2024-03-15'),
-      updatedAt: new Date('2024-07-22')
+      updatedAt: new Date('2024-07-22'),
+      createdBy: '1'
     },
     {
       id: '4',
@@ -500,10 +517,13 @@ export class CarRentalService {
         { resource: 'bookings', actions: ['read'] }
       ],
       branchIds: ['1', '2'],
+      phone: '+971502468135',
+      status: 'inactive',
       isActive: false,
       lastLogin: new Date('2024-07-20T16:30:00'),
       createdAt: new Date('2024-04-01'),
-      updatedAt: new Date('2024-07-15')
+      updatedAt: new Date('2024-07-15'),
+      createdBy: '1'
     }
   ];
 
@@ -562,30 +582,32 @@ export class CarRentalService {
     return of(user).pipe(delay(500));
   }
 
-  createAdminUser(user: Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'>): Observable<AdminUser> {
-    const newUser: AdminUser = {
-      ...user,
+  createAdminUser(adminUser: Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'>): Observable<AdminUser> {
+    const newAdminUser: AdminUser = {
+      ...adminUser,
       id: Date.now().toString(),
-      lastLogin: new Date(),
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    this.mockAdminUsers.push(newUser);
-    return of(newUser).pipe(delay(1000));
+
+    this.mockAdminUsers.unshift(newAdminUser);
+    return of(newAdminUser).pipe(delay(1000));
   }
 
-  updateAdminUser(id: string, updates: Partial<AdminUser>): Observable<AdminUser> {
+  updateAdminUser(id: string, adminUser: Partial<AdminUser>): Observable<AdminUser | null> {
     const index = this.mockAdminUsers.findIndex(u => u.id === id);
     if (index !== -1) {
       this.mockAdminUsers[index] = {
         ...this.mockAdminUsers[index],
-        ...updates,
+        ...adminUser,
         updatedAt: new Date()
       };
       return of(this.mockAdminUsers[index]).pipe(delay(1000));
     }
-    throw new Error('Admin user not found');
+    return of(null).pipe(delay(1000));
   }
+
+
 
   deleteAdminUser(id: string): Observable<boolean> {
     const index = this.mockAdminUsers.findIndex(u => u.id === id);
@@ -599,7 +621,7 @@ export class CarRentalService {
   toggleAdminUserStatus(id: string): Observable<AdminUser> {
     const user = this.mockAdminUsers.find(u => u.id === id);
     if (user) {
-      user.isActive = !user.isActive;
+      user.status = user.status === 'active' ? 'inactive' : 'active';
       user.updatedAt = new Date();
       return of(user).pipe(delay(500));
     }
@@ -633,8 +655,13 @@ export class CarRentalService {
       phone: '+971-50-123-4567',
       dateOfBirth: new Date('1985-03-15'),
       nationality: 'UAE',
-      licenseNumber: 'DL-12345678',
-      licenseExpiryDate: new Date('2026-03-15'),
+      driverLicense: {
+        number: 'DL-12345678',
+        issuingCountry: 'UAE',
+        issueDate: new Date('2021-03-15'),
+        expiryDate: new Date('2026-03-15'),
+        licenseClass: 'B'
+      },
       address: {
         street: '123 Sheikh Zayed Road',
         city: 'Dubai',
@@ -652,12 +679,17 @@ export class CarRentalService {
       totalRentals: 15,
       totalSpent: 12500,
       averageRating: 4.8,
+      marketingConsent: true,
+      status: 'active',
+      verificationStatus: 'verified',
       isActive: true,
       isBlacklisted: false,
+      licenseNumber: 'DL-12345678',
       notes: 'Excellent customer, always returns vehicles in perfect condition.',
       createdAt: new Date('2023-01-15'),
       updatedAt: new Date('2024-07-20'),
-      lastRentalDate: new Date('2024-07-15')
+      lastRentalDate: new Date('2024-07-15'),
+      createdBy: '1'
     },
     {
       id: '2',
@@ -667,8 +699,13 @@ export class CarRentalService {
       phone: '+971-55-234-5678',
       dateOfBirth: new Date('1990-07-22'),
       nationality: 'USA',
-      licenseNumber: 'US-87654321',
-      licenseExpiryDate: new Date('2025-07-22'),
+      driverLicense: {
+        number: 'US-87654321',
+        issuingCountry: 'USA',
+        issueDate: new Date('2020-07-22'),
+        expiryDate: new Date('2025-07-22'),
+        licenseClass: 'B'
+      },
       address: {
         street: '456 Marina Walk',
         city: 'Dubai',
@@ -686,12 +723,17 @@ export class CarRentalService {
       totalRentals: 8,
       totalSpent: 4200,
       averageRating: 4.5,
+      marketingConsent: false,
+      status: 'active',
+      verificationStatus: 'verified',
       isActive: true,
       isBlacklisted: false,
+      licenseNumber: 'US-87654321',
       notes: 'Tourist customer, prefers luxury vehicles.',
       createdAt: new Date('2023-06-10'),
       updatedAt: new Date('2024-07-18'),
-      lastRentalDate: new Date('2024-07-10')
+      lastRentalDate: new Date('2024-07-10'),
+      createdBy: '1'
     },
     {
       id: '3',
@@ -701,8 +743,13 @@ export class CarRentalService {
       phone: '+971-52-345-6789',
       dateOfBirth: new Date('1988-11-08'),
       nationality: 'Egypt',
-      licenseNumber: 'EG-11223344',
-      licenseExpiryDate: new Date('2025-11-08'),
+      driverLicense: {
+        number: 'EG-11223344',
+        issuingCountry: 'Egypt',
+        issueDate: new Date('2020-11-08'),
+        expiryDate: new Date('2025-11-08'),
+        licenseClass: 'B'
+      },
       address: {
         street: '789 Al Wasl Road',
         city: 'Dubai',
@@ -720,12 +767,17 @@ export class CarRentalService {
       totalRentals: 12,
       totalSpent: 8900,
       averageRating: 4.2,
+      marketingConsent: true,
+      status: 'active',
+      verificationStatus: 'verified',
       isActive: true,
       isBlacklisted: false,
+      licenseNumber: 'EG-11223344',
       notes: 'Corporate account, frequent business traveler.',
       createdAt: new Date('2023-03-20'),
       updatedAt: new Date('2024-07-22'),
-      lastRentalDate: new Date('2024-07-20')
+      lastRentalDate: new Date('2024-07-20'),
+      createdBy: '1'
     },
     {
       id: '4',
@@ -735,8 +787,13 @@ export class CarRentalService {
       phone: '+971-56-456-7890',
       dateOfBirth: new Date('1992-05-12'),
       nationality: 'Singapore',
-      licenseNumber: 'SG-99887766',
-      licenseExpiryDate: new Date('2024-12-31'),
+      driverLicense: {
+        number: 'SG-99887766',
+        issuingCountry: 'Singapore',
+        issueDate: new Date('2019-12-31'),
+        expiryDate: new Date('2024-12-31'),
+        licenseClass: 'B'
+      },
       address: {
         street: '321 Business Bay',
         city: 'Dubai',
@@ -754,12 +811,17 @@ export class CarRentalService {
       totalRentals: 3,
       totalSpent: 1800,
       averageRating: 4.0,
+      marketingConsent: false,
+      status: 'inactive',
+      verificationStatus: 'pending',
       isActive: false,
       isBlacklisted: true,
+      licenseNumber: 'SG-99887766',
       notes: 'Late return issues, payment disputes.',
       createdAt: new Date('2024-02-15'),
       updatedAt: new Date('2024-06-30'),
-      lastRentalDate: new Date('2024-06-25')
+      lastRentalDate: new Date('2024-06-25'),
+      createdBy: '1'
     }
   ];
 
@@ -848,33 +910,63 @@ export class CarRentalService {
     return of(customer).pipe(delay(500));
   }
 
-  createCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'totalRentals' | 'totalSpent' | 'loyaltyPoints' | 'averageRating'>): Observable<Customer> {
+  createCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'lastRentalDate'>): Observable<Customer> {
     const newCustomer: Customer = {
       ...customer,
       id: Date.now().toString(),
-      totalRentals: 0,
-      totalSpent: 0,
-      loyaltyPoints: 0,
-      averageRating: 0,
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    this.mockCustomers.push(newCustomer);
+
+    this.mockCustomers.unshift(newCustomer);
     return of(newCustomer).pipe(delay(1000));
   }
 
-  updateCustomer(id: string, updates: Partial<Customer>): Observable<Customer> {
+  updateCustomer(id: string, customer: Partial<Customer>): Observable<Customer | null> {
     const index = this.mockCustomers.findIndex(c => c.id === id);
     if (index !== -1) {
       this.mockCustomers[index] = {
         ...this.mockCustomers[index],
-        ...updates,
+        ...customer,
         updatedAt: new Date()
       };
       return of(this.mockCustomers[index]).pipe(delay(1000));
     }
-    throw new Error('Customer not found');
+    return of(null).pipe(delay(1000));
   }
+
+  // Booking Management Methods
+  createBooking(booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Observable<Booking> {
+    const newBooking: Booking = {
+      ...booking,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    this.mockBookings.unshift(newBooking);
+    return of(newBooking).pipe(delay(1000));
+  }
+
+  updateBooking(id: string, booking: Partial<Booking>): Observable<Booking | null> {
+    const index = this.mockBookings.findIndex(b => b.id === id);
+    if (index !== -1) {
+      this.mockBookings[index] = {
+        ...this.mockBookings[index],
+        ...booking,
+        updatedAt: new Date()
+      };
+      return of(this.mockBookings[index]).pipe(delay(1000));
+    }
+    return of(null).pipe(delay(1000));
+  }
+
+  getBookingById(id: string): Observable<Booking | null> {
+    const booking = this.mockBookings.find(b => b.id === id) || null;
+    return of(booking).pipe(delay(500));
+  }
+
+
 
   deleteCustomer(id: string): Observable<boolean> {
     const index = this.mockCustomers.findIndex(c => c.id === id);
@@ -938,6 +1030,7 @@ export class CarRentalService {
       taxes: 22.5,
       fees: 15,
       totalAmount: 487.5,
+      paidAmount: 487.5,
       status: 'confirmed',
       paymentStatus: 'paid',
       pickupLocation: 'Dubai International Airport',
@@ -981,6 +1074,7 @@ export class CarRentalService {
       taxes: 75,
       fees: 25,
       totalAmount: 1600,
+      paidAmount: 0,
       status: 'pending',
       paymentStatus: 'pending',
       pickupLocation: 'Downtown Dubai',
@@ -1025,6 +1119,7 @@ export class CarRentalService {
       taxes: 20,
       fees: 10,
       totalAmount: 430,
+      paidAmount: 430,
       status: 'active',
       paymentStatus: 'paid',
       pickupLocation: 'Business Bay',
@@ -1066,6 +1161,7 @@ export class CarRentalService {
       taxes: 12,
       fees: 8,
       totalAmount: 260,
+      paidAmount: 260,
       status: 'completed',
       paymentStatus: 'paid',
       pickupLocation: 'Dubai Marina',
@@ -1109,6 +1205,7 @@ export class CarRentalService {
       taxes: 10,
       fees: 5,
       totalAmount: 215,
+      paidAmount: 215,
       status: 'cancelled',
       paymentStatus: 'refunded',
       pickupLocation: 'Dubai International Airport',
@@ -1140,41 +1237,13 @@ export class CarRentalService {
     );
   }
 
-  getBookingById(id: string): Observable<Booking | null> {
-    const booking = this.mockBookings.find(b => b.id === id) || null;
-    return of(booking).pipe(delay(500));
-  }
 
-  createBooking(booking: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>): Observable<Booking> {
-    const newBooking: Booking = {
-      ...booking,
-      id: Date.now().toString(),
-      bookingNumber: `NOL-2024-${String(this.mockBookings.length + 1).padStart(3, '0')}`,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.mockBookings.push(newBooking);
-    return of(newBooking).pipe(delay(1000));
-  }
 
-  updateBooking(id: string, updates: Partial<Booking>): Observable<Booking> {
-    const index = this.mockBookings.findIndex(b => b.id === id);
-    if (index !== -1) {
-      this.mockBookings[index] = {
-        ...this.mockBookings[index],
-        ...updates,
-        updatedAt: new Date()
-      };
-      return of(this.mockBookings[index]).pipe(delay(1000));
-    }
-    throw new Error('Booking not found');
-  }
-
-  updateBookingStatus(id: string, status: BookingStatus): Observable<Booking> {
+  updateBookingStatus(id: string, status: BookingStatus): Observable<Booking | null> {
     return this.updateBooking(id, { status });
   }
 
-  updatePaymentStatus(id: string, paymentStatus: PaymentStatus): Observable<Booking> {
+  updatePaymentStatus(id: string, paymentStatus: PaymentStatus): Observable<Booking | null> {
     return this.updateBooking(id, { paymentStatus });
   }
 

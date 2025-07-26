@@ -153,7 +153,7 @@
               <i class="bi bi-clock detail-icon"></i>
               <div>
                 <span class="detail-label">{{ 'adminUsers.lastLogin' | translate }}</span>
-                <span class="detail-value">{{ getTimeSince(user.lastLogin) }}</span>
+                <span class="detail-value">{{ user.lastLogin ? getTimeSince(user.lastLogin) : ('common.never' | translate) }}</span>
               </div>
             </div>
           </div>

@@ -1,0 +1,425 @@
+<div class="service-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <a routerLink="/car-rental/services" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </a>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('services.editService' | translate) : ('services.addService' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('services.editServiceDesc' | translate) : ('services.addServiceDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-info-circle"></i>
+            {{ 'services.basicInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'services.basicInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Service Name -->
+          <div class="form-group full-width">
+            <label class="form-label" for="name">
+              {{ 'services.serviceName' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              formControlName="name"
+              class="form-input"
+              [class.error]="isFieldInvalid('name')"
+              [placeholder]="'services.serviceNamePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('name')">
+              {{ getFieldError('name') }}
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group full-width">
+            <label class="form-label" for="description">
+              {{ 'services.description' | translate }} <span class="required">*</span>
+            </label>
+            <textarea
+              id="description"
+              formControlName="description"
+              class="form-textarea"
+              rows="4"
+              [class.error]="isFieldInvalid('description')"
+              [placeholder]="'services.descriptionPlaceholder' | translate"
+            ></textarea>
+            <div class="error-message" *ngIf="isFieldInvalid('description')">
+              {{ getFieldError('description') }}
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="category">
+              {{ 'services.category' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="category"
+              formControlName="category"
+              class="form-select"
+              [class.error]="isFieldInvalid('category')"
+            >
+              <option value="">{{ 'services.selectCategory' | translate }}</option>
+              <option *ngFor="let cat of serviceCategories" [value]="cat.value">
+                <i [class]="cat.icon"></i> {{ cat.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('category')">
+              {{ getFieldError('category') }}
+            </div>
+          </div>
+
+          <!-- Icon -->
+          <div class="form-group">
+            <label class="form-label" for="icon">
+              {{ 'services.icon' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="icon"
+              formControlName="icon"
+              class="form-select"
+              [class.error]="isFieldInvalid('icon')"
+            >
+              <option *ngFor="let iconClass of popularIcons" [value]="iconClass">
+                <i [class]="iconClass"></i> {{ iconClass }}
+              </option>
+            </select>
+            <div class="icon-preview" *ngIf="serviceForm.get('icon')?.value">
+              <i [class]="serviceForm.get('icon')?.value"></i>
+              {{ 'services.preview' | translate }}
+            </div>
+            <div class="error-message" *ngIf="isFieldInvalid('icon')">
+              {{ getFieldError('icon') }}
+            </div>
+          </div>
+
+          <!-- Service Image -->
+          <div class="form-group full-width">
+            <label class="form-label" for="image">
+              {{ 'services.serviceImage' | translate }}
+            </label>
+            <input
+              type="url"
+              id="image"
+              formControlName="image"
+              class="form-input"
+              [placeholder]="'services.serviceImagePlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'services.serviceImageHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-currency-dollar"></i>
+            {{ 'services.pricing' | translate }}
+          </h2>
+          <p class="section-description">{{ 'services.pricingDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Daily Rate -->
+          <div class="form-group">
+            <label class="form-label" for="dailyRate">
+              {{ 'services.dailyRate' | translate }} <span class="required">*</span>
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="dailyRate"
+                formControlName="dailyRate"
+                class="form-input with-currency"
+                [class.error]="isFieldInvalid('dailyRate')"
+                [placeholder]="'services.dailyRatePlaceholder' | translate"
+                min="0"
+                step="0.01"
+                (input)="onDailyRateChange()"
+              />
+            </div>
+            <div class="error-message" *ngIf="isFieldInvalid('dailyRate')">
+              {{ getFieldError('dailyRate') }}
+            </div>
+          </div>
+
+          <!-- Weekly Rate -->
+          <div class="form-group">
+            <label class="form-label" for="weeklyRate">
+              {{ 'services.weeklyRate' | translate }} <span class="required">*</span>
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="weeklyRate"
+                formControlName="weeklyRate"
+                class="form-input with-currency"
+                [class.error]="isFieldInvalid('weeklyRate')"
+                [placeholder]="'services.weeklyRatePlaceholder' | translate"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-help">{{ 'services.weeklyRateHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('weeklyRate')">
+              {{ getFieldError('weeklyRate') }}
+            </div>
+          </div>
+
+          <!-- Monthly Rate -->
+          <div class="form-group">
+            <label class="form-label" for="monthlyRate">
+              {{ 'services.monthlyRate' | translate }} <span class="required">*</span>
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="monthlyRate"
+                formControlName="monthlyRate"
+                class="form-input with-currency"
+                [class.error]="isFieldInvalid('monthlyRate')"
+                [placeholder]="'services.monthlyRatePlaceholder' | translate"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-help">{{ 'services.monthlyRateHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('monthlyRate')">
+              {{ getFieldError('monthlyRate') }}
+            </div>
+          </div>
+
+          <!-- Discount Percentage -->
+          <div class="form-group">
+            <label class="form-label" for="discountPercentage">
+              {{ 'services.discountPercentage' | translate }}
+            </label>
+            <div class="input-with-suffix">
+              <input
+                type="number"
+                id="discountPercentage"
+                formControlName="discountPercentage"
+                class="form-input with-suffix"
+                [placeholder]="'services.discountPercentagePlaceholder' | translate"
+                min="0"
+                max="100"
+                step="1"
+              />
+              <span class="input-suffix">%</span>
+            </div>
+            <div class="form-help">{{ 'services.discountPercentageHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Availability Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-check-circle"></i>
+            {{ 'services.availability' | translate }}
+          </h2>
+          <p class="section-description">{{ 'services.availabilityDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Is Available -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input
+                type="checkbox"
+                id="isAvailable"
+                formControlName="isAvailable"
+                class="form-checkbox"
+              />
+              <label class="checkbox-label" for="isAvailable">
+                {{ 'services.isAvailable' | translate }}
+              </label>
+            </div>
+            <div class="form-help">{{ 'services.isAvailableHelp' | translate }}</div>
+          </div>
+
+          <!-- Max Quantity -->
+          <div class="form-group">
+            <label class="form-label" for="maxQuantity">
+              {{ 'services.maxQuantity' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="maxQuantity"
+              formControlName="maxQuantity"
+              class="form-input"
+              [class.error]="isFieldInvalid('maxQuantity')"
+              [placeholder]="'services.maxQuantityPlaceholder' | translate"
+              min="1"
+              step="1"
+            />
+            <div class="form-help">{{ 'services.maxQuantityHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('maxQuantity')">
+              {{ getFieldError('maxQuantity') }}
+            </div>
+          </div>
+
+          <!-- Minimum Rental Days -->
+          <div class="form-group">
+            <label class="form-label" for="minimumRentalDays">
+              {{ 'services.minimumRentalDays' | translate }}
+            </label>
+            <input
+              type="number"
+              id="minimumRentalDays"
+              formControlName="minimumRentalDays"
+              class="form-input"
+              [placeholder]="'services.minimumRentalDaysPlaceholder' | translate"
+              min="1"
+              step="1"
+            />
+            <div class="form-help">{{ 'services.minimumRentalDaysHelp' | translate }}</div>
+          </div>
+
+          <!-- Available at Branches -->
+          <div class="form-group full-width">
+            <label class="form-label" for="availableAtBranches">
+              {{ 'services.availableAtBranches' | translate }}
+            </label>
+            <select
+              id="availableAtBranches"
+              formControlName="availableAtBranches"
+              class="form-select"
+              multiple
+            >
+              <option *ngFor="let branch of branches()" [value]="branch.id">
+                {{ branch.name }} - {{ branch.city }}
+              </option>
+            </select>
+            <div class="form-help">{{ 'services.availableAtBranchesHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features and Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-list-stars"></i>
+            {{ 'services.featuresAndDetails' | translate }}
+          </h2>
+          <p class="section-description">{{ 'services.featuresAndDetailsDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Features -->
+          <div class="form-group full-width">
+            <label class="form-label" for="features">
+              {{ 'services.features' | translate }}
+            </label>
+            <input
+              type="text"
+              id="features"
+              formControlName="features"
+              class="form-input"
+              [placeholder]="'services.featuresPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'services.featuresHelp' | translate }}</div>
+          </div>
+
+          <!-- Restrictions -->
+          <div class="form-group full-width">
+            <label class="form-label" for="restrictions">
+              {{ 'services.restrictions' | translate }}
+            </label>
+            <input
+              type="text"
+              id="restrictions"
+              formControlName="restrictions"
+              class="form-input"
+              [placeholder]="'services.restrictionsPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'services.restrictionsHelp' | translate }}</div>
+          </div>
+
+          <!-- Tags -->
+          <div class="form-group full-width">
+            <label class="form-label" for="tags">
+              {{ 'services.tags' | translate }}
+            </label>
+            <input
+              type="text"
+              id="tags"
+              formControlName="tags"
+              class="form-input"
+              [placeholder]="'services.tagsPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'services.tagsHelp' | translate }}</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group full-width">
+            <label class="form-label" for="notes">
+              {{ 'services.notes' | translate }}
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              class="form-textarea"
+              rows="4"
+              [placeholder]="'services.notesPlaceholder' | translate"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      >
+        {{ 'common.cancel' | translate }}
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="serviceForm.invalid || isSubmitting()"
+      >
+        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
+        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

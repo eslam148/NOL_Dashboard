@@ -1,0 +1,568 @@
+<div class="admin-user-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <a routerLink="/car-rental/admin-users" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {{ 'common.back' | translate }}
+      </a>
+      <div>
+        <h1 class="page-title">
+          {{ isEditMode() ? ('adminUsers.editAdminUser' | translate) : ('adminUsers.addAdminUser' | translate) }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? ('adminUsers.editAdminUserDesc' | translate) : ('adminUsers.addAdminUserDesc' | translate) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="adminUserForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+    <div class="form-sections">
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-person"></i>
+            {{ 'adminUsers.basicInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.basicInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- First Name -->
+          <div class="form-group">
+            <label class="form-label" for="firstName">
+              {{ 'adminUsers.firstName' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              formControlName="firstName"
+              class="form-input"
+              [class.error]="isFieldInvalid('firstName')"
+              [placeholder]="'adminUsers.firstNamePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('firstName')">
+              {{ getFieldError('firstName') }}
+            </div>
+          </div>
+
+          <!-- Last Name -->
+          <div class="form-group">
+            <label class="form-label" for="lastName">
+              {{ 'adminUsers.lastName' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              formControlName="lastName"
+              class="form-input"
+              [class.error]="isFieldInvalid('lastName')"
+              [placeholder]="'adminUsers.lastNamePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('lastName')">
+              {{ getFieldError('lastName') }}
+            </div>
+          </div>
+
+          <!-- Username -->
+          <div class="form-group">
+            <label class="form-label" for="username">
+              {{ 'adminUsers.username' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="form-input"
+              [class.error]="isFieldInvalid('username')"
+              [placeholder]="'adminUsers.usernamePlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'adminUsers.usernameHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('username')">
+              {{ getFieldError('username') }}
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">
+              {{ 'adminUsers.email' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-input"
+              [class.error]="isFieldInvalid('email')"
+              [placeholder]="'adminUsers.emailPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('email')">
+              {{ getFieldError('email') }}
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label class="form-label" for="phone">
+              {{ 'adminUsers.phone' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              class="form-input"
+              [class.error]="isFieldInvalid('phone')"
+              [placeholder]="'adminUsers.phonePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('phone')">
+              {{ getFieldError('phone') }}
+            </div>
+          </div>
+
+          <!-- Alternate Phone -->
+          <div class="form-group">
+            <label class="form-label" for="alternatePhone">
+              {{ 'adminUsers.alternatePhone' | translate }}
+            </label>
+            <input
+              type="tel"
+              id="alternatePhone"
+              formControlName="alternatePhone"
+              class="form-input"
+              [class.error]="isFieldInvalid('alternatePhone')"
+              [placeholder]="'adminUsers.alternatePhonePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('alternatePhone')">
+              {{ getFieldError('alternatePhone') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role and Access Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-shield-check"></i>
+            {{ 'adminUsers.roleAndAccess' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.roleAndAccessDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Role -->
+          <div class="form-group">
+            <label class="form-label" for="role">
+              {{ 'adminUsers.role' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="role"
+              formControlName="role"
+              class="form-select"
+              [class.error]="isFieldInvalid('role')"
+            >
+              <option value="">{{ 'adminUsers.selectRole' | translate }}</option>
+              <option *ngFor="let role of adminRoles" [value]="role.value">
+                {{ role.label | translate }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('role')">
+              {{ getFieldError('role') }}
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="form-group">
+            <label class="form-label" for="status">
+              {{ 'adminUsers.status' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="status"
+              formControlName="status"
+              class="form-select"
+              [class.error]="isFieldInvalid('status')"
+            >
+              <option value="active">{{ 'adminUsers.active' | translate }}</option>
+              <option value="inactive">{{ 'adminUsers.inactive' | translate }}</option>
+              <option value="suspended">{{ 'adminUsers.suspended' | translate }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('status')">
+              {{ getFieldError('status') }}
+            </div>
+          </div>
+
+          <!-- Branch Assignment -->
+          <div class="form-group full-width">
+            <label class="form-label" for="branchIds">
+              {{ 'adminUsers.branchAssignment' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="branchIds"
+              formControlName="branchIds"
+              class="form-select"
+              multiple
+              [class.error]="isFieldInvalid('branchIds')"
+            >
+              <option *ngFor="let branch of branches()" [value]="branch.id">
+                {{ branch.name }} - {{ branch.city }}
+              </option>
+            </select>
+            <div class="form-help">{{ 'adminUsers.branchAssignmentHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('branchIds')">
+              {{ getFieldError('branchIds') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-briefcase"></i>
+            {{ 'adminUsers.employmentInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.employmentInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Employee ID -->
+          <div class="form-group">
+            <label class="form-label" for="employeeId">
+              {{ 'adminUsers.employeeId' | translate }}
+            </label>
+            <input
+              type="text"
+              id="employeeId"
+              formControlName="employeeId"
+              class="form-input"
+              [placeholder]="'adminUsers.employeeIdPlaceholder' | translate"
+            />
+          </div>
+
+          <!-- Department -->
+          <div class="form-group">
+            <label class="form-label" for="department">
+              {{ 'adminUsers.department' | translate }}
+            </label>
+            <select
+              id="department"
+              formControlName="department"
+              class="form-select"
+            >
+              <option value="">{{ 'adminUsers.selectDepartment' | translate }}</option>
+              <option *ngFor="let dept of departments" [value]="dept.value">
+                {{ dept.label | translate }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Hire Date -->
+          <div class="form-group">
+            <label class="form-label" for="hireDate">
+              {{ 'adminUsers.hireDate' | translate }}
+            </label>
+            <input
+              type="date"
+              id="hireDate"
+              formControlName="hireDate"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Salary -->
+          <div class="form-group">
+            <label class="form-label" for="salary">
+              {{ 'adminUsers.salary' | translate }}
+            </label>
+            <div class="input-with-currency">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="salary"
+                formControlName="salary"
+                class="form-input with-currency"
+                [placeholder]="'adminUsers.salaryPlaceholder' | translate"
+                min="0"
+                step="100"
+              />
+            </div>
+            <div class="form-help">{{ 'adminUsers.salaryHelp' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-geo-alt"></i>
+            {{ 'adminUsers.addressInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.addressInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Street -->
+          <div class="form-group full-width">
+            <label class="form-label" for="street">
+              {{ 'adminUsers.street' | translate }}
+            </label>
+            <input
+              type="text"
+              id="street"
+              formControlName="street"
+              class="form-input"
+              [placeholder]="'adminUsers.streetPlaceholder' | translate"
+            />
+          </div>
+
+          <!-- City -->
+          <div class="form-group">
+            <label class="form-label" for="city">
+              {{ 'adminUsers.city' | translate }}
+            </label>
+            <input
+              type="text"
+              id="city"
+              formControlName="city"
+              class="form-input"
+              [placeholder]="'adminUsers.cityPlaceholder' | translate"
+            />
+          </div>
+
+          <!-- State -->
+          <div class="form-group">
+            <label class="form-label" for="state">
+              {{ 'adminUsers.state' | translate }}
+            </label>
+            <input
+              type="text"
+              id="state"
+              formControlName="state"
+              class="form-input"
+              [placeholder]="'adminUsers.statePlaceholder' | translate"
+            />
+          </div>
+
+          <!-- Zip Code -->
+          <div class="form-group">
+            <label class="form-label" for="zipCode">
+              {{ 'adminUsers.zipCode' | translate }}
+            </label>
+            <input
+              type="text"
+              id="zipCode"
+              formControlName="zipCode"
+              class="form-input"
+              [placeholder]="'adminUsers.zipCodePlaceholder' | translate"
+            />
+          </div>
+
+          <!-- Country -->
+          <div class="form-group">
+            <label class="form-label" for="country">
+              {{ 'adminUsers.country' | translate }}
+            </label>
+            <input
+              type="text"
+              id="country"
+              formControlName="country"
+              class="form-input"
+              [placeholder]="'adminUsers.countryPlaceholder' | translate"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Contact Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-telephone"></i>
+            {{ 'adminUsers.emergencyContact' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.emergencyContactDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Emergency Contact Name -->
+          <div class="form-group">
+            <label class="form-label" for="emergencyContactName">
+              {{ 'adminUsers.emergencyContactName' | translate }}
+            </label>
+            <input
+              type="text"
+              id="emergencyContactName"
+              formControlName="emergencyContactName"
+              class="form-input"
+              [placeholder]="'adminUsers.emergencyContactNamePlaceholder' | translate"
+            />
+          </div>
+
+          <!-- Relationship -->
+          <div class="form-group">
+            <label class="form-label" for="emergencyContactRelationship">
+              {{ 'adminUsers.relationship' | translate }}
+            </label>
+            <select
+              id="emergencyContactRelationship"
+              formControlName="emergencyContactRelationship"
+              class="form-select"
+            >
+              <option value="">{{ 'adminUsers.selectRelationship' | translate }}</option>
+              <option *ngFor="let rel of relationships" [value]="rel.value">
+                {{ rel.label | translate }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Emergency Contact Phone -->
+          <div class="form-group">
+            <label class="form-label" for="emergencyContactPhone">
+              {{ 'adminUsers.emergencyContactPhone' | translate }}
+            </label>
+            <input
+              type="tel"
+              id="emergencyContactPhone"
+              formControlName="emergencyContactPhone"
+              class="form-input"
+              [class.error]="isFieldInvalid('emergencyContactPhone')"
+              [placeholder]="'adminUsers.emergencyContactPhonePlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('emergencyContactPhone')">
+              {{ getFieldError('emergencyContactPhone') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password Section (for new users) -->
+      <div class="form-section" *ngIf="!isEditMode()">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-lock"></i>
+            {{ 'adminUsers.passwordSetup' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.passwordSetupDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Password -->
+          <div class="form-group">
+            <label class="form-label" for="password">
+              {{ 'adminUsers.password' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="form-input"
+              [class.error]="isFieldInvalid('password')"
+              [placeholder]="'adminUsers.passwordPlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'adminUsers.passwordHelp' | translate }}</div>
+            <div class="error-message" *ngIf="isFieldInvalid('password')">
+              {{ getFieldError('password') }}
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">
+              {{ 'adminUsers.confirmPassword' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="form-input"
+              [class.error]="isFieldInvalid('confirmPassword') || !passwordsMatch()"
+              [placeholder]="'adminUsers.confirmPasswordPlaceholder' | translate"
+            />
+            <div class="error-message" *ngIf="!passwordsMatch() && adminUserForm.get('confirmPassword')?.touched">
+              {{ 'adminUsers.passwordsDoNotMatch' | translate }}
+            </div>
+            <div class="error-message" *ngIf="isFieldInvalid('confirmPassword')">
+              {{ getFieldError('confirmPassword') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="bi bi-plus-circle"></i>
+            {{ 'adminUsers.additionalInformation' | translate }}
+          </h2>
+          <p class="section-description">{{ 'adminUsers.additionalInformationDesc' | translate }}</p>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Profile Image -->
+          <div class="form-group full-width">
+            <label class="form-label" for="profileImage">
+              {{ 'adminUsers.profileImage' | translate }}
+            </label>
+            <input
+              type="url"
+              id="profileImage"
+              formControlName="profileImage"
+              class="form-input"
+              [placeholder]="'adminUsers.profileImagePlaceholder' | translate"
+            />
+            <div class="form-help">{{ 'adminUsers.profileImageHelp' | translate }}</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group full-width">
+            <label class="form-label" for="notes">
+              {{ 'adminUsers.notes' | translate }}
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              class="form-textarea"
+              rows="4"
+              [placeholder]="'adminUsers.notesPlaceholder' | translate"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      >
+        {{ 'common.cancel' | translate }}
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="adminUserForm.invalid || isSubmitting() || (!isEditMode() && !passwordsMatch())"
+      >
+        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
+        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
+        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+      </button>
+    </div>
+  </form>
+</div>

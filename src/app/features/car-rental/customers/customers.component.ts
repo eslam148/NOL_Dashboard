@@ -87,7 +87,7 @@ export class CustomersComponent implements OnInit {
         customer.lastName.toLowerCase().includes(search) ||
         customer.email.toLowerCase().includes(search) ||
         customer.phone.toLowerCase().includes(search) ||
-        customer.licenseNumber.toLowerCase().includes(search)
+        customer.driverLicense.number.toLowerCase().includes(search)
       );
     }
 
@@ -98,11 +98,10 @@ export class CustomersComponent implements OnInit {
 
     // Apply status filter
     if (this.statusFilter() !== 'all') {
-      if (this.statusFilter() === 'blacklisted') {
-        filtered = filtered.filter(customer => customer.isBlacklisted);
+      if (this.statusFilter() === 'blocked') {
+        filtered = filtered.filter(customer => customer.status === 'blocked');
       } else {
-        const isActive = this.statusFilter() === 'active';
-        filtered = filtered.filter(customer => customer.isActive === isActive && !customer.isBlacklisted);
+        filtered = filtered.filter(customer => customer.status === this.statusFilter());
       }
     }
 
@@ -146,7 +145,7 @@ export class CustomersComponent implements OnInit {
   }
 
   toggleCustomerBlacklist(customer: Customer) {
-    if (confirm(`Are you sure you want to ${customer.isBlacklisted ? 'remove from' : 'add to'} blacklist?`)) {
+    if (confirm(`Are you sure you want to ${customer.status === 'blocked' ? 'unblock' : 'block'} this customer?`)) {
       this.carRentalService.toggleCustomerBlacklist(customer.id).subscribe({
         next: (updatedCustomer) => {
           // Update the customer in the list
@@ -247,10 +246,10 @@ export class CustomersComponent implements OnInit {
     const customers = this.customers();
     return {
       total: customers.length,
-      active: customers.filter(c => c.isActive && !c.isBlacklisted).length,
+      active: customers.filter(c => c.status === 'active').length,
       premium: customers.filter(c => c.customerType === 'premium').length,
       corporate: customers.filter(c => c.customerType === 'corporate').length,
-      blacklisted: customers.filter(c => c.isBlacklisted).length,
+      blocked: customers.filter(c => c.status === 'blocked').length,
       totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0),
       averageSpent: customers.length > 0 ? customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length : 0
     };
