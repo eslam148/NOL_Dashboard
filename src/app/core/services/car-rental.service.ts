@@ -12,6 +12,7 @@ import { BookingApiService } from './booking-api.service';
 import { AdvertisementApiService } from './advertisement-api.service';
 import { BranchApiService } from './branch-api.service';
 import { DashboardApiService } from './dashboard-api.service';
+import { CustomerApiService } from './customer-api.service';
 import {
   AdminCarDto,
   AdminCreateCarDto,
@@ -40,6 +41,7 @@ export class CarRentalService {
   private advertisementApiService = inject(AdvertisementApiService);
   private branchApiService = inject(BranchApiService);
   private dashboardApiService = inject(DashboardApiService);
+  private customerApiService = inject(CustomerApiService);
   private isLoading = signal(false);
 
   // Feature flags for API integration
@@ -1401,8 +1403,62 @@ export class CarRentalService {
     }
   ];
 
-  getCustomers(): Observable<Customer[]> {
+  getCustomers(filter?: any): Observable<Customer[]> {
     this.isLoading.set(true);
+
+    if (this.useRealApi) {
+      // Convert filter to CustomerFilterDto
+      const customerFilter = this.convertCustomerFilterToDto(filter);
+
+      console.log('👥 Fetching customers with filter:', customerFilter);
+
+      return this.customerApiService.getCustomers(customerFilter).pipe(
+        map((paginatedResponse) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Customer API Paginated Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid customer paginated response structure:', paginatedResponse);
+            return [];
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Customer response data is not an array:', paginatedResponse.data);
+            return [];
+          }
+
+          console.log(`✅ Converting ${paginatedResponse.data.length} customer DTOs to Customer objects`);
+
+          const convertedCustomers = this.convertAdminCustomerDtosToCustomers(paginatedResponse.data);
+          console.log('🔄 Converted customers:', convertedCustomers);
+
+          return convertedCustomers;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching customers:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 Customer API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - Customer API might be unreachable');
+          }
+
+          // Return empty array instead of throwing error to prevent app crash
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for customers');
     return of([...this.mockCustomers]).pipe(
       delay(800),
       map(customers => {
@@ -1418,6 +1474,13 @@ export class CarRentalService {
   }
 
   createCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'lastRentalDate'>): Observable<Customer> {
+    if (this.useRealApi) {
+      // Note: Customer creation is typically handled by the customer registration API
+      // This method would need to be implemented if admin customer creation is required
+      console.warn('Customer creation via admin API not implemented - using mock data');
+    }
+
+    // Fallback to mock data (customer creation is typically done through registration)
     const newCustomer: Customer = {
       ...customer,
       id: Date.now().toString(),
@@ -1430,6 +1493,13 @@ export class CarRentalService {
   }
 
   updateCustomer(id: string, customer: Partial<Customer>): Observable<Customer | null> {
+    if (this.useRealApi) {
+      // Note: Customer updates are typically handled by the customer profile API
+      // Admin updates would need specific admin customer update endpoints
+      console.warn('Customer update via admin API not implemented - using mock data');
+    }
+
+    // Fallback to mock data
     const index = this.mockCustomers.findIndex(c => c.id === id);
     if (index !== -1) {
       this.mockCustomers[index] = {
@@ -1498,6 +1568,120 @@ export class CarRentalService {
       return of(true).pipe(delay(1000));
     }
     return of(false).pipe(delay(1000));
+  }
+
+  // Customer Analytics and Loyalty Methods
+  getCustomerAnalytics(): Observable<any> {
+    if (this.useRealApi) {
+      console.log('👥 Fetching customer analytics');
+
+      return this.customerApiService.getCustomerAnalytics().pipe(
+        map((analytics) => {
+          console.log('📦 Customer Analytics API Response:', analytics);
+          return analytics;
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching customer analytics:', error);
+          return of(this.getMockCustomerAnalytics());
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for customer analytics');
+    return of(this.getMockCustomerAnalytics()).pipe(delay(800));
+  }
+
+  private getMockCustomerAnalytics(): any {
+    return {
+      totalCustomers: 1250,
+      activeCustomers: 980,
+      newCustomersThisMonth: 45,
+      customerRetentionRate: 85.5,
+      averageLifetimeValue: 2500,
+      averageLoyaltyPoints: 150
+    };
+  }
+
+  awardLoyaltyPoints(customerId: string, points: number, reason: string): Observable<boolean> {
+    if (this.useRealApi) {
+      const awardData = {
+        customerId,
+        points,
+        reason
+      };
+
+      return this.customerApiService.awardLoyaltyPoints(awardData).pipe(
+        catchError((error) => {
+          console.error('❌ Error awarding loyalty points:', error);
+          return of(false);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log(`🎭 Mock: Awarding ${points} loyalty points to customer ${customerId} for ${reason}`);
+    return of(true).pipe(delay(1000));
+  }
+
+  redeemLoyaltyPoints(customerId: string, points: number, reason: string): Observable<boolean> {
+    if (this.useRealApi) {
+      const redeemData = {
+        customerId,
+        points,
+        reason
+      };
+
+      return this.customerApiService.redeemLoyaltyPoints(redeemData).pipe(
+        catchError((error) => {
+          console.error('❌ Error redeeming loyalty points:', error);
+          return of(false);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log(`🎭 Mock: Redeeming ${points} loyalty points from customer ${customerId} for ${reason}`);
+    return of(true).pipe(delay(1000));
+  }
+
+  getCustomerLoyaltyPointsSummary(customerId: string): Observable<any> {
+    if (this.useRealApi) {
+      return this.customerApiService.getCustomerLoyaltyPointsSummary(customerId).pipe(
+        catchError((error) => {
+          console.error('❌ Error fetching loyalty points summary:', error);
+          return of({});
+        })
+      );
+    }
+
+    // Fallback to mock data
+    return of({
+      totalPoints: 250,
+      availablePoints: 180,
+      lifetimeEarned: 850,
+      lifetimeRedeemed: 670,
+      expiringPoints: 20,
+      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    }).pipe(delay(800));
+  }
+
+  getCustomersAtChurnRisk(): Observable<any[]> {
+    if (this.useRealApi) {
+      return this.customerApiService.getCustomersAtChurnRisk().pipe(
+        catchError((error) => {
+          console.error('❌ Error fetching customers at churn risk:', error);
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    return of([
+      { customerId: '1', customerName: 'Ahmed Al-Mansouri', lastBookingDate: '2024-01-15', riskScore: 85 },
+      { customerId: '2', customerName: 'Sarah Johnson', lastBookingDate: '2024-02-10', riskScore: 72 },
+      { customerId: '3', customerName: 'Mohammed Ali', lastBookingDate: '2024-01-28', riskScore: 68 }
+    ]).pipe(delay(800));
   }
 
   toggleCustomerStatus(id: string): Observable<Customer> {
@@ -2965,6 +3149,123 @@ export class CarRentalService {
     return '09:00-18:00 Mon-Sun';
   }
 
+  // Customer conversion methods
+  private convertCustomerFilterToDto(filter?: any): any {
+    if (!filter) return {};
+
+    return {
+      name: filter.name,
+      email: filter.email,
+      phone: filter.phone,
+      userRole: filter.userRole,
+      preferredLanguage: filter.preferredLanguage,
+      isActive: filter.isActive,
+      emailVerified: filter.emailVerified,
+      createdDateFrom: filter.createdDateFrom,
+      createdDateTo: filter.createdDateTo,
+      minBookings: filter.minBookings,
+      maxBookings: filter.maxBookings,
+      minSpent: filter.minSpent,
+      maxSpent: filter.maxSpent,
+      minLoyaltyPoints: filter.minLoyaltyPoints,
+      maxLoyaltyPoints: filter.maxLoyaltyPoints,
+      sortBy: filter.sortBy,
+      sortOrder: filter.sortOrder,
+      page: filter.page || 1,
+      pageSize: filter.pageSize || 50
+    };
+  }
+
+  private convertAdminCustomerDtosToCustomers(customers: any[]): Customer[] {
+    if (!customers || !Array.isArray(customers)) {
+      console.warn('Invalid customers array provided to convertAdminCustomerDtosToCustomers:', customers);
+      return [];
+    }
+
+    return customers.map(customer => {
+      try {
+        return this.convertAdminCustomerDtoToCustomer(customer);
+      } catch (error) {
+        console.error('Error converting customer DTO:', customer, error);
+        // Return null for failed conversions and filter them out
+        return null;
+      }
+    }).filter(customer => customer !== null) as Customer[];
+  }
+
+  private convertAdminCustomerDtoToCustomer(customer: any): Customer {
+    if (!customer) {
+      throw new Error('Customer DTO is null or undefined');
+    }
+
+    // Split full name into first and last name
+    const nameParts = (customer.fullName || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    return {
+      id: customer.id || '',
+      firstName: firstName,
+      lastName: lastName,
+      email: customer.email || '',
+      phone: customer.phoneNumber || '',
+      alternatePhone: undefined,
+      dateOfBirth: new Date(), // API doesn't provide DOB
+      nationality: 'Unknown', // API doesn't provide nationality
+      gender: undefined,
+      driverLicense: {
+        number: 'Unknown',
+        issuingCountry: 'Unknown',
+        issueDate: new Date(),
+        expiryDate: new Date(),
+        licenseClass: 'Unknown'
+      },
+      address: {
+        street: 'Unknown',
+        city: 'Unknown',
+        state: 'Unknown',
+        country: 'Unknown',
+        zipCode: 'Unknown'
+      },
+      emergencyContact: {
+        name: 'Unknown',
+        phone: 'Unknown',
+        relationship: 'Unknown'
+      },
+      customerType: this.mapApiRoleToCustomerType(customer.userRole || 'Customer'),
+      preferredLanguage: customer.preferredLanguage?.toLowerCase() || 'en',
+      marketingConsent: false, // API doesn't provide this
+      profileImage: undefined,
+      loyaltyPoints: customer.availableLoyaltyPoints || 0,
+      totalRentals: customer.totalBookings || 0,
+      totalSpent: customer.totalSpent || 0,
+      averageRating: 0, // API doesn't provide rating
+      status: customer.isActive ? 'active' : 'inactive',
+      verificationStatus: customer.emailConfirmed ? 'verified' : 'pending',
+      documents: undefined,
+      preferences: undefined,
+      notes: undefined,
+      createdAt: customer.createdAt ? new Date(customer.createdAt) : new Date(),
+      updatedAt: customer.updatedAt ? new Date(customer.updatedAt) : new Date(),
+      lastRentalDate: customer.lastBookingDate ? new Date(customer.lastBookingDate) : undefined,
+      createdBy: 'system',
+      isActive: customer.isActive,
+      isBlacklisted: false, // API doesn't provide this
+      licenseNumber: 'Unknown' // API doesn't provide this
+    };
+  }
+
+  private mapApiRoleToCustomerType(apiRole: string): CustomerType {
+    const roleMap: Record<string, CustomerType> = {
+      'Customer': 'regular',
+      'PremiumCustomer': 'premium',
+      'VIPCustomer': 'premium', // Map VIP to premium since we don't have vip type
+      'CorporateCustomer': 'corporate'
+    };
+
+    return roleMap[apiRole] || 'regular';
+  }
+
   // Dashboard conversion methods
   private convertDashboardStatsDtoToStats(dashboardStatsDto: any): DashboardStats {
     if (!dashboardStatsDto) {
@@ -3125,6 +3426,30 @@ export class CarRentalService {
       }),
       catchError(error => {
         console.error('❌ Dashboard API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Customer API connection
+  debugCustomerApi(): Observable<any> {
+    console.log('🔧 Testing Customer API connection...');
+    console.log('🔧 Customer API Base URL:', this.customerApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test with minimal filter to see raw response
+    return this.customerApiService.getCustomers({ page: 1, pageSize: 5 }).pipe(
+      map(response => {
+        console.log('✅ Customer API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Customer API test failed:', error);
         return of({ error: error.message || 'Unknown error' });
       })
     );
