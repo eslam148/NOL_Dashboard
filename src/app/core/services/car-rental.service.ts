@@ -8,6 +8,9 @@ import {
 } from '../models/car-rental.models';
 import { CarApiService } from './car-api.service';
 import { AdminApiService } from './admin-api.service';
+import { BookingApiService } from './booking-api.service';
+import { AdvertisementApiService } from './advertisement-api.service';
+import { BranchApiService } from './branch-api.service';
 import {
   AdminCarDto,
   AdminCreateCarDto,
@@ -17,7 +20,12 @@ import {
   PaginatedResponse,
   AdminUserDto,
   CreateAdminUserDto,
-  AdminFilterDto
+  AdminFilterDto,
+  AdminBookingDto,
+  AdminCreateBookingDto,
+  BookingFilterDto,
+  UpdateBookingStatusDto,
+  CancelBookingDto
 } from '../models/api.models';
 import { environment } from '../../../environments/environment';
 
@@ -27,6 +35,9 @@ import { environment } from '../../../environments/environment';
 export class CarRentalService {
   private carApiService = inject(CarApiService);
   private adminApiService = inject(AdminApiService);
+  private bookingApiService = inject(BookingApiService);
+  private advertisementApiService = inject(AdvertisementApiService);
+  private branchApiService = inject(BranchApiService);
   private isLoading = signal(false);
 
   // Feature flags for API integration
@@ -189,6 +200,60 @@ export class CarRentalService {
   // Branch Management
   getBranches(filter?: BranchFilter): Observable<Branch[]> {
     this.isLoading.set(true);
+
+    if (this.useRealApi) {
+      // Convert BranchFilter to BranchFilterDto
+      const branchFilter = this.convertBranchFilterToDto(filter);
+
+      console.log('🏢 Fetching branches with filter:', branchFilter);
+
+      return this.branchApiService.getBranches(branchFilter).pipe(
+        map((paginatedResponse) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Branch API Paginated Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid branch paginated response structure:', paginatedResponse);
+            return [];
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Branch response data is not an array:', paginatedResponse.data);
+            return [];
+          }
+
+          console.log(`✅ Converting ${paginatedResponse.data.length} branch DTOs to Branch objects`);
+
+          const convertedBranches = this.convertBranchDtosToBranches(paginatedResponse.data);
+          console.log('🔄 Converted branches:', convertedBranches);
+
+          return convertedBranches;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching branches:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 Branch API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - Branch API might be unreachable');
+          }
+
+          // Return empty array instead of throwing error to prevent app crash
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for branches');
     let filteredBranches = [...this.mockBranches];
 
     if (filter) {
@@ -196,7 +261,7 @@ export class CarRentalService {
         filteredBranches = filteredBranches.filter(b => b.status === filter.status);
       }
       if (filter.city) {
-        filteredBranches = filteredBranches.filter(b => 
+        filteredBranches = filteredBranches.filter(b =>
           b.city.toLowerCase().includes(filter.city!.toLowerCase())
         );
       }
@@ -217,6 +282,22 @@ export class CarRentalService {
   }
 
   createBranch(branch: Omit<Branch, 'id' | 'createdAt' | 'updatedAt'>): Observable<Branch> {
+    if (this.useRealApi) {
+      // Convert Branch to CreateBranchDto
+      const createBranchDto = this.convertBranchToCreateDto(branch);
+
+      return this.branchApiService.createBranch(createBranchDto).pipe(
+        map((createdBranch) => {
+          return this.convertBranchDtoToBranch(createdBranch);
+        }),
+        catchError((error) => {
+          console.error('Error creating branch:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const newBranch: Branch = {
       ...branch,
       id: Date.now().toString(),
@@ -228,6 +309,20 @@ export class CarRentalService {
   }
 
   updateBranch(id: string, updates: Partial<Branch>): Observable<Branch> {
+    if (this.useRealApi) {
+      // Convert partial Branch to UpdateBranchDto
+      const updateBranchDto = this.convertPartialBranchToUpdateDto(updates);
+
+      return this.branchApiService.updateBranch(parseInt(id), updateBranchDto).pipe(
+        map((updatedBranch) => this.convertBranchDtoToBranch(updatedBranch)),
+        catchError((error) => {
+          console.error('Error updating branch:', error);
+          throw error;
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockBranches.findIndex(b => b.id === id);
     if (index !== -1) {
       this.mockBranches[index] = {
@@ -241,6 +336,16 @@ export class CarRentalService {
   }
 
   deleteBranch(id: string): Observable<boolean> {
+    if (this.useRealApi) {
+      return this.branchApiService.deleteBranch(parseInt(id)).pipe(
+        catchError((error) => {
+          console.error('Error deleting branch:', error);
+          return of(false);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockBranches.findIndex(b => b.id === id);
     if (index !== -1) {
       this.mockBranches.splice(index, 1);
@@ -1217,6 +1322,22 @@ export class CarRentalService {
 
   // Booking Management Methods
   createBooking(booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Observable<Booking> {
+    if (this.useRealApi) {
+      // Convert Booking to AdminCreateBookingDto
+      const createBookingDto: AdminCreateBookingDto = this.convertBookingToCreateBookingDto(booking);
+
+      return this.bookingApiService.createBooking(createBookingDto).pipe(
+        map((createdBooking: AdminBookingDto) => {
+          return this.convertAdminBookingDtoToBooking(createdBooking);
+        }),
+        catchError((error) => {
+          console.error('Error creating booking:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const newBooking: Booking = {
       ...booking,
       id: Date.now().toString(),
@@ -1506,8 +1627,59 @@ export class CarRentalService {
     }
   ];
 
-  getBookings(): Observable<Booking[]> {
+  getBookings(filter?: BookingFilterDto): Observable<Booking[]> {
     this.isLoading.set(true);
+
+    if (this.useRealApi) {
+      console.log('📅 Fetching bookings with filter:', filter);
+
+      return this.bookingApiService.getBookings(filter).pipe(
+        map((paginatedResponse: PaginatedResponse<AdminBookingDto>) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Booking API Paginated Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid booking paginated response structure:', paginatedResponse);
+            return [];
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Booking response data is not an array:', paginatedResponse.data);
+            return [];
+          }
+
+          console.log(`✅ Converting ${paginatedResponse.data.length} booking DTOs to Booking objects`);
+
+          const convertedBookings = this.convertAdminBookingDtosToBookings(paginatedResponse.data);
+          console.log('🔄 Converted bookings:', convertedBookings);
+
+          return convertedBookings;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching bookings:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 Booking API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - Booking API might be unreachable');
+          }
+
+          // Return empty array instead of throwing error to prevent app crash
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for bookings');
     return of([...this.mockBookings]).pipe(
       delay(800),
       map(bookings => {
@@ -1520,6 +1692,21 @@ export class CarRentalService {
 
 
   updateBookingStatus(id: string, status: BookingStatus): Observable<Booking | null> {
+    if (this.useRealApi) {
+      const statusUpdate: UpdateBookingStatusDto = {
+        status: this.mapBookingStatusToApiStatus(status)
+      };
+
+      return this.bookingApiService.updateBookingStatus(parseInt(id), statusUpdate).pipe(
+        map((updatedBooking: AdminBookingDto) => this.convertAdminBookingDtoToBooking(updatedBooking)),
+        catchError((error) => {
+          console.error('Error updating booking status:', error);
+          return of(null);
+        })
+      );
+    }
+
+    // Fallback to mock data
     return this.updateBooking(id, { status });
   }
 
@@ -1699,6 +1886,61 @@ export class CarRentalService {
 
   // Advertisement Management Methods
   getAdvertisements(filter?: AdvertisementFilter): Observable<Advertisement[]> {
+    this.isLoading.set(true);
+
+    if (this.useRealApi) {
+      // Convert AdvertisementFilter to AdvertisementFilterDto
+      const advertisementFilter = this.convertAdvertisementFilterToDto(filter);
+
+      console.log('📢 Fetching advertisements with filter:', advertisementFilter);
+
+      return this.advertisementApiService.getAdvertisements(advertisementFilter).pipe(
+        map((paginatedResponse) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Advertisement API Paginated Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid advertisement paginated response structure:', paginatedResponse);
+            return [];
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Advertisement response data is not an array:', paginatedResponse.data);
+            return [];
+          }
+
+          console.log(`✅ Converting ${paginatedResponse.data.length} advertisement DTOs to Advertisement objects`);
+
+          const convertedAdvertisements = this.convertAdminAdvertisementDtosToAdvertisements(paginatedResponse.data);
+          console.log('🔄 Converted advertisements:', convertedAdvertisements);
+
+          return convertedAdvertisements;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching advertisements:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 Advertisement API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - Advertisement API might be unreachable');
+          }
+
+          // Return empty array instead of throwing error to prevent app crash
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for advertisements');
     let filteredAds = [...this.mockAdvertisements];
 
     if (filter) {
@@ -1724,7 +1966,10 @@ export class CarRentalService {
 
     return of(filteredAds).pipe(
       delay(800),
-      map(ads => ads.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()))
+      map(ads => {
+        this.isLoading.set(false);
+        return ads.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      })
     );
   }
 
@@ -1734,6 +1979,22 @@ export class CarRentalService {
   }
 
   createAdvertisement(advertisement: Omit<Advertisement, 'id' | 'createdAt' | 'updatedAt' | 'impressions' | 'clicks' | 'conversions'>): Observable<Advertisement> {
+    if (this.useRealApi) {
+      // Convert Advertisement to AdminCreateAdvertisementDto
+      const createAdvertisementDto = this.convertAdvertisementToCreateDto(advertisement);
+
+      return this.advertisementApiService.createAdvertisement(createAdvertisementDto).pipe(
+        map((createdAdvertisement) => {
+          return this.convertAdminAdvertisementDtoToAdvertisement(createdAdvertisement);
+        }),
+        catchError((error) => {
+          console.error('Error creating advertisement:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const newAdvertisement: Advertisement = {
       ...advertisement,
       id: Date.now().toString(),
@@ -1749,6 +2010,20 @@ export class CarRentalService {
   }
 
   updateAdvertisement(id: string, advertisement: Partial<Advertisement>): Observable<Advertisement | null> {
+    if (this.useRealApi) {
+      // Convert partial Advertisement to AdminCreateAdvertisementDto
+      const updateAdvertisementDto = this.convertPartialAdvertisementToUpdateDto(advertisement);
+
+      return this.advertisementApiService.updateAdvertisement(parseInt(id), updateAdvertisementDto).pipe(
+        map((updatedAdvertisement) => this.convertAdminAdvertisementDtoToAdvertisement(updatedAdvertisement)),
+        catchError((error) => {
+          console.error('Error updating advertisement:', error);
+          return of(null);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockAdvertisements.findIndex(ad => ad.id === id);
     if (index !== -1) {
       this.mockAdvertisements[index] = {
@@ -1762,6 +2037,16 @@ export class CarRentalService {
   }
 
   deleteAdvertisement(id: string): Observable<boolean> {
+    if (this.useRealApi) {
+      return this.advertisementApiService.deleteAdvertisement(parseInt(id)).pipe(
+        catchError((error) => {
+          console.error('Error deleting advertisement:', error);
+          return of(false);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockAdvertisements.findIndex(ad => ad.id === id);
     if (index !== -1) {
       this.mockAdvertisements.splice(index, 1);
@@ -2110,6 +2395,454 @@ export class CarRentalService {
     return roleMap[adminRole];
   }
 
+  // Booking conversion methods
+  private convertAdminBookingDtosToBookings(bookings: AdminBookingDto[]): Booking[] {
+    if (!bookings || !Array.isArray(bookings)) {
+      console.warn('Invalid bookings array provided to convertAdminBookingDtosToBookings:', bookings);
+      return [];
+    }
+
+    return bookings.map(booking => {
+      try {
+        return this.convertAdminBookingDtoToBooking(booking);
+      } catch (error) {
+        console.error('Error converting booking DTO:', booking, error);
+        // Return null for failed conversions and filter them out
+        return null;
+      }
+    }).filter(booking => booking !== null) as Booking[];
+  }
+
+  private convertAdminBookingDtoToBooking(booking: AdminBookingDto): Booking {
+    if (!booking) {
+      throw new Error('Booking DTO is null or undefined');
+    }
+
+    // Calculate total days
+    const startDate = booking.startDate ? new Date(booking.startDate) : new Date();
+    const endDate = booking.endDate ? new Date(booking.endDate) : new Date();
+    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    return {
+      id: booking.id?.toString() || '',
+      bookingNumber: `BK-${booking.id}` || '',
+      customerId: booking.userId || '',
+      customer: {
+        id: booking.userId || '',
+        firstName: booking.customerName?.split(' ')[0] || '',
+        lastName: booking.customerName?.split(' ').slice(1).join(' ') || '',
+        email: booking.customerEmail || '',
+        phone: booking.customerPhone || '',
+        alternatePhone: undefined,
+        dateOfBirth: new Date(), // API doesn't provide DOB
+        nationality: 'Unknown', // API doesn't provide nationality
+        gender: undefined,
+        driverLicense: {
+          number: 'Unknown',
+          issuingCountry: 'Unknown',
+          issueDate: new Date(),
+          expiryDate: new Date(),
+          licenseClass: 'Unknown'
+        },
+        address: {
+          street: 'Unknown',
+          city: 'Unknown',
+          state: 'Unknown',
+          country: 'Unknown',
+          zipCode: 'Unknown'
+        },
+        emergencyContact: {
+          name: 'Unknown',
+          phone: 'Unknown',
+          relationship: 'Unknown'
+        },
+        customerType: 'regular' as CustomerType,
+        preferredLanguage: 'en',
+        marketingConsent: false,
+        profileImage: undefined,
+        loyaltyPoints: 0,
+        totalRentals: 0,
+        totalSpent: 0,
+        averageRating: 0,
+        status: 'active',
+        verificationStatus: 'verified',
+        documents: undefined,
+        preferences: undefined,
+        notes: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastRentalDate: undefined,
+        createdBy: 'system',
+        isActive: true,
+        isBlacklisted: false,
+        licenseNumber: 'Unknown'
+      },
+      vehicleId: booking.carId?.toString() || '',
+      vehicle: {
+        id: booking.carId?.toString() || '',
+        make: booking.carBrand || '',
+        model: booking.carModel || '',
+        year: new Date().getFullYear(), // API doesn't provide year
+        licensePlate: booking.carPlateNumber || '',
+        category: 'economy' as VehicleCategory, // Default category
+        dailyRate: booking.totalAmount ? booking.totalAmount / Math.max(totalDays, 1) : 0
+      },
+      startDate: startDate,
+      endDate: endDate,
+      totalDays: totalDays,
+      dailyRate: booking.totalAmount ? booking.totalAmount / Math.max(totalDays, 1) : 0,
+      subtotal: booking.totalAmount || 0,
+      taxes: 0, // API doesn't provide tax breakdown
+      fees: 0, // API doesn't provide fee breakdown
+      totalAmount: booking.totalAmount || 0,
+      paidAmount: 0, // API doesn't provide paid amount directly
+      status: this.mapApiStatusToBookingStatus(booking.status || 'Pending'),
+      paymentStatus: 'pending' as PaymentStatus, // API doesn't provide payment status directly
+      pickupLocation: booking.receivingBranchName || '',
+      dropoffLocation: booking.deliveryBranchName || '',
+      pickupTime: '09:00', // API doesn't provide pickup time
+      dropoffTime: '17:00', // API doesn't provide dropoff time
+      additionalServices: booking.extrasDetails?.map(extra => ({
+        serviceId: extra.extraTypeName,
+        name: extra.extraTypeName,
+        dailyRate: extra.unitPrice,
+        totalAmount: extra.totalPrice
+      })) || [],
+      specialRequests: undefined,
+      driverLicense: 'Unknown', // API doesn't provide driver license
+      emergencyContact: {
+        name: 'Unknown',
+        phone: 'Unknown'
+      },
+      createdAt: booking.createdAt ? new Date(booking.createdAt) : new Date(),
+      updatedAt: booking.updatedAt ? new Date(booking.updatedAt) : new Date(),
+      createdBy: 'admin' as 'customer' | 'admin',
+      notes: undefined // API doesn't provide notes directly
+    };
+  }
+
+  private convertBookingToCreateBookingDto(booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): AdminCreateBookingDto {
+    return {
+      userId: booking.customerId,
+      carId: parseInt(booking.vehicleId),
+      startDate: booking.startDate.toISOString(),
+      endDate: booking.endDate.toISOString(),
+      receivingBranchId: 1, // Default branch - this should be determined from pickupLocation
+      deliveryBranchId: 1, // Default branch - this should be determined from dropoffLocation
+      extras: booking.additionalServices?.map(service => ({
+        extraTypePriceId: 1, // This would need to be mapped from service name to ID
+        quantity: 1 // Default quantity
+      })),
+      notes: booking.notes,
+      discountAmount: 0, // Not provided in Booking interface
+      discountReason: undefined
+    };
+  }
+
+  private mapBookingStatusToApiStatus(status: BookingStatus): 'Pending' | 'Confirmed' | 'Active' | 'Completed' | 'Cancelled' {
+    const statusMap: Record<BookingStatus, 'Pending' | 'Confirmed' | 'Active' | 'Completed' | 'Cancelled'> = {
+      'pending': 'Pending',
+      'confirmed': 'Confirmed',
+      'active': 'Active',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+      'no_show': 'Cancelled' // Map no_show to Cancelled since API doesn't have no_show status
+    };
+
+    return statusMap[status] || 'Pending';
+  }
+
+  private mapApiStatusToBookingStatus(status: string): BookingStatus {
+    const statusMap: Record<string, BookingStatus> = {
+      'Pending': 'pending',
+      'Confirmed': 'confirmed',
+      'Active': 'active',
+      'Completed': 'completed',
+      'Cancelled': 'cancelled'
+    };
+
+    return statusMap[status] || 'pending';
+  }
+
+  // Advertisement conversion methods
+  private convertAdvertisementFilterToDto(filter?: AdvertisementFilter): any {
+    if (!filter) return {};
+
+    return {
+      status: this.mapAdvertisementStatusToApiStatus(filter.status),
+      type: this.mapAdvertisementTypeToApiType(filter.type),
+      startDateFrom: filter.startDate?.toISOString(),
+      startDateTo: filter.endDate?.toISOString(),
+      page: 1,
+      pageSize: 50
+    };
+  }
+
+  private convertAdminAdvertisementDtosToAdvertisements(advertisements: any[]): Advertisement[] {
+    if (!advertisements || !Array.isArray(advertisements)) {
+      console.warn('Invalid advertisements array provided to convertAdminAdvertisementDtosToAdvertisements:', advertisements);
+      return [];
+    }
+
+    return advertisements.map(advertisement => {
+      try {
+        return this.convertAdminAdvertisementDtoToAdvertisement(advertisement);
+      } catch (error) {
+        console.error('Error converting advertisement DTO:', advertisement, error);
+        // Return null for failed conversions and filter them out
+        return null;
+      }
+    }).filter(advertisement => advertisement !== null) as Advertisement[];
+  }
+
+  private convertAdminAdvertisementDtoToAdvertisement(advertisement: any): Advertisement {
+    if (!advertisement) {
+      throw new Error('Advertisement DTO is null or undefined');
+    }
+
+    return {
+      id: advertisement.id?.toString() || '',
+      title: advertisement.titleEn || advertisement.titleAr || '',
+      description: advertisement.descriptionEn || advertisement.descriptionAr || '',
+      imageUrl: advertisement.imageUrl || '',
+      targetUrl: advertisement.linkUrl,
+      type: this.mapApiTypeToAdvertisementType(advertisement.type || 'Banner'),
+      status: this.mapApiStatusToAdvertisementStatus(advertisement.status || 'Active'),
+      startDate: advertisement.startDate ? new Date(advertisement.startDate) : new Date(),
+      endDate: advertisement.endDate ? new Date(advertisement.endDate) : new Date(),
+      priority: advertisement.displayOrder || 0,
+      branchIds: [], // API doesn't provide branch IDs directly
+      targetAudience: {
+        gender: 'all',
+        location: [],
+        interests: [],
+        customerType: []
+      }, // Default target audience
+      impressions: advertisement.impressionCount || 0,
+      clicks: advertisement.clickCount || 0,
+      conversions: 0, // API doesn't provide conversions
+      budget: 0, // API doesn't provide budget
+      createdAt: advertisement.createdAt ? new Date(advertisement.createdAt) : new Date(),
+      updatedAt: advertisement.updatedAt ? new Date(advertisement.updatedAt) : new Date(),
+      createdBy: 'admin' // Default value
+    };
+  }
+
+  private convertAdvertisementToCreateDto(advertisement: Omit<Advertisement, 'id' | 'createdAt' | 'updatedAt' | 'impressions' | 'clicks' | 'conversions'>): any {
+    return {
+      titleAr: advertisement.title, // Using title for both languages for now
+      titleEn: advertisement.title,
+      descriptionAr: advertisement.description,
+      descriptionEn: advertisement.description,
+      imageUrl: advertisement.imageUrl,
+      linkUrl: advertisement.targetUrl,
+      type: this.mapAdvertisementTypeToApiType(advertisement.type),
+      status: this.mapAdvertisementStatusToApiStatus(advertisement.status),
+      startDate: advertisement.startDate.toISOString(),
+      endDate: advertisement.endDate.toISOString(),
+      displayOrder: advertisement.priority,
+      targetAudience: advertisement.targetAudience
+    };
+  }
+
+  private convertPartialAdvertisementToUpdateDto(advertisement: Partial<Advertisement>): any {
+    const updateDto: any = {};
+
+    if (advertisement.title) {
+      updateDto.titleAr = advertisement.title;
+      updateDto.titleEn = advertisement.title;
+    }
+    if (advertisement.description) {
+      updateDto.descriptionAr = advertisement.description;
+      updateDto.descriptionEn = advertisement.description;
+    }
+    if (advertisement.imageUrl) updateDto.imageUrl = advertisement.imageUrl;
+    if (advertisement.targetUrl) updateDto.linkUrl = advertisement.targetUrl;
+    if (advertisement.type) updateDto.type = this.mapAdvertisementTypeToApiType(advertisement.type);
+    if (advertisement.status) updateDto.status = this.mapAdvertisementStatusToApiStatus(advertisement.status);
+    if (advertisement.startDate) updateDto.startDate = advertisement.startDate.toISOString();
+    if (advertisement.endDate) updateDto.endDate = advertisement.endDate.toISOString();
+    if (advertisement.priority !== undefined) updateDto.displayOrder = advertisement.priority;
+    if (advertisement.targetAudience) updateDto.targetAudience = advertisement.targetAudience;
+
+    return updateDto;
+  }
+
+  private mapAdvertisementStatusToApiStatus(status?: AdvertisementStatus): string {
+    if (!status) return 'Active';
+
+    const statusMap: Record<AdvertisementStatus, string> = {
+      'draft': 'Inactive',
+      'active': 'Active',
+      'paused': 'Inactive',
+      'expired': 'Expired',
+      'archived': 'Inactive'
+    };
+
+    return statusMap[status] || 'Active';
+  }
+
+  private mapApiStatusToAdvertisementStatus(status: string): AdvertisementStatus {
+    const statusMap: Record<string, AdvertisementStatus> = {
+      'Active': 'active',
+      'Inactive': 'paused',
+      'Scheduled': 'draft',
+      'Expired': 'expired'
+    };
+
+    return statusMap[status] || 'active';
+  }
+
+  private mapAdvertisementTypeToApiType(type?: AdvertisementType): string {
+    if (!type) return 'Banner';
+
+    const typeMap: Record<AdvertisementType, string> = {
+      'banner': 'Banner',
+      'popup': 'Popup',
+      'sidebar': 'Sidebar',
+      'featured': 'Banner', // Map featured to Banner since API doesn't have featured
+      'promotion': 'Banner' // Map promotion to Banner since API doesn't have promotion
+    };
+
+    return typeMap[type] || 'Banner';
+  }
+
+  private mapApiTypeToAdvertisementType(type: string): AdvertisementType {
+    const typeMap: Record<string, AdvertisementType> = {
+      'Banner': 'banner',
+      'Popup': 'popup',
+      'Sidebar': 'sidebar'
+    };
+
+    return typeMap[type] || 'banner';
+  }
+
+  // Branch conversion methods
+  private convertBranchFilterToDto(filter?: BranchFilter): any {
+    if (!filter) return {};
+
+    return {
+      isActive: filter.status === 'active' ? true : filter.status === 'inactive' ? false : undefined,
+      city: filter.city,
+      country: filter.country,
+      page: 1,
+      pageSize: 50
+    };
+  }
+
+  private convertBranchDtosToBranches(branches: any[]): Branch[] {
+    if (!branches || !Array.isArray(branches)) {
+      console.warn('Invalid branches array provided to convertBranchDtosToBranches:', branches);
+      return [];
+    }
+
+    return branches.map(branch => {
+      try {
+        return this.convertBranchDtoToBranch(branch);
+      } catch (error) {
+        console.error('Error converting branch DTO:', branch, error);
+        // Return null for failed conversions and filter them out
+        return null;
+      }
+    }).filter(branch => branch !== null) as Branch[];
+  }
+
+  private convertBranchDtoToBranch(branch: any): Branch {
+    if (!branch) {
+      throw new Error('Branch DTO is null or undefined');
+    }
+
+    return {
+      id: branch.id?.toString() || '',
+      name: branch.nameEn || branch.nameAr || '',
+      address: branch.addressEn || branch.addressAr || '',
+      city: this.extractCityFromAddress(branch.addressEn || branch.addressAr || ''),
+      country: 'UAE', // Default country since API doesn't provide it
+      phone: branch.phoneNumber || '',
+      email: branch.email || '',
+      coordinates: {
+        lat: branch.latitude || 0,
+        lng: branch.longitude || 0
+      },
+      operatingHours: this.parseWorkingHours(branch.workingHours || '24/7'),
+      status: branch.isActive ? 'active' : 'inactive',
+      manager: 'Unknown', // API doesn't provide manager info
+      createdAt: new Date(), // API doesn't provide creation date
+      updatedAt: new Date() // API doesn't provide update date
+    };
+  }
+
+  private convertBranchToCreateDto(branch: Omit<Branch, 'id' | 'createdAt' | 'updatedAt'>): any {
+    return {
+      nameAr: branch.name, // Using name for both languages for now
+      nameEn: branch.name,
+      addressAr: branch.address,
+      addressEn: branch.address,
+      phoneNumber: branch.phone,
+      email: branch.email,
+      latitude: branch.coordinates.lat,
+      longitude: branch.coordinates.lng,
+      isActive: branch.status === 'active',
+      workingHours: this.convertOperatingHoursToString(branch.operatingHours)
+    };
+  }
+
+  private convertPartialBranchToUpdateDto(branch: Partial<Branch>): any {
+    const updateDto: any = {};
+
+    if (branch.name) {
+      updateDto.nameAr = branch.name;
+      updateDto.nameEn = branch.name;
+    }
+    if (branch.address) {
+      updateDto.addressAr = branch.address;
+      updateDto.addressEn = branch.address;
+    }
+    if (branch.phone) updateDto.phoneNumber = branch.phone;
+    if (branch.email) updateDto.email = branch.email;
+    if (branch.coordinates) {
+      updateDto.latitude = branch.coordinates.lat;
+      updateDto.longitude = branch.coordinates.lng;
+    }
+    if (branch.status) updateDto.isActive = branch.status === 'active';
+    if (branch.operatingHours) updateDto.workingHours = this.convertOperatingHoursToString(branch.operatingHours);
+
+    return updateDto;
+  }
+
+  private extractCityFromAddress(address: string): string {
+    // Simple city extraction logic - in a real app, this would be more sophisticated
+    const cities = ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain'];
+    const foundCity = cities.find(city => address.toLowerCase().includes(city.toLowerCase()));
+    return foundCity || 'Dubai'; // Default to Dubai
+  }
+
+  private parseWorkingHours(workingHours: string): any {
+    // Parse working hours string into operatingHours object
+    // For now, return a default structure - in a real app, this would parse the actual string
+    const defaultHours = {
+      open: '09:00',
+      close: '18:00',
+      isOpen: true
+    };
+
+    return {
+      monday: defaultHours,
+      tuesday: defaultHours,
+      wednesday: defaultHours,
+      thursday: defaultHours,
+      friday: defaultHours,
+      saturday: defaultHours,
+      sunday: defaultHours
+    };
+  }
+
+  private convertOperatingHoursToString(operatingHours: any): string {
+    // Convert operatingHours object to string format for API
+    // For now, return a simple format - in a real app, this would create a proper string
+    return '09:00-18:00 Mon-Sun';
+  }
+
   // Debug method to test API connection
   debugAdminApi(): Observable<any> {
     console.log('🔧 Testing Admin API connection...');
@@ -2153,6 +2886,78 @@ export class CarRentalService {
       }),
       catchError(error => {
         console.error('❌ Car API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Booking API connection
+  debugBookingApi(): Observable<any> {
+    console.log('🔧 Testing Booking API connection...');
+    console.log('🔧 Booking API Base URL:', this.bookingApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test with minimal filter to see raw response
+    return this.bookingApiService.getBookings({ page: 1, pageSize: 5 }).pipe(
+      map(response => {
+        console.log('✅ Booking API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Booking API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Advertisement API connection
+  debugAdvertisementApi(): Observable<any> {
+    console.log('🔧 Testing Advertisement API connection...');
+    console.log('🔧 Advertisement API Base URL:', this.advertisementApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test with minimal filter to see raw response
+    return this.advertisementApiService.getAdvertisements({ page: 1, pageSize: 5 }).pipe(
+      map(response => {
+        console.log('✅ Advertisement API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Advertisement API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Branch API connection
+  debugBranchApi(): Observable<any> {
+    console.log('🔧 Testing Branch API connection...');
+    console.log('🔧 Branch API Base URL:', this.branchApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test with minimal filter to see raw response
+    return this.branchApiService.getBranches({ page: 1, pageSize: 5 }).pipe(
+      map(response => {
+        console.log('✅ Branch API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Branch API test failed:', error);
         return of({ error: error.message || 'Unknown error' });
       })
     );
