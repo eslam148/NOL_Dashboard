@@ -53,6 +53,7 @@ export interface DashboardFilterDto {
   startDate?: string; // ISO date
   endDate?: string;   // ISO date
   branchId?: number;
+  period?: 'day' | 'week' | 'month' | 'year';
 }
 
 export interface DashboardStatsDto {

@@ -11,6 +11,7 @@ import { AdminApiService } from './admin-api.service';
 import { BookingApiService } from './booking-api.service';
 import { AdvertisementApiService } from './advertisement-api.service';
 import { BranchApiService } from './branch-api.service';
+import { DashboardApiService } from './dashboard-api.service';
 import {
   AdminCarDto,
   AdminCreateCarDto,
@@ -38,6 +39,7 @@ export class CarRentalService {
   private bookingApiService = inject(BookingApiService);
   private advertisementApiService = inject(AdvertisementApiService);
   private branchApiService = inject(BranchApiService);
+  private dashboardApiService = inject(DashboardApiService);
   private isLoading = signal(false);
 
   // Feature flags for API integration
@@ -177,9 +179,57 @@ export class CarRentalService {
   }
 
   // Dashboard Statistics
-  getDashboardStats(): Observable<DashboardStats> {
+  getDashboardStats(filter?: any): Observable<DashboardStats> {
     this.isLoading.set(true);
-    return of({
+
+    if (this.useRealApi) {
+      console.log('📊 Fetching dashboard stats with filter:', filter);
+
+      return this.dashboardApiService.getDashboardStats(filter).pipe(
+        map((dashboardStatsDto) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Dashboard Stats API Response:', dashboardStatsDto);
+
+          // Convert DashboardStatsDto to DashboardStats
+          const convertedStats = this.convertDashboardStatsDtoToStats(dashboardStatsDto);
+          console.log('🔄 Converted dashboard stats:', convertedStats);
+
+          return convertedStats;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching dashboard stats:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 Dashboard API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - Dashboard API might be unreachable');
+          }
+
+          // Return fallback mock data instead of throwing error to prevent app crash
+          return of(this.getMockDashboardStats());
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for dashboard stats');
+    return of(this.getMockDashboardStats()).pipe(
+      delay(1000),
+      map(stats => {
+        this.isLoading.set(false);
+        return stats;
+      })
+    );
+  }
+
+  private getMockDashboardStats(): DashboardStats {
+    return {
       totalVehicles: 45,
       availableVehicles: 32,
       activeBookings: 18,
@@ -188,13 +238,85 @@ export class CarRentalService {
       totalBranches: 5,
       totalCustomers: 1250,
       maintenanceAlerts: 3
-    }).pipe(
-      delay(1000),
-      map(stats => {
-        this.isLoading.set(false);
-        return stats;
-      })
-    );
+    };
+  }
+
+  // Dashboard Analytics Methods
+  getPopularCars(count: number = 10, filter?: any): Observable<any[]> {
+    if (this.useRealApi) {
+      console.log('📊 Fetching popular cars with count:', count, 'filter:', filter);
+
+      return this.dashboardApiService.getPopularCars(count, filter).pipe(
+        map((popularCars) => {
+          console.log('📦 Popular Cars API Response:', popularCars);
+          return popularCars || [];
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching popular cars:', error);
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for popular cars');
+    return of([
+      { carId: 1, carInfo: 'Toyota Camry 2023', bookingCount: 25, revenue: 15000 },
+      { carId: 2, carInfo: 'Honda Accord 2023', bookingCount: 22, revenue: 13500 },
+      { carId: 3, carInfo: 'Nissan Altima 2023', bookingCount: 18, revenue: 11000 }
+    ]).pipe(delay(800));
+  }
+
+  getRecentBookings(count: number = 10): Observable<any[]> {
+    if (this.useRealApi) {
+      console.log('📊 Fetching recent bookings with count:', count);
+
+      return this.dashboardApiService.getRecentBookings(count).pipe(
+        map((recentBookings) => {
+          console.log('📦 Recent Bookings API Response:', recentBookings);
+          return recentBookings || [];
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching recent bookings:', error);
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for recent bookings');
+    return of([
+      { id: 1, customerName: 'Ahmed Al-Mansouri', carInfo: 'Toyota Camry', status: 'Active', totalAmount: 450 },
+      { id: 2, customerName: 'Sarah Johnson', carInfo: 'Honda Accord', status: 'Completed', totalAmount: 380 },
+      { id: 3, customerName: 'Mohammed Ali', carInfo: 'Nissan Altima', status: 'Pending', totalAmount: 320 }
+    ]).pipe(delay(800));
+  }
+
+  getRevenueAnalytics(filter?: any): Observable<any> {
+    if (this.useRealApi) {
+      console.log('📊 Fetching revenue analytics with filter:', filter);
+
+      return this.dashboardApiService.getRevenueAnalytics(filter).pipe(
+        map((revenueAnalytics) => {
+          console.log('📦 Revenue Analytics API Response:', revenueAnalytics);
+          return revenueAnalytics;
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching revenue analytics:', error);
+          return of({});
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for revenue analytics');
+    return of({
+      todayRevenue: 2500,
+      weekRevenue: 15000,
+      monthRevenue: 45000,
+      yearRevenue: 125000,
+      revenueGrowthRate: 12.5
+    }).pipe(delay(800));
   }
 
   // Branch Management
@@ -2843,6 +2965,27 @@ export class CarRentalService {
     return '09:00-18:00 Mon-Sun';
   }
 
+  // Dashboard conversion methods
+  private convertDashboardStatsDtoToStats(dashboardStatsDto: any): DashboardStats {
+    if (!dashboardStatsDto) {
+      throw new Error('Dashboard stats DTO is null or undefined');
+    }
+
+    const overallStats = dashboardStatsDto.overallStats || {};
+    const carStats = dashboardStatsDto.carStats || {};
+
+    return {
+      totalVehicles: carStats.totalCars || 0,
+      availableVehicles: carStats.availableCars || 0,
+      activeBookings: overallStats.pendingBookings || 0,
+      totalRevenue: overallStats.totalRevenue || 0,
+      monthlyRevenue: dashboardStatsDto.revenueStats?.monthRevenue || 0,
+      totalBranches: 5, // API doesn't provide this directly, using default
+      totalCustomers: overallStats.totalCustomers || 0,
+      maintenanceAlerts: carStats.maintenanceCars || 0
+    };
+  }
+
   // Debug method to test API connection
   debugAdminApi(): Observable<any> {
     console.log('🔧 Testing Admin API connection...');
@@ -2958,6 +3101,30 @@ export class CarRentalService {
       }),
       catchError(error => {
         console.error('❌ Branch API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Dashboard API connection
+  debugDashboardApi(): Observable<any> {
+    console.log('🔧 Testing Dashboard API connection...');
+    console.log('🔧 Dashboard API Base URL:', this.dashboardApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test dashboard stats endpoint
+    return this.dashboardApiService.getDashboardStats().pipe(
+      map(response => {
+        console.log('✅ Dashboard API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Dashboard API test failed:', error);
         return of({ error: error.message || 'Unknown error' });
       })
     );
