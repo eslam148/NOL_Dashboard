@@ -85,7 +85,25 @@ export class TranslationService {
         back: 'Back',
         next: 'Next',
         previous: 'Previous',
-        never: 'Never'
+        never: 'Never',
+        update: 'Update',
+        nolLogo: 'NOL Logo',
+        switchToEnglish: 'Switch to English',
+        switchToArabic: 'Switch to Arabic',
+        accessDenied: 'Access Denied',
+        noPermission: 'You don\'t have permission to access this page.',
+        comingSoon: 'Coming Soon',
+        underDevelopment: 'This feature is under development and will be available soon.',
+        formValidation: {
+          required: 'This field is required',
+          email: 'Please enter a valid email',
+          minLength: 'This field is too short',
+          maxLength: 'This field is too long',
+          pattern: 'Invalid format',
+          min: 'Value is too low',
+          max: 'Value is too high',
+          passwordMismatch: 'Passwords do not match'
+        }
       },
       // Car Rental Dashboard
       dashboard: {
@@ -146,7 +164,9 @@ export class TranslationService {
         country: 'Country',
         coordinates: 'Coordinates',
         latitude: 'Latitude',
+        latitudePlaceholder: '25.2048',
         longitude: 'Longitude',
+        longitudePlaceholder: '55.2708',
         monday: 'Monday',
         tuesday: 'Tuesday',
         wednesday: 'Wednesday',
@@ -607,11 +627,94 @@ export class TranslationService {
         emailNotifications: 'Email Notifications',
         smsNotifications: 'SMS Notifications',
         pushNotifications: 'Push Notifications',
-        blockedCustomers: 'Blocked Customers'
+        blockedCustomers: 'Blocked Customers',
+
+        // Customer List Page
+        title: 'Customer Management',
+        subtitle: 'Manage customer accounts and information',
+        customerList: 'Customer List',
+        analytics: 'Analytics',
+        searchPlaceholder: 'Search customers...',
+        type: 'Type',
+        status: 'Status',
+        showingResults: 'Showing',
+        of: 'of',
+        customers: 'customers',
+
+        // Customer Status and Types
+        active: 'Active',
+        inactive: 'Inactive',
+        blacklisted: 'Blacklisted',
+
+        // Customer Stats
+        totalRentals: 'Total Rentals',
+        totalSpent: 'Total Spent',
+        loyaltyPoints: 'Loyalty Points',
+        rating: 'Rating',
+        license: 'License',
+        location: 'Location',
+        lastRental: 'Last Rental',
+        member: 'Member Since',
+
+        // Customer Actions
+        viewHistory: 'View History',
+        activate: 'Activate',
+        deactivate: 'Deactivate',
+        addBlacklist: 'Add to Blacklist',
+        removeBlacklist: 'Remove from Blacklist',
+
+        // Empty State
+        noCustomersFound: 'No customers found',
+        noCustomersDescription: 'No customers match your current filters. Try adjusting your search criteria.',
+        addFirstCustomer: 'Add First Customer',
+
+        // Analytics
+        customerOverview: 'Customer Overview',
+        totalCustomers: 'Total Customers',
+        activeCustomers: 'Active Customers',
+        customerTypes: 'Customer Types',
+        revenue: 'Revenue',
+        totalRevenue: 'Total Revenue',
+        averageSpent: 'Average Spent',
+        issues: 'Issues',
+
+        // Rental History Modal
+        rentalHistory: 'Rental History',
+        days: 'days',
+        noRentalHistory: 'No rental history available',
+
+        // Rental Status
+        confirmed: 'Confirmed',
+        ongoing: 'Ongoing',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+
+        // Coming Soon
+        detailComingSoon: 'Customer Details Coming Soon',
+        detailComingSoonDesc: 'Detailed customer view is under development and will be available soon.'
       },
 
       // Booking Management
       bookings: {
+        title:  'Bookings Management',  
+        newBooking: 'New Booking',
+        bookingsList : 'Bookings List',
+        subtitle: 'Customer Booking and Rental Management',
+        calendar: 'Calendar',
+        analytics: 'Analytics',
+        payment: 'Payment',
+        allPayments: 'All Payments',
+        searchPlaceholder: 'Search bookings...',
+        showingResults: 'Showing',
+        of: 'of',
+        bookings: 'Bookings',
+        allStatuses: 'All Statuses',
+        noBookingsFound: 'No bookings found',
+        paid: 'Paid',
+        refunded: 'Refunded',
+        dropoff: 'Drop-off',
+        pickup: 'Pickup',
+        duration: 'Duration',
         addBooking: 'Add Booking',
         addBookingDesc: 'Create a new vehicle rental booking',
         editBooking: 'Edit Booking',
@@ -739,7 +842,25 @@ export class TranslationService {
         back: 'رجوع',
         next: 'التالي',
         previous: 'السابق',
-        never: 'أبداً'
+        never: 'أبداً',
+        update: 'تحديث',
+        nolLogo: 'شعار نول',
+        switchToEnglish: 'التبديل إلى الإنجليزية',
+        switchToArabic: 'التبديل إلى العربية',
+        accessDenied: 'تم رفض الوصول',
+        noPermission: 'ليس لديك إذن للوصول إلى هذه الصفحة.',
+        comingSoon: 'قريباً',
+        underDevelopment: 'هذه الميزة قيد التطوير وستكون متاحة قريباً.',
+        formValidation: {
+          required: 'هذا الحقل مطلوب',
+          email: 'يرجى إدخال بريد إلكتروني صحيح',
+          minLength: 'هذا الحقل قصير جداً',
+          maxLength: 'هذا الحقل طويل جداً',
+          pattern: 'تنسيق غير صحيح',
+          min: 'القيمة منخفضة جداً',
+          max: 'القيمة عالية جداً',
+          passwordMismatch: 'كلمات المرور غير متطابقة'
+        }
       },
       // لوحة تحكم تأجير السيارات
       dashboard: {
@@ -800,7 +921,9 @@ export class TranslationService {
         country: 'البلد',
         coordinates: 'الإحداثيات',
         latitude: 'خط العرض',
+        latitudePlaceholder: '25.2048',
         longitude: 'خط الطول',
+        longitudePlaceholder: '55.2708',
         monday: 'الاثنين',
         tuesday: 'الثلاثاء',
         wednesday: 'الأربعاء',
@@ -1265,11 +1388,94 @@ export class TranslationService {
         emailNotifications: 'إشعارات البريد الإلكتروني',
         smsNotifications: 'إشعارات الرسائل النصية',
         pushNotifications: 'الإشعارات الفورية',
-        blockedCustomers: 'العملاء المحظورون'
+        blockedCustomers: 'العملاء المحظورون',
+
+        // صفحة قائمة العملاء
+        title: 'إدارة العملاء',
+        subtitle: 'إدارة حسابات ومعلومات العملاء',
+        customerList: 'قائمة العملاء',
+        analytics: 'التحليلات',
+        searchPlaceholder: 'البحث في العملاء...',
+        type: 'النوع',
+        status: 'الحالة',
+        showingResults: 'عرض',
+        of: 'من',
+        customers: 'عملاء',
+
+        // حالة وأنواع العملاء
+        active: 'نشط',
+        inactive: 'غير نشط',
+        blacklisted: 'في القائمة السوداء',
+
+        // إحصائيات العملاء
+        totalRentals: 'إجمالي الإيجارات',
+        totalSpent: 'إجمالي المبلغ المنفق',
+        loyaltyPoints: 'نقاط الولاء',
+        rating: 'التقييم',
+        license: 'الرخصة',
+        location: 'الموقع',
+        lastRental: 'آخر إيجار',
+        member: 'عضو منذ',
+
+        // إجراءات العملاء
+        viewHistory: 'عرض التاريخ',
+        activate: 'تفعيل',
+        deactivate: 'إلغاء التفعيل',
+        addBlacklist: 'إضافة للقائمة السوداء',
+        removeBlacklist: 'إزالة من القائمة السوداء',
+
+        // حالة فارغة
+        noCustomersFound: 'لم يتم العثور على عملاء',
+        noCustomersDescription: 'لا يوجد عملاء يطابقون المرشحات الحالية. حاول تعديل معايير البحث.',
+        addFirstCustomer: 'إضافة أول عميل',
+
+        // التحليلات
+        customerOverview: 'نظرة عامة على العملاء',
+        totalCustomers: 'إجمالي العملاء',
+        activeCustomers: 'العملاء النشطون',
+        customerTypes: 'أنواع العملاء',
+        revenue: 'الإيرادات',
+        totalRevenue: 'إجمالي الإيرادات',
+        averageSpent: 'متوسط الإنفاق',
+        issues: 'المشاكل',
+
+        // نافذة تاريخ الإيجار
+        rentalHistory: 'تاريخ الإيجار',
+        days: 'أيام',
+        noRentalHistory: 'لا يوجد تاريخ إيجار متاح',
+
+        // حالة الإيجار
+        confirmed: 'مؤكد',
+        ongoing: 'جاري',
+        completed: 'مكتمل',
+        cancelled: 'ملغي',
+
+        // قريباً
+        detailComingSoon: 'تفاصيل العميل قريباً',
+        detailComingSoonDesc: 'عرض تفاصيل العميل قيد التطوير وسيكون متاحاً قريباً.'
       },
 
       // إدارة الحجوزات
       bookings: {
+        title: 'إدارة الحجوزات',
+        newBooking: 'حجز جديد',
+        bookingsList : 'قائمة الحجوزات',
+        subtitle : 'إدارة حجوزات العملاء والتأجير',
+        calendar: 'التقويم',
+        analytics: 'التحليلات',
+        payment: 'الدفع',
+        allPayments: 'جميع المدفوعات',
+        searchPlaceholder: 'البحث في الحجوزات...',
+        showingResults : 'عرض',
+        of: 'من',
+        bookings: 'حجوزات',
+        allStatuses: 'جميع الحالات',
+        noBookingsFound: 'لم يتم العثور على حجوزات',
+        paid: 'مدفوع',
+        refunded: 'مسترد',
+        dropoff:'تسيلم',
+        pickup: 'استلام',
+        duration: 'المدة',
         addBooking: 'إضافة حجز',
         addBookingDesc: 'إنشاء حجز تأجير مركبة جديد',
         editBooking: 'تعديل الحجز',

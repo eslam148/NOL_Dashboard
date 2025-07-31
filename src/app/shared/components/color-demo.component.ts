@@ -63,8 +63,8 @@ import { Component } from '@angular/core';
       <section class="color-section">
         <h3 class="text-secondary">Form Elements</h3>
         <div class="form-demo">
-          <input type="text" class="form-input" placeholder="Enter your text here">
-          <input type="email" class="form-input" placeholder="Enter your email">
+          <input type="text" class="form-input" placeholder="Sample text input">
+          <input type="email" class="form-input" placeholder="sample@example.com">
         </div>
       </section>
     </div>

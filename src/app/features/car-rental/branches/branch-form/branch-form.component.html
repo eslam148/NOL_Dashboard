@@ -205,7 +205,7 @@
               formControlName="coordinates.lat"
               class="form-input focus-ring"
               [class.error]="isFieldInvalid('coordinates.lat')"
-              placeholder="25.2048"
+              [placeholder]="'branches.latitudePlaceholder' | translate"
             />
             <div class="form-error" *ngIf="isFieldInvalid('coordinates.lat')">
               <i class="bi bi-exclamation-circle"></i>
@@ -223,7 +223,7 @@
               formControlName="coordinates.lng"
               class="form-input focus-ring"
               [class.error]="isFieldInvalid('coordinates.lng')"
-              placeholder="55.2708"
+              [placeholder]="'branches.longitudePlaceholder' | translate"
             />
             <div class="form-error" *ngIf="isFieldInvalid('coordinates.lng')">
               <i class="bi bi-exclamation-circle"></i>

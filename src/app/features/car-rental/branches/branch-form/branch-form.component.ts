@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { Branch } from '../../../../core/models/car-rental.models';
 
@@ -18,6 +19,7 @@ export class BranchFormComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private carRentalService = inject(CarRentalService);
+  private translationService = inject(TranslationService);
 
   branchForm: FormGroup;
   isEditMode = signal(false);
@@ -195,11 +197,12 @@ export class BranchFormComponent implements OnInit {
   getFieldError(fieldName: string): string {
     const field = this.branchForm.get(fieldName);
     if (field?.errors) {
-      if (field.errors['required']) return 'This field is required';
-      if (field.errors['email']) return 'Please enter a valid email';
-      if (field.errors['minlength']) return `Minimum length is ${field.errors['minlength'].requiredLength}`;
-      if (field.errors['min']) return `Minimum value is ${field.errors['min'].min}`;
-      if (field.errors['max']) return `Maximum value is ${field.errors['max'].max}`;
+      if (field.errors['required']) return this.translationService.translate('common.formValidation.required');
+      if (field.errors['email']) return this.translationService.translate('common.formValidation.email');
+      if (field.errors['minlength']) return this.translationService.translate('common.formValidation.minLength');
+      if (field.errors['min']) return this.translationService.translate('common.formValidation.min');
+      if (field.errors['max']) return this.translationService.translate('common.formValidation.max');
+      if (field.errors['pattern']) return this.translationService.translate('common.formValidation.pattern');
     }
     return '';
   }

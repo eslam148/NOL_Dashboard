@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslationService, SupportedLanguage } from '../../../core/services/translation.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-language-switcher',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <div class="language-switcher">
       <button
@@ -13,7 +14,7 @@ import { TranslationService, SupportedLanguage } from '../../../core/services/tr
         class="language-btn"
         [class.active]="translationService.getCurrentLanguage() === 'en'"
         (click)="switchLanguage('en')"
-        [attr.aria-label]="'Switch to English'"
+        [attr.aria-label]="'common.switchToEnglish' | translate"
       >
         <span class="flag-icon">🇺🇸</span>
         <span class="lang-text">EN</span>
@@ -24,7 +25,7 @@ import { TranslationService, SupportedLanguage } from '../../../core/services/tr
         class="language-btn"
         [class.active]="translationService.getCurrentLanguage() === 'ar'"
         (click)="switchLanguage('ar')"
-        [attr.aria-label]="'التبديل إلى العربية'"
+        [attr.aria-label]="'common.switchToArabic' | translate"
       >
         <span class="flag-icon">🇸🇦</span>
         <span class="lang-text">العربية</span>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { AdminUser, AdminRole, Permission, Branch } from '../../../../core/models/car-rental.models';
 
@@ -18,6 +19,7 @@ export class AdminUserFormComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private translationService = inject(TranslationService);
 
   adminUserForm!: FormGroup;
   branches = signal<Branch[]>([]);
@@ -314,11 +316,12 @@ export class AdminUserFormComponent implements OnInit {
   getFieldError(fieldName: string): string {
     const field = this.adminUserForm.get(fieldName);
     if (field?.errors) {
-      if (field.errors['required']) return `${fieldName} is required`;
-      if (field.errors['email']) return 'Invalid email format';
-      if (field.errors['minlength']) return `${fieldName} is too short`;
-      if (field.errors['pattern']) return `${fieldName} format is invalid`;
-      if (field.errors['min']) return `${fieldName} value is too low`;
+      if (field.errors['required']) return this.translationService.translate('common.formValidation.required');
+      if (field.errors['email']) return this.translationService.translate('common.formValidation.email');
+      if (field.errors['minlength']) return this.translationService.translate('common.formValidation.minLength');
+      if (field.errors['pattern']) return this.translationService.translate('common.formValidation.pattern');
+      if (field.errors['min']) return this.translationService.translate('common.formValidation.min');
+      if (field.errors['max']) return this.translationService.translate('common.formValidation.max');
     }
     return '';
   }

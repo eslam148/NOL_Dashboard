@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-unauthorized',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <div class="unauthorized-container">
       <div class="unauthorized-content">
@@ -17,9 +18,9 @@ import { AuthService } from '../../../core/services/auth.service';
           </svg>
         </div>
         
-        <h1 class="error-title text-primary">Access Denied</h1>
+        <h1 class="error-title text-primary">{{ 'common.accessDenied' | translate }}</h1>
         <p class="error-message text-secondary">
-          You don't have permission to access this page.
+          {{ 'common.noPermission' | translate }}
         </p>
         
         @if (authService.currentUser()) {
