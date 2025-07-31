@@ -1,17 +1,36 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay, map } from 'rxjs';
+import { Injectable, signal, inject } from '@angular/core';
+import { Observable, of, delay, map, catchError, throwError, switchMap } from 'rxjs';
 import {
-  Branch, Vehicle, Booking, Customer, AdditionalService, AdminUser,
+  Branch, Vehicle, Booking, Customer, AdditionalService, AdminUser, AdminRole,
   DashboardStats, VehicleFilter, BookingFilter, BranchFilter,
-  VehicleStatus, BookingStatus, PaymentStatus, ActivityLog, CustomerType, RentalHistory,
+  VehicleStatus, VehicleCategory, BookingStatus, PaymentStatus, ActivityLog, CustomerType, RentalHistory,
   Advertisement, AdvertisementFilter, AdvertisementAnalytics, AdvertisementType, AdvertisementStatus
 } from '../models/car-rental.models';
+import { CarApiService } from './car-api.service';
+import { AdminApiService } from './admin-api.service';
+import {
+  AdminCarDto,
+  AdminCreateCarDto,
+  CarFilterDto,
+  UpdateCarStatusDto,
+  BulkCarOperationDto,
+  PaginatedResponse,
+  AdminUserDto,
+  CreateAdminUserDto,
+  AdminFilterDto
+} from '../models/api.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CarRentalService {
+  private carApiService = inject(CarApiService);
+  private adminApiService = inject(AdminApiService);
   private isLoading = signal(false);
+
+  // Feature flags for API integration
+  private useRealApi = !environment.features.mockData;
 
   // Mock data for demonstration
   private mockBranches: Branch[] = [
@@ -233,6 +252,59 @@ export class CarRentalService {
   // Vehicle Management
   getVehicles(filter?: VehicleFilter): Observable<Vehicle[]> {
     this.isLoading.set(true);
+
+    if (this.useRealApi) {
+      // Convert VehicleFilter to CarFilterDto
+      const carFilter: CarFilterDto = this.convertVehicleFilterToCarFilter(filter);
+
+      console.log('🚗 Fetching cars with filter:', carFilter);
+
+      return this.carApiService.getCars(carFilter).pipe(
+        map((paginatedResponse: PaginatedResponse<AdminCarDto>) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Car API Paginated Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid car paginated response structure:', paginatedResponse);
+            return [];
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Car response data is not an array:', paginatedResponse.data);
+            return [];
+          }
+
+          console.log(`✅ Converting ${paginatedResponse.data.length} car DTOs to Vehicle objects`);
+
+          const convertedVehicles = this.convertAdminCarDtosToVehicles(paginatedResponse.data);
+          console.log('🔄 Converted vehicles:', convertedVehicles);
+
+          return convertedVehicles;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching cars:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 Car API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - Car API might be unreachable');
+          }
+
+          // Return empty array instead of throwing error to prevent app crash
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
     let filteredVehicles = [...this.mockVehicles];
 
     if (filter) {
@@ -257,11 +329,38 @@ export class CarRentalService {
   }
 
   getVehicleById(id: string): Observable<Vehicle | null> {
+    if (this.useRealApi) {
+      return this.carApiService.getCarById(parseInt(id)).pipe(
+        map((car: AdminCarDto) => this.convertAdminCarDtoToVehicle(car)),
+        catchError((error) => {
+          console.error('Error fetching car by ID:', error);
+          return of(null);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const vehicle = this.mockVehicles.find(v => v.id === id) || null;
     return of(vehicle).pipe(delay(500));
   }
 
   createVehicle(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Observable<Vehicle> {
+    if (this.useRealApi) {
+      // Convert Vehicle to AdminCreateCarDto
+      const createCarDto: AdminCreateCarDto = this.convertVehicleToCreateCarDto(vehicle);
+
+      return this.carApiService.createCar(createCarDto).pipe(
+        map((createdCar: AdminCarDto) => {
+          return this.convertAdminCarDtoToVehicle(createdCar);
+        }),
+        catchError((error) => {
+          console.error('Error creating car:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const newVehicle: Vehicle = {
       ...vehicle,
       id: Date.now().toString(),
@@ -273,6 +372,22 @@ export class CarRentalService {
   }
 
   updateVehicle(id: string, updates: Partial<Vehicle>): Observable<Vehicle> {
+    if (this.useRealApi) {
+      // Convert partial Vehicle updates to AdminCreateCarDto
+      const updateCarDto = this.convertPartialVehicleToUpdateCarDto(updates);
+
+      return this.carApiService.updateCar(parseInt(id), updateCarDto).pipe(
+        map((updatedCar: AdminCarDto) => {
+          return this.convertAdminCarDtoToVehicle(updatedCar);
+        }),
+        catchError((error) => {
+          console.error('Error updating car:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockVehicles.findIndex(v => v.id === id);
     if (index !== -1) {
       this.mockVehicles[index] = {
@@ -286,6 +401,17 @@ export class CarRentalService {
   }
 
   deleteVehicle(id: string): Observable<boolean> {
+    if (this.useRealApi) {
+      return this.carApiService.deleteCar(parseInt(id)).pipe(
+        map(() => true),
+        catchError((error) => {
+          console.error('Error deleting car:', error);
+          return of(false);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockVehicles.findIndex(v => v.id === id);
     if (index !== -1) {
       this.mockVehicles.splice(index, 1);
@@ -295,6 +421,21 @@ export class CarRentalService {
   }
 
   updateVehicleStatus(id: string, status: VehicleStatus): Observable<Vehicle> {
+    if (this.useRealApi) {
+      const statusUpdate: UpdateCarStatusDto = {
+        status: this.mapVehicleStatusToCarStatus(status) || 'Available'
+      };
+
+      return this.carApiService.updateCarStatus(parseInt(id), statusUpdate).pipe(
+        map((updatedCar: AdminCarDto) => this.convertAdminCarDtoToVehicle(updatedCar)),
+        catchError((error) => {
+          console.error('Error updating car status:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     return this.updateVehicle(id, { status });
   }
 
@@ -566,8 +707,72 @@ export class CarRentalService {
     }
   ];
 
-  getAdminUsers(): Observable<AdminUser[]> {
+  getAdminUsers(filter?: AdminFilterDto): Observable<AdminUser[]> {
     this.isLoading.set(true);
+
+    if (this.useRealApi) {
+      // Add default filter to only get admin users (not customers)
+      const adminFilter: AdminFilterDto = {
+        ...filter,
+        // Only get users with admin roles, not customers
+        userRole: filter?.userRole || undefined // Let the API return all admin roles if not specified
+      };
+
+      console.log('🔍 Fetching admins with filter:', adminFilter);
+
+      return this.adminApiService.getAdmins(adminFilter).pipe(
+        map((paginatedResponse: PaginatedResponse<AdminUserDto>) => {
+          this.isLoading.set(false);
+
+          console.log('📦 Paginated API Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid paginated response structure:', paginatedResponse);
+            return [];
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Response data is not an array:', paginatedResponse.data);
+            return [];
+          }
+
+          // Filter out customers - only keep admin users
+          const adminUsers = paginatedResponse.data.filter(user =>
+            user.userRole && user.userRole !== 'Customer'
+          );
+
+          console.log(`✅ Found ${paginatedResponse.data.length} total users, ${adminUsers.length} admin users`);
+          console.log('🔍 Admin users to convert:', adminUsers);
+
+          const convertedAdmins = this.convertAdminUserDtosToAdminUsers(adminUsers);
+          console.log('🔄 Converted admins:', convertedAdmins);
+
+          return convertedAdmins;
+        }),
+        catchError((error) => {
+          this.isLoading.set(false);
+          console.error('❌ Error fetching admins:', error);
+
+          // Log the full error for debugging
+          if (error.error) {
+            console.error('🔍 API Error Details:', error.error);
+          }
+
+          // Check if it's a network error
+          if (error.status === 0) {
+            console.error('🌐 Network error - API might be unreachable');
+          }
+
+          // Return empty array instead of throwing error to prevent app crash
+          return of([]);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for admins');
     return of([...this.mockAdminUsers]).pipe(
       delay(800),
       map(users => {
@@ -578,11 +783,38 @@ export class CarRentalService {
   }
 
   getAdminUserById(id: string): Observable<AdminUser | null> {
+    if (this.useRealApi) {
+      return this.adminApiService.getAdminById(id).pipe(
+        map((adminDto: AdminUserDto) => this.convertAdminUserDtoToAdminUser(adminDto)),
+        catchError((error) => {
+          console.error('Error fetching admin by ID:', error);
+          return of(null);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const user = this.mockAdminUsers.find(u => u.id === id) || null;
     return of(user).pipe(delay(500));
   }
 
   createAdminUser(adminUser: Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'>): Observable<AdminUser> {
+    if (this.useRealApi) {
+      // Convert AdminUser to CreateAdminUserDto
+      const createAdminDto: CreateAdminUserDto = this.convertAdminUserToCreateAdminDto(adminUser);
+
+      return this.adminApiService.createAdmin(createAdminDto).pipe(
+        map((createdAdmin: AdminUserDto) => {
+          return this.convertAdminUserDtoToAdminUser(createdAdmin);
+        }),
+        catchError((error) => {
+          console.error('Error creating admin:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const newAdminUser: AdminUser = {
       ...adminUser,
       id: Date.now().toString(),
@@ -595,6 +827,22 @@ export class CarRentalService {
   }
 
   updateAdminUser(id: string, adminUser: Partial<AdminUser>): Observable<AdminUser | null> {
+    if (this.useRealApi) {
+      // Convert partial AdminUser updates to CreateAdminUserDto
+      const updateAdminDto = this.convertPartialAdminUserToUpdateDto(adminUser);
+
+      return this.adminApiService.updateAdmin(id, updateAdminDto).pipe(
+        map((updatedAdmin: AdminUserDto) => {
+          return this.convertAdminUserDtoToAdminUser(updatedAdmin);
+        }),
+        catchError((error) => {
+          console.error('Error updating admin:', error);
+          return of(null);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockAdminUsers.findIndex(u => u.id === id);
     if (index !== -1) {
       this.mockAdminUsers[index] = {
@@ -610,6 +858,18 @@ export class CarRentalService {
 
 
   deleteAdminUser(id: string): Observable<boolean> {
+    if (this.useRealApi) {
+      // Note: The API doesn't have a delete endpoint, so we'll deactivate instead
+      return this.adminApiService.deactivateAdmin(id).pipe(
+        map(() => true),
+        catchError((error) => {
+          console.error('Error deactivating admin:', error);
+          return of(false);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const index = this.mockAdminUsers.findIndex(u => u.id === id);
     if (index !== -1) {
       this.mockAdminUsers.splice(index, 1);
@@ -619,6 +879,26 @@ export class CarRentalService {
   }
 
   toggleAdminUserStatus(id: string): Observable<AdminUser> {
+    if (this.useRealApi) {
+      // First get the current admin to check status
+      return this.adminApiService.getAdminById(id).pipe(
+        switchMap((admin: AdminUserDto) => {
+          // Toggle status: if active, deactivate; if inactive, activate
+          if (admin.isActive) {
+            return this.adminApiService.deactivateAdmin(id);
+          } else {
+            return this.adminApiService.activateAdmin(id);
+          }
+        }),
+        map((updatedAdmin: AdminUserDto) => this.convertAdminUserDtoToAdminUser(updatedAdmin)),
+        catchError((error) => {
+          console.error('Error toggling admin status:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
     const user = this.mockAdminUsers.find(u => u.id === id);
     if (user) {
       user.status = user.status === 'active' ? 'inactive' : 'active';
@@ -1536,5 +1816,345 @@ export class CarRentalService {
   getAdvertisementsByType(type: AdvertisementType): Observable<Advertisement[]> {
     const typeAds = this.mockAdvertisements.filter(ad => ad.type === type);
     return of(typeAds).pipe(delay(500));
+  }
+
+  // Conversion methods for API integration
+  private convertVehicleFilterToCarFilter(filter?: VehicleFilter): CarFilterDto {
+    if (!filter) return {};
+
+    return {
+      status: this.mapVehicleStatusToCarStatus(filter.status),
+      branchId: filter.branchId ? parseInt(filter.branchId) : undefined,
+      brand: filter.make,
+      dailyRateFrom: filter.minRate,
+      dailyRateTo: filter.maxRate,
+      transmissionType: filter.transmission as 'Manual' | 'Automatic',
+      fuelType: filter.fuelType as 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid',
+      page: 1,
+      pageSize: 50
+    };
+  }
+
+  private convertAdminCarDtosToVehicles(cars: AdminCarDto[]): Vehicle[] {
+    if (!cars || !Array.isArray(cars)) {
+      console.warn('Invalid cars array provided to convertAdminCarDtosToVehicles:', cars);
+      return [];
+    }
+
+    return cars.map(car => {
+      try {
+        return this.convertAdminCarDtoToVehicle(car);
+      } catch (error) {
+        console.error('Error converting car DTO:', car, error);
+        // Return null for failed conversions and filter them out
+        return null;
+      }
+    }).filter(vehicle => vehicle !== null) as Vehicle[];
+  }
+
+  private convertAdminCarDtoToVehicle(car: AdminCarDto): Vehicle {
+    if (!car) {
+      throw new Error('Car DTO is null or undefined');
+    }
+
+    return {
+      id: car.id?.toString() || '',
+      make: car.brand || '',
+      model: car.model || '',
+      year: car.year || new Date().getFullYear(),
+      licensePlate: car.plateNumber || '',
+      vin: `VIN${car.id || 'UNKNOWN'}`, // API doesn't provide VIN, so we generate a placeholder
+      category: this.mapCarCategoryToVehicleCategory(car.categoryId || 1),
+      fuelType: this.mapCarFuelTypeToVehicleFuelType(car.fuelType || 'Petrol'),
+      transmission: (car.transmissionType || 'Manual').toLowerCase() as 'manual' | 'automatic',
+      seats: car.seatingCapacity || 4,
+      doors: 4, // API doesn't provide doors, so we default to 4
+      color: 'Unknown', // API doesn't provide color
+      mileage: car.mileage || 0,
+      dailyRate: car.dailyRate || 0,
+      weeklyRate: car.weeklyRate || 0,
+      monthlyRate: car.monthlyRate || 0,
+      status: this.mapCarStatusToVehicleStatus(car.status || 'Available'),
+      branchId: car.branchId?.toString() || '1',
+      features: car.features ? car.features.split(',').map(f => f.trim()) : [],
+      images: car.imageUrl ? [car.imageUrl] : [],
+      maintenanceHistory: [], // This would need to be fetched separately
+      createdAt: car.createdAt ? new Date(car.createdAt) : new Date(),
+      updatedAt: car.updatedAt ? new Date(car.updatedAt) : new Date()
+    };
+  }
+
+  private mapVehicleStatusToCarStatus(status?: VehicleStatus): 'Available' | 'Rented' | 'Maintenance' | 'OutOfService' | undefined {
+    if (!status) return undefined;
+
+    const statusMap: Record<VehicleStatus, 'Available' | 'Rented' | 'Maintenance' | 'OutOfService'> = {
+      'available': 'Available',
+      'rented': 'Rented',
+      'maintenance': 'Maintenance',
+      'out_of_service': 'OutOfService',
+      'reserved': 'Available' // Map reserved to available for API
+    };
+
+    return statusMap[status];
+  }
+
+  private mapCarStatusToVehicleStatus(status: string): VehicleStatus {
+    const statusMap: Record<string, VehicleStatus> = {
+      'Available': 'available',
+      'Rented': 'rented',
+      'Maintenance': 'maintenance',
+      'OutOfService': 'out_of_service'
+    };
+
+    return statusMap[status] || 'available';
+  }
+
+  private mapCarCategoryToVehicleCategory(categoryId: number): VehicleCategory {
+    // This should ideally come from a categories API, but for now we'll use a simple mapping
+    const categoryMap: Record<number, VehicleCategory> = {
+      1: 'economy',
+      2: 'compact',
+      3: 'midsize',
+      4: 'fullsize',
+      5: 'luxury',
+      6: 'suv',
+      7: 'van'
+    };
+
+    return categoryMap[categoryId] || 'economy';
+  }
+
+  private mapCarFuelTypeToVehicleFuelType(fuelType: string): 'gasoline' | 'diesel' | 'electric' | 'hybrid' {
+    const fuelTypeMap: Record<string, 'gasoline' | 'diesel' | 'electric' | 'hybrid'> = {
+      'Petrol': 'gasoline',
+      'Diesel': 'diesel',
+      'Electric': 'electric',
+      'Hybrid': 'hybrid'
+    };
+
+    return fuelTypeMap[fuelType] || 'gasoline';
+  }
+
+  private convertVehicleToCreateCarDto(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): AdminCreateCarDto {
+    return {
+      brand: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      plateNumber: vehicle.licensePlate,
+      seatingCapacity: vehicle.seats,
+      transmissionType: vehicle.transmission === 'automatic' ? 'Automatic' : 'Manual',
+      fuelType: this.mapVehicleFuelTypeToCarFuelType(vehicle.fuelType),
+      dailyRate: vehicle.dailyRate,
+      weeklyRate: vehicle.weeklyRate || vehicle.dailyRate * 7,
+      monthlyRate: vehicle.monthlyRate || vehicle.dailyRate * 30,
+      status: this.mapVehicleStatusToCarStatus(vehicle.status) || 'Available',
+      imageUrl: vehicle.images?.[0],
+      mileage: vehicle.mileage,
+      features: vehicle.features?.join(', '),
+      categoryId: this.mapVehicleCategoryToCarCategoryId(vehicle.category),
+      branchId: parseInt(vehicle.branchId)
+    };
+  }
+
+  private mapVehicleFuelTypeToCarFuelType(fuelType: 'gasoline' | 'diesel' | 'electric' | 'hybrid'): 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid' {
+    const fuelTypeMap: Record<'gasoline' | 'diesel' | 'electric' | 'hybrid', 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid'> = {
+      'gasoline': 'Petrol',
+      'diesel': 'Diesel',
+      'electric': 'Electric',
+      'hybrid': 'Hybrid'
+    };
+
+    return fuelTypeMap[fuelType];
+  }
+
+  private mapVehicleCategoryToCarCategoryId(category: VehicleCategory): number {
+    const categoryMap: Record<VehicleCategory, number> = {
+      'economy': 1,
+      'compact': 2,
+      'midsize': 3,
+      'fullsize': 4,
+      'luxury': 5,
+      'suv': 6,
+      'van': 7,
+      'truck': 8
+    };
+
+    return categoryMap[category] || 1;
+  }
+
+  private convertPartialVehicleToUpdateCarDto(updates: Partial<Vehicle>): Partial<AdminCreateCarDto> {
+    const updateDto: Partial<AdminCreateCarDto> = {};
+
+    if (updates.make) updateDto.brand = updates.make;
+    if (updates.model) updateDto.model = updates.model;
+    if (updates.year) updateDto.year = updates.year;
+    if (updates.licensePlate) updateDto.plateNumber = updates.licensePlate;
+    if (updates.seats) updateDto.seatingCapacity = updates.seats;
+    if (updates.transmission) updateDto.transmissionType = updates.transmission === 'automatic' ? 'Automatic' : 'Manual';
+    if (updates.fuelType) updateDto.fuelType = this.mapVehicleFuelTypeToCarFuelType(updates.fuelType);
+    if (updates.dailyRate) updateDto.dailyRate = updates.dailyRate;
+    if (updates.weeklyRate) updateDto.weeklyRate = updates.weeklyRate;
+    if (updates.monthlyRate) updateDto.monthlyRate = updates.monthlyRate;
+    if (updates.status) updateDto.status = this.mapVehicleStatusToCarStatus(updates.status);
+    if (updates.images?.[0]) updateDto.imageUrl = updates.images[0];
+    if (updates.mileage) updateDto.mileage = updates.mileage;
+    if (updates.features) updateDto.features = updates.features.join(', ');
+    if (updates.category) updateDto.categoryId = this.mapVehicleCategoryToCarCategoryId(updates.category);
+    if (updates.branchId) updateDto.branchId = parseInt(updates.branchId);
+
+    return updateDto;
+  }
+
+  // Admin User conversion methods
+  private convertAdminUserDtosToAdminUsers(admins: AdminUserDto[]): AdminUser[] {
+    if (!admins || !Array.isArray(admins)) {
+      console.warn('Invalid admins array provided to convertAdminUserDtosToAdminUsers:', admins);
+      return [];
+    }
+
+    return admins.map(admin => {
+      try {
+        return this.convertAdminUserDtoToAdminUser(admin);
+      } catch (error) {
+        console.error('Error converting admin DTO:', admin, error);
+        // Return a fallback admin object or skip this admin
+        return null;
+      }
+    }).filter(admin => admin !== null) as AdminUser[];
+  }
+
+  private convertAdminUserDtoToAdminUser(admin: AdminUserDto): AdminUser {
+    if (!admin) {
+      throw new Error('Admin DTO is null or undefined');
+    }
+
+    // Safely handle fullName splitting
+    const fullName = admin.fullName || '';
+    const fullNameParts = fullName.split(' ');
+    const firstName = fullNameParts[0] || '';
+    const lastName = fullNameParts.slice(1).join(' ') || '';
+
+    return {
+      id: admin.id || '',
+      username: admin.email || '', // Use email as username since API doesn't provide username
+      email: admin.email || '',
+      firstName: firstName,
+      lastName: lastName,
+      phone: admin.phoneNumber || '',
+      role: this.mapApiRoleToAdminRole(admin.userRole || 'Employee'),
+      permissions: [], // API doesn't provide permissions in the user object
+      branchIds: admin.assignedBranches?.map(id => id.toString()) || [],
+      status: admin.isActive ? 'active' : 'inactive',
+      lastLogin: admin.lastLoginDate ? new Date(admin.lastLoginDate) : undefined,
+      createdAt: admin.createdAt ? new Date(admin.createdAt) : new Date(),
+      updatedAt: admin.updatedAt ? new Date(admin.updatedAt) : new Date(),
+      createdBy: admin.createdByAdmin || 'system',
+      isActive: admin.isActive || false
+    };
+  }
+
+  private convertAdminUserToCreateAdminDto(adminUser: Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'>): CreateAdminUserDto {
+    return {
+      email: adminUser.email,
+      fullName: `${adminUser.firstName} ${adminUser.lastName}`.trim(),
+      phoneNumber: adminUser.phone,
+      userRole: this.mapAdminRoleToApiRole(adminUser.role),
+      preferredLanguage: 'English', // Default to English since AdminUser doesn't have language field
+      password: 'TempPassword123!', // This should be handled properly in the UI
+      confirmPassword: 'TempPassword123!',
+      assignedBranches: adminUser.branchIds?.map(id => parseInt(id)),
+      permissions: adminUser.permissions?.map(p => `${p.resource}:${p.actions.join(',')}`),
+      sendWelcomeEmail: true
+    };
+  }
+
+  private convertPartialAdminUserToUpdateDto(updates: Partial<AdminUser>): Partial<CreateAdminUserDto> {
+    const updateDto: Partial<CreateAdminUserDto> = {};
+
+    if (updates.email) updateDto.email = updates.email;
+    if (updates.firstName || updates.lastName) {
+      updateDto.fullName = `${updates.firstName || ''} ${updates.lastName || ''}`.trim();
+    }
+    if (updates.phone) updateDto.phoneNumber = updates.phone;
+    if (updates.role) updateDto.userRole = this.mapAdminRoleToApiRole(updates.role);
+    if (updates.branchIds) updateDto.assignedBranches = updates.branchIds.map(id => parseInt(id));
+    if (updates.permissions) updateDto.permissions = updates.permissions.map(p => `${p.resource}:${p.actions.join(',')}`);
+
+    return updateDto;
+  }
+
+  private mapApiRoleToAdminRole(apiRole: string): AdminRole {
+    const roleMap: Record<string, AdminRole> = {
+      'SuperAdmin': 'super_admin',
+      'Admin': 'super_admin', // Map Admin to super_admin since we don't have exact match
+      'BranchManager': 'branch_manager',
+      'Employee': 'staff',
+      'Customer': 'viewer' // Map Customer to viewer (though customers shouldn't be in admin list)
+    };
+
+    if (environment.logging.enableApiLogging && !roleMap[apiRole]) {
+      console.warn(`🔍 Unknown API role: ${apiRole}, defaulting to 'staff'`);
+    }
+
+    return roleMap[apiRole] || 'staff';
+  }
+
+  private mapAdminRoleToApiRole(adminRole: AdminRole): 'Employee' | 'BranchManager' | 'Admin' | 'SuperAdmin' {
+    const roleMap: Record<AdminRole, 'Employee' | 'BranchManager' | 'Admin' | 'SuperAdmin'> = {
+      'super_admin': 'SuperAdmin',
+      'branch_manager': 'BranchManager',
+      'staff': 'Employee',
+      'viewer': 'Employee'
+    };
+
+    return roleMap[adminRole];
+  }
+
+  // Debug method to test API connection
+  debugAdminApi(): Observable<any> {
+    console.log('🔧 Testing Admin API connection...');
+    console.log('🔧 API Base URL:', this.adminApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test with minimal filter to see raw response
+    return this.adminApiService.getAdmins({ page: 1, pageSize: 5 }).pipe(
+      map(response => {
+        console.log('✅ Admin API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Admin API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Car API connection
+  debugCarApi(): Observable<any> {
+    console.log('🔧 Testing Car API connection...');
+    console.log('🔧 Car API Base URL:', this.carApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test with minimal filter to see raw response
+    return this.carApiService.getCars({ page: 1, pageSize: 5 }).pipe(
+      map(response => {
+        console.log('✅ Car API test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Car API test failed:', error);
+        return of({ error: error.message || 'Unknown error' });
+      })
+    );
   }
 }

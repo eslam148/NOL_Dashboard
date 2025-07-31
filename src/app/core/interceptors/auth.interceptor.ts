@@ -1,14 +1,17 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { AuthApiService } from '../services/auth-api.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Auth Interceptor - Automatically adds auth token to HTTP requests
  * and handles token refresh on 401 errors
  */
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-  const authService = inject(AuthService);
+  const authService = inject(AuthApiService);
+  const router = inject(Router);
 
   // Skip auth for certain URLs (login, register, public APIs)
   const skipAuth = shouldSkipAuth(req.url);
@@ -27,7 +30,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       if (error.status === 401 && token) {
         return handleUnauthorizedError(authReq, next, authService);
       }
-      
+
+      // Handle 403 Forbidden errors
+      if (error.status === 403) {
+        router.navigate(['/auth/unauthorized']);
+      }
+
       return throwError(() => error);
     })
   );
@@ -39,7 +47,10 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 function addAuthHeader(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
   return req.clone({
     setHeaders: {
-      Authorization: `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Accept-Language': localStorage.getItem(environment.auth.languageKey) || 'en',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     }
   });
 }
@@ -65,7 +76,7 @@ function shouldSkipAuth(url: string): boolean {
 function handleUnauthorizedError(
   req: HttpRequest<unknown>, 
   next: HttpHandlerFn, 
-  authService: AuthService
+  authService: AuthApiService
 ) {
   return authService.refreshToken().pipe(
     switchMap((authResponse) => {

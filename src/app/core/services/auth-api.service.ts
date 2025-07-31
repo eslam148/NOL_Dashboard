@@ -30,10 +30,10 @@ export interface AuthResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthApiService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-
+  
   private readonly TOKEN_KEY = environment.auth.tokenKey;
   private readonly REFRESH_TOKEN_KEY = environment.auth.refreshTokenKey;
   private readonly USER_KEY = 'nol_user';
@@ -58,27 +58,31 @@ export class AuthService {
   }
 
   /**
-   * Initialize authentication state from localStorage
+   * Initialize authentication state from stored data
    */
   private initializeAuth(): void {
     const token = this.getToken();
-    const user = this.getStoredUser();
-
-    if (token && user && this.isTokenValid(token)) {
-      this._currentUser.set(user);
-      this.authStateSubject.next(true);
+    const userData = localStorage.getItem(this.USER_KEY);
+    
+    if (token && userData && this.isTokenValid(token)) {
+      try {
+        const user: User = JSON.parse(userData);
+        this._currentUser.set(user);
+        this.authStateSubject.next(true);
+      } catch (error) {
+        this.clearAuthData();
+      }
     } else {
       this.clearAuthData();
     }
   }
 
   /**
-   * Login with email and password
+   * Login user with credentials
    */
   login(credentials: LoginCredentials): Observable<AuthResponse> {
     this._isLoading.set(true);
 
-    // Real API call
     const loginDto: LoginDto = {
       email: credentials.email,
       password: credentials.password
@@ -89,7 +93,7 @@ export class AuthService {
         if (!apiResponse.succeeded) {
           throw new Error(apiResponse.message || 'Login failed');
         }
-
+        
         const authData = apiResponse.data;
         const user: User = {
           id: authData.user.id,
@@ -98,14 +102,14 @@ export class AuthService {
           role: authData.user.role,
           preferredLanguage: authData.user.preferredLanguage
         };
-
+        
         const response: AuthResponse = {
           user,
           token: authData.token,
           refreshToken: authData.refreshToken,
           expiresAt: authData.expiresAt
         };
-
+        
         this.setAuthData(response);
         this._currentUser.set(response.user);
         this._isLoading.set(false);
@@ -140,13 +144,12 @@ export class AuthService {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    // Real API call for token refresh
     return this.http.post<ApiResponse<AuthResponseDto>>(`${this.API_URL}/auth/refresh`, { refreshToken }).pipe(
       map((apiResponse) => {
         if (!apiResponse.succeeded) {
           throw new Error(apiResponse.message || 'Token refresh failed');
         }
-
+        
         const authData = apiResponse.data;
         const user: User = {
           id: authData.user.id,
@@ -155,14 +158,14 @@ export class AuthService {
           role: authData.user.role,
           preferredLanguage: authData.user.preferredLanguage
         };
-
+        
         const response: AuthResponse = {
           user,
           token: authData.token,
           refreshToken: authData.refreshToken,
           expiresAt: authData.expiresAt
         };
-
+        
         this.setAuthData(response);
         this._currentUser.set(response.user);
         this.authStateSubject.next(true);
@@ -193,14 +196,6 @@ export class AuthService {
   }
 
   /**
-   * Check if user has any of the specified roles
-   */
-  hasAnyRole(roles: string[]): boolean {
-    const user = this._currentUser();
-    return user ? roles.includes(user.role) : false;
-  }
-
-  /**
    * Get current authentication token
    */
   getToken(): string | null {
@@ -210,20 +205,12 @@ export class AuthService {
   /**
    * Get refresh token
    */
-  private getRefreshToken(): string | null {
+  getRefreshToken(): string | null {
     return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   /**
-   * Get stored user data
-   */
-  private getStoredUser(): User | null {
-    const userData = localStorage.getItem(this.USER_KEY);
-    return userData ? JSON.parse(userData) : null;
-  }
-
-  /**
-   * Set authentication data in localStorage
+   * Set authentication data in storage
    */
   private setAuthData(authResponse: AuthResponse): void {
     localStorage.setItem(this.TOKEN_KEY, authResponse.token);
@@ -241,7 +228,7 @@ export class AuthService {
   }
 
   /**
-   * Check if token is valid (basic check - in real app, verify with server)
+   * Check if token is valid (not expired)
    */
   private isTokenValid(token: string): boolean {
     try {
@@ -254,10 +241,18 @@ export class AuthService {
   }
 
   /**
- 
-  /**
-   * Generate mock JWT token for demonstration
- 
+   * Check if token is expired
+   */
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      return payload.exp < currentTime;
+    } catch {
+      return true;
+    }
+  }
+
   /**
    * Get user role from token
    */
