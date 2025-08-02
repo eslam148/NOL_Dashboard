@@ -37,37 +37,20 @@
         <h2 class="section-title">{{ 'branches.basicInfo' | translate }}</h2>
         
         <div class="form-grid">
-          <!-- Branch Name Arabic -->
+          <!-- Branch Name -->
           <div class="form-group">
-            <label for="nameAr" class="form-label required">{{ 'branches.nameAr' | translate }}</label>
+            <label for="name" class="form-label required">{{ 'branches.name' | translate }}</label>
             <input
-              id="nameAr"
+              id="name"
               type="text"
-              formControlName="nameAr"
+              formControlName="name"
               class="form-input focus-ring"
-              [class.error]="isFieldInvalid('nameAr')"
-              [placeholder]="'branches.nameArPlaceholder' | translate"
+              [class.error]="isFieldInvalid('name')"
+              [placeholder]="'branches.namePlaceholder' | translate"
             />
-            <div class="form-error" *ngIf="isFieldInvalid('nameAr')">
+            <div class="form-error" *ngIf="isFieldInvalid('name')">
               <i class="bi bi-exclamation-circle"></i>
-              {{ getFieldError('nameAr') }}
-            </div>
-          </div>
-
-          <!-- Branch Name English -->
-          <div class="form-group">
-            <label for="nameEn" class="form-label required">{{ 'branches.nameEn' | translate }}</label>
-            <input
-              id="nameEn"
-              type="text"
-              formControlName="nameEn"
-              class="form-input focus-ring"
-              [class.error]="isFieldInvalid('nameEn')"
-              [placeholder]="'branches.nameEnPlaceholder' | translate"
-            />
-            <div class="form-error" *ngIf="isFieldInvalid('nameEn')">
-              <i class="bi bi-exclamation-circle"></i>
-              {{ getFieldError('nameEn') }}
+              {{ getFieldError('name') }}
             </div>
           </div>
 
@@ -90,31 +73,16 @@
           </div>
         </div>
 
-        <!-- Description Fields -->
-        <div class="form-grid">
-          <!-- Description Arabic -->
-          <div class="form-group">
-            <label for="descriptionAr" class="form-label">{{ 'branches.descriptionAr' | translate }}</label>
-            <textarea
-              id="descriptionAr"
-              formControlName="descriptionAr"
-              class="form-textarea focus-ring"
-              rows="3"
-              [placeholder]="'branches.descriptionArPlaceholder' | translate"
-            ></textarea>
-          </div>
-
-          <!-- Description English -->
-          <div class="form-group">
-            <label for="descriptionEn" class="form-label">{{ 'branches.descriptionEn' | translate }}</label>
-            <textarea
-              id="descriptionEn"
-              formControlName="descriptionEn"
-              class="form-textarea focus-ring"
-              rows="3"
-              [placeholder]="'branches.descriptionEnPlaceholder' | translate"
-            ></textarea>
-          </div>
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description" class="form-label">{{ 'branches.description' | translate }}</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            class="form-textarea focus-ring"
+            rows="3"
+            [placeholder]="'branches.descriptionPlaceholder' | translate"
+          ></textarea>
         </div>
 
         <div class="form-grid">
@@ -275,53 +243,25 @@
         </div>
       </div>
 
-      <!-- Working Hours and Additional Information -->
+      <!-- Working Hours -->
       <div class="form-section">
-        <h2 class="section-title">{{ 'branches.additionalInfo' | translate }}</h2>
+        <h2 class="section-title">{{ 'branches.workingHours' | translate }}</h2>
 
-        <div class="form-grid">
-          <!-- Working Hours -->
-          <div class="form-group">
-            <label for="workingHours" class="form-label required">{{ 'branches.workingHours' | translate }}</label>
-            <input
-              id="workingHours"
-              type="text"
-              formControlName="workingHours"
-              class="form-input focus-ring"
-              [class.error]="isFieldInvalid('workingHours')"
-              [placeholder]="'branches.workingHoursPlaceholder' | translate"
-            />
-            <div class="form-error" *ngIf="isFieldInvalid('workingHours')">
-              <i class="bi bi-exclamation-circle"></i>
-              {{ getFieldError('workingHours') }}
-            </div>
-          </div>
-
-          <!-- Assigned Staff IDs -->
-          <div class="form-group">
-            <label for="assignedStaffIds" class="form-label">{{ 'branches.assignedStaff' | translate }}</label>
-            <input
-              id="assignedStaffIds"
-              type="text"
-              formControlName="assignedStaffIds"
-              class="form-input focus-ring"
-              [placeholder]="'branches.assignedStaffPlaceholder' | translate"
-              readonly
-            />
-            <small class="form-help">{{ 'branches.assignedStaffHelp' | translate }}</small>
-          </div>
-        </div>
-
-        <!-- Notes -->
         <div class="form-group">
-          <label for="notes" class="form-label">{{ 'branches.notes' | translate }}</label>
-          <textarea
-            id="notes"
-            formControlName="notes"
-            class="form-textarea focus-ring"
-            rows="4"
-            [placeholder]="'branches.notesPlaceholder' | translate"
-          ></textarea>
+          <label for="workingHours" class="form-label required">{{ 'branches.workingHours' | translate }}</label>
+          <input
+            id="workingHours"
+            type="text"
+            formControlName="workingHours"
+            class="form-input focus-ring"
+            [class.error]="isFieldInvalid('workingHours')"
+            [placeholder]="'branches.workingHoursPlaceholder' | translate"
+          />
+          <div class="form-error" *ngIf="isFieldInvalid('workingHours')">
+            <i class="bi bi-exclamation-circle"></i>
+            {{ getFieldError('workingHours') }}
+          </div>
+          <small class="form-help">{{ 'branches.workingHoursHelp' | translate }}</small>
         </div>
       </div>
     </div>

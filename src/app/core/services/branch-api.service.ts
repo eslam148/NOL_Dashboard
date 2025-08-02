@@ -10,10 +10,8 @@ import {
 
 export interface BranchDto {
   id: number;
-  nameAr: string;
-  nameEn: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
+  name: string;
+  description?: string;
   address: string;
   city: string;
   country: string;
@@ -23,15 +21,38 @@ export interface BranchDto {
   longitude: number;
   workingHours: string;
   isActive: boolean;
-  assignedStaffIds?: string[];
-  notes?: string;
+  // Additional fields from API response
+  createdAt?: string;
+  updatedAt?: string;
+  createdByAdmin?: string;
+  updatedByAdmin?: string;
+  totalCars?: number;
+  availableCars?: number;
+  rentedCars?: number;
+  maintenanceCars?: number;
+  carUtilizationRate?: number;
+  totalBookings?: number;
+  activeBookings?: number;
+  completedBookings?: number;
+  cancelledBookings?: number;
+  monthlyRevenue?: number;
+  yearlyRevenue?: number;
+  totalRevenue?: number;
+  averageBookingValue?: number;
+  totalStaff?: number;
+  activeStaff?: number;
+  staff?: any[];
+  customerSatisfactionRate?: number;
+  onTimeDeliveryRate?: number;
+  maintenanceRequestsCount?: number;
+  lastBookingDate?: string;
+  lastMaintenanceDate?: string;
+  recentActivities?: any[];
 }
 
 export interface CreateBranchDto {
-  nameAr: string;
-  nameEn: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
+  name: string;
+  description?: string;
   address: string;
   city: string;
   country: string;
@@ -41,15 +62,11 @@ export interface CreateBranchDto {
   longitude: number;
   workingHours: string;
   isActive?: boolean;
-  assignedStaffIds?: string[];
-  notes?: string;
 }
 
 export interface UpdateBranchDto {
-  nameAr?: string;
-  nameEn?: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
+  name?: string;
+  description?: string;
   address?: string;
   city?: string;
   country?: string;
@@ -59,8 +76,17 @@ export interface UpdateBranchDto {
   longitude?: number;
   workingHours?: string;
   isActive?: boolean;
-  assignedStaffIds?: string[];
-  notes?: string;
+}
+
+// Interface for the paginated API response structure
+export interface BranchPaginatedApiResponse {
+  data: BranchDto[];
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface BranchFilterDto {
@@ -110,7 +136,7 @@ export class BranchApiService {
    */
   getBranches(filter?: BranchFilterDto): Observable<PaginatedResponse<BranchDto>> {
     let params = new HttpParams();
-    
+
     if (filter) {
       if (filter.name) params = params.set('name', filter.name);
       if (filter.isActive !== undefined) params = params.set('isActive', filter.isActive.toString());
@@ -122,7 +148,7 @@ export class BranchApiService {
       if (filter.pageSize) params = params.set('pageSize', filter.pageSize.toString());
     }
 
-    return this.http.get<ApiResponse<BranchDto[]>>(this.baseUrl, { params }).pipe(
+    return this.http.get<ApiResponse<any>>(this.baseUrl, { params }).pipe(
       map(response => {
         // Add debugging logs
         if (environment.logging.enableApiLogging) {
@@ -150,22 +176,68 @@ export class BranchApiService {
             hasNextPage: false
           };
         }
-        
-        // The API returns an array directly, so we need to wrap it in a paginated response structure
+
+        // Check if the response.data contains pagination info (new API structure)
+        if (response.data && typeof response.data === 'object' && 'data' in response.data && Array.isArray(response.data.data)) {
+          console.log('🎉 API supports server-side pagination with proper structure!');
+          const paginatedData = response.data as BranchPaginatedApiResponse;
+          console.log(`📊 Page ${paginatedData.currentPage}/${paginatedData.totalPages} with ${paginatedData.data.length} items (total: ${paginatedData.totalCount})`);
+
+          return {
+            data: paginatedData.data,
+            totalCount: paginatedData.totalCount,
+            pageNumber: paginatedData.currentPage,
+            pageSize: paginatedData.pageSize,
+            totalPages: paginatedData.totalPages,
+            hasPreviousPage: paginatedData.hasPreviousPage,
+            hasNextPage: paginatedData.hasNextPage
+          } as PaginatedResponse<BranchDto>;
+        }
+
+        // Fallback: API returns array directly (old structure)
         const branchArray = Array.isArray(response.data) ? response.data : [];
         const pageSize = filter?.pageSize || 10;
         const pageNumber = filter?.page || 1;
-        const totalCount = branchArray.length;
-        const totalPages = Math.ceil(totalCount / pageSize);
-        
+
+        console.log(`📊 Branch API returned ${branchArray.length} branches for page ${pageNumber}, pageSize ${pageSize} (legacy structure)`);
+
+        // Check if API supports server-side pagination
+        let paginatedData: any[];
+        let totalCount: number;
+        let totalPages: number;
+        let hasPreviousPage: boolean;
+        let hasNextPage: boolean;
+
+        if (branchArray.length <= pageSize || branchArray.length === pageSize) {
+          // Assume API supports server-side pagination
+          console.log('🔄 Assuming server-side pagination is supported');
+          paginatedData = branchArray;
+          totalCount = branchArray.length; // This should ideally come from API headers or response
+          totalPages = Math.ceil(totalCount / pageSize);
+          hasPreviousPage = pageNumber > 1;
+          hasNextPage = pageNumber < totalPages;
+        } else {
+          // API returns all data, simulate pagination client-side
+          console.log('🎭 Simulating client-side pagination');
+          const startIndex = (pageNumber - 1) * pageSize;
+          const endIndex = startIndex + pageSize;
+          paginatedData = branchArray.slice(startIndex, endIndex);
+          totalCount = branchArray.length;
+          totalPages = Math.ceil(totalCount / pageSize);
+          hasPreviousPage = pageNumber > 1;
+          hasNextPage = pageNumber < totalPages;
+        }
+
+        console.log(`📄 Returning page ${pageNumber}/${totalPages} with ${paginatedData.length} items (total: ${totalCount})`);
+
         return {
-          data: branchArray,
+          data: paginatedData,
           totalCount: totalCount,
           pageNumber: pageNumber,
           pageSize: pageSize,
           totalPages: totalPages,
-          hasPreviousPage: pageNumber > 1,
-          hasNextPage: pageNumber < totalPages
+          hasPreviousPage: hasPreviousPage,
+          hasNextPage: hasNextPage
         } as PaginatedResponse<BranchDto>;
       }),
       catchError(this.handleError)

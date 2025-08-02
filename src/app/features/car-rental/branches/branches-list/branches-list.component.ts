@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { Branch, BranchFilter } from '../../../../core/models/car-rental.models';
+import { PaginatedResponse } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-branches-list',
@@ -15,14 +16,21 @@ import { Branch, BranchFilter } from '../../../../core/models/car-rental.models'
 })
 export class BranchesListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
-  
+
   branches = signal<Branch[]>([]);
-  filteredBranches = signal<Branch[]>([]);
   isLoading = signal(false);
   searchTerm = signal('');
   statusFilter = signal<string>('all');
   cityFilter = signal<string>('all');
-  
+
+  // Pagination properties
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalCount = signal(0);
+  totalPages = signal(0);
+  hasPreviousPage = signal(false);
+  hasNextPage = signal(false);
+
   // Available filter options
   statusOptions = [
     { value: 'all', label: 'branches.allStatuses' },
@@ -31,16 +39,27 @@ export class BranchesListComponent implements OnInit {
     { value: 'maintenance', label: 'branches.maintenance' }
   ];
 
+  // Page size options
+  pageSizeOptions = [
+    { value: 5, label: '5' },
+    { value: 10, label: '10' },
+    { value: 20, label: '20' },
+    { value: 50, label: '50' }
+  ];
+
   ngOnInit() {
     this.loadBranches();
   }
 
   private loadBranches() {
     this.isLoading.set(true);
-    this.carRentalService.getBranches().subscribe({
-      next: (branches) => {
-        this.branches.set(branches);
-        this.applyFilters();
+
+    const filter = this.buildFilter();
+
+    this.carRentalService.getBranchesPaginated(filter).subscribe({
+      next: (paginatedResponse: PaginatedResponse<Branch>) => {
+        this.branches.set(paginatedResponse.data);
+        this.updatePaginationInfo(paginatedResponse);
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -50,49 +69,107 @@ export class BranchesListComponent implements OnInit {
     });
   }
 
+  private buildFilter(): any {
+    const filter: any = {
+      page: this.currentPage(),
+      pageSize: this.pageSize()
+    };
+
+    // Add search filter
+    if (this.searchTerm()) {
+      filter.name = this.searchTerm();
+    }
+
+    // Add status filter
+    if (this.statusFilter() !== 'all') {
+      filter.isActive = this.statusFilter() === 'active';
+    }
+
+    // Add city filter
+    if (this.cityFilter() !== 'all') {
+      filter.city = this.cityFilter();
+    }
+
+    return filter;
+  }
+
+  private updatePaginationInfo(paginatedResponse: PaginatedResponse<Branch>) {
+    this.totalCount.set(paginatedResponse.totalCount);
+    this.totalPages.set(paginatedResponse.totalPages);
+    this.hasPreviousPage.set(paginatedResponse.hasPreviousPage);
+    this.hasNextPage.set(paginatedResponse.hasNextPage);
+  }
+
   onSearchChange(term: string) {
     this.searchTerm.set(term);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when searching
+    this.loadBranches();
   }
 
   onStatusFilterChange(status: string) {
     this.statusFilter.set(status);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when filtering
+    this.loadBranches();
   }
 
   onCityFilterChange(city: string) {
     this.cityFilter.set(city);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when filtering
+    this.loadBranches();
   }
 
-  private applyFilters() {
-    let filtered = [...this.branches()];
-    
-    // Apply search filter
-    const search = this.searchTerm().toLowerCase();
-    if (search) {
-      filtered = filtered.filter(branch => 
-        branch.name.toLowerCase().includes(search) ||
-        branch.address.toLowerCase().includes(search) ||
-        branch.city.toLowerCase().includes(search) ||
-        branch.manager.toLowerCase().includes(search)
-      );
+  onPageSizeChange(newPageSize: number) {
+    this.pageSize.set(newPageSize);
+    this.currentPage.set(1); // Reset to first page when changing page size
+    this.loadBranches();
+  }
+
+  onPageChange(newPage: number) {
+    if (newPage >= 1 && newPage <= this.totalPages()) {
+      this.currentPage.set(newPage);
+      this.loadBranches();
     }
-    
-    // Apply status filter
-    if (this.statusFilter() !== 'all') {
-      filtered = filtered.filter(branch => branch.status === this.statusFilter());
+  }
+
+  goToFirstPage() {
+    this.onPageChange(1);
+  }
+
+  goToPreviousPage() {
+    if (this.hasPreviousPage()) {
+      this.onPageChange(this.currentPage() - 1);
     }
-    
-    // Apply city filter
-    if (this.cityFilter() !== 'all') {
-      filtered = filtered.filter(branch => branch.city === this.cityFilter());
+  }
+
+  goToNextPage() {
+    if (this.hasNextPage()) {
+      this.onPageChange(this.currentPage() + 1);
     }
-    
-    this.filteredBranches.set(filtered);
+  }
+
+  goToLastPage() {
+    this.onPageChange(this.totalPages());
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.totalPages();
+    const currentPage = this.currentPage();
+    const pages: number[] = [];
+
+    // Show up to 5 page numbers around current page
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   }
 
   getUniqueCities(): string[] {
+    // Note: This will only show cities from current page
+    // For full city list, consider a separate API call
     const cities = this.branches().map(branch => branch.city);
     return [...new Set(cities)].sort();
   }
@@ -122,6 +199,35 @@ export class BranchesListComponent implements OnInit {
   }
 
   refreshList() {
+    this.currentPage.set(1);
     this.loadBranches();
+  }
+
+  // Helper methods for pagination display
+  getStartIndex(): number {
+    return (this.currentPage() - 1) * this.pageSize() + 1;
+  }
+
+  getEndIndex(): number {
+    return Math.min(this.currentPage() * this.pageSize(), this.totalCount());
+  }
+
+  getOperatingHoursDisplay(branch: Branch): string {
+    if (!branch.operatingHours) {
+      return 'Not specified';
+    }
+
+    // Try to find a typical day's hours (Monday or first available day)
+    const days = Object.keys(branch.operatingHours);
+    if (days.length === 0) {
+      return 'Not specified';
+    }
+
+    const firstDay = branch.operatingHours[days[0]];
+    if (firstDay && firstDay.isOpen) {
+      return `${firstDay.open} - ${firstDay.close}`;
+    }
+
+    return 'Closed';
   }
 }

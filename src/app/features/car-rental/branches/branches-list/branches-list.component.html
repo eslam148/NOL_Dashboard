@@ -68,15 +68,31 @@
     </div>
   </div>
 
-  <!-- Results Summary -->
+  <!-- Results Summary and Page Size -->
   <div class="results-summary" *ngIf="!isLoading()">
-    <p class="text-secondary">
-      {{ 'branches.showingResults' | translate }} 
-      <strong>{{ filteredBranches().length }}</strong> 
-      {{ 'branches.of' | translate }} 
-      <strong>{{ branches().length }}</strong> 
-      {{ 'branches.branches' | translate }}
-    </p>
+    <div class="flex items-center justify-between">
+      <p class="text-secondary">
+        {{ 'branches.showingResults' | translate }}
+        <strong>{{ getStartIndex() }}</strong>-<strong>{{ getEndIndex() }}</strong>
+        {{ 'branches.of' | translate }}
+        <strong>{{ totalCount() }}</strong>
+        {{ 'branches.branches' | translate }}
+      </p>
+
+      <!-- Page Size Selector -->
+      <div class="page-size-selector">
+        <label class="text-sm text-secondary mr-2">{{ 'common.itemsPerPage' | translate }}:</label>
+        <select
+          class="form-select form-select-sm"
+          [value]="pageSize()"
+          (change)="onPageSizeChange(+$any($event.target).value)"
+        >
+          <option *ngFor="let option of pageSizeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -86,8 +102,8 @@
   </div>
 
   <!-- Branches Grid -->
-  <div class="branches-grid" *ngIf="!isLoading() && filteredBranches().length > 0">
-    <div class="branch-card" *ngFor="let branch of filteredBranches()">
+  <div class="branches-grid" *ngIf="!isLoading() && branches().length > 0">
+    <div class="branch-card" *ngFor="let branch of branches()">
       <!-- Branch Header -->
       <div class="branch-header">
         <div class="branch-info">
@@ -129,10 +145,10 @@
         </div>
 
         <div class="detail-item">
-          <i class="bi bi-person detail-icon"></i>
+          <i class="bi bi-clock detail-icon"></i>
           <div>
-            <p class="detail-text">{{ branch.manager }}</p>
-            <p class="detail-subtext">{{ 'branches.branchManager' | translate }}</p>
+            <p class="detail-text">{{ getOperatingHoursDisplay(branch) }}</p>
+            <p class="detail-subtext">{{ 'branches.operatingHours' | translate }}</p>
           </div>
         </div>
       </div>
@@ -156,7 +172,7 @@
   </div>
 
   <!-- Empty State -->
-  <div class="empty-state" *ngIf="!isLoading() && filteredBranches().length === 0">
+  <div class="empty-state" *ngIf="!isLoading() && branches().length === 0">
     <div class="empty-icon">
       <i class="bi bi-building"></i>
     </div>
@@ -166,5 +182,69 @@
       <i class="bi bi-plus-circle"></i>
       {{ 'branches.addFirstBranch' | translate }}
     </a>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-container" *ngIf="!isLoading() && totalPages() > 1">
+    <div class="pagination-info">
+      <span class="text-sm text-secondary">
+        {{ 'common.page' | translate }} {{ currentPage() }} {{ 'common.of' | translate }} {{ totalPages() }}
+      </span>
+    </div>
+
+    <div class="pagination-controls">
+      <!-- First Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasPreviousPage()"
+        (click)="goToFirstPage()"
+        [title]="'common.firstPage' | translate"
+      >
+        <i class="bi bi-chevron-double-left"></i>
+      </button>
+
+      <!-- Previous Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasPreviousPage()"
+        (click)="goToPreviousPage()"
+        [title]="'common.previousPage' | translate"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <!-- Page Numbers -->
+      <div class="page-numbers">
+        <button
+          *ngFor="let pageNum of getPageNumbers()"
+          class="btn btn-sm"
+          [class.btn-primary]="pageNum === currentPage()"
+          [class.btn-ghost]="pageNum !== currentPage()"
+          (click)="onPageChange(pageNum)"
+        >
+          {{ pageNum }}
+        </button>
+      </div>
+
+      <!-- Next Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasNextPage()"
+        (click)="goToNextPage()"
+        [title]="'common.nextPage' | translate"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      <!-- Last Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasNextPage()"
+        (click)="goToLastPage()"
+        [title]="'common.lastPage' | translate"
+      >
+        <i class="bi bi-chevron-double-right"></i>
+      </button>
+    </div>
   </div>
 </div>

@@ -537,6 +537,118 @@ export class CarRentalService {
     return of(null).pipe(delay(1000));
   }
 
+  // Paginated branch methods
+  getBranchesPaginated(filter?: any): Observable<PaginatedResponse<Branch>> {
+    if (this.useRealApi) {
+      console.log('🏢 Fetching paginated branches with filter:', filter);
+
+      return this.branchApiService.getBranches(filter).pipe(
+        map((paginatedResponse) => {
+          console.log('📦 Branch API Paginated Response:', paginatedResponse);
+
+          // Add null checks for the response data
+          if (!paginatedResponse || !paginatedResponse.data) {
+            console.warn('⚠️ Invalid branch paginated response structure:', paginatedResponse);
+            return {
+              data: [],
+              totalCount: 0,
+              pageNumber: 1,
+              pageSize: 10,
+              totalPages: 0,
+              hasPreviousPage: false,
+              hasNextPage: false
+            };
+          }
+
+          // Ensure data is an array
+          if (!Array.isArray(paginatedResponse.data)) {
+            console.warn('⚠️ Branch response data is not an array:', paginatedResponse.data);
+            return {
+              data: [],
+              totalCount: 0,
+              pageNumber: 1,
+              pageSize: 10,
+              totalPages: 0,
+              hasPreviousPage: false,
+              hasNextPage: false
+            };
+          }
+
+          console.log(`✅ Converting ${paginatedResponse.data.length} branch DTOs to Branch objects`);
+
+          const convertedBranches = this.convertBranchDtosToBranches(paginatedResponse.data);
+          console.log('🔄 Converted branches:', convertedBranches);
+
+          return {
+            data: convertedBranches,
+            totalCount: paginatedResponse.totalCount,
+            pageNumber: paginatedResponse.pageNumber,
+            pageSize: paginatedResponse.pageSize,
+            totalPages: paginatedResponse.totalPages,
+            hasPreviousPage: paginatedResponse.hasPreviousPage,
+            hasNextPage: paginatedResponse.hasNextPage
+          };
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching paginated branches:', error);
+
+          // Return empty paginated response instead of throwing error
+          return of({
+            data: [],
+            totalCount: 0,
+            pageNumber: 1,
+            pageSize: 10,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false
+          });
+        })
+      );
+    }
+
+    // Fallback to mock data with pagination simulation
+    console.log('🎭 Using mock data for paginated branches');
+    const pageSize = filter?.pageSize || 10;
+    const pageNumber = filter?.page || 1;
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    let filteredBranches = [...this.mockBranches];
+
+    // Apply filters to mock data
+    if (filter?.name) {
+      filteredBranches = filteredBranches.filter(branch =>
+        branch.name.toLowerCase().includes(filter.name.toLowerCase())
+      );
+    }
+
+    if (filter?.isActive !== undefined) {
+      filteredBranches = filteredBranches.filter(branch =>
+        branch.status === (filter.isActive ? 'active' : 'inactive')
+      );
+    }
+
+    if (filter?.city) {
+      filteredBranches = filteredBranches.filter(branch =>
+        branch.city.toLowerCase() === filter.city.toLowerCase()
+      );
+    }
+
+    const totalCount = filteredBranches.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const paginatedData = filteredBranches.slice(startIndex, endIndex);
+
+    return of({
+      data: paginatedData,
+      totalCount: totalCount,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      totalPages: totalPages,
+      hasPreviousPage: pageNumber > 1,
+      hasNextPage: pageNumber < totalPages
+    }).pipe(delay(800));
+  }
+
   // Vehicle Management
   getVehicles(filter?: VehicleFilter): Observable<Vehicle[]> {
     this.isLoading.set(true);
@@ -3112,18 +3224,22 @@ export class CarRentalService {
     }).filter(branch => branch !== null) as Branch[];
   }
 
+
+
   private convertBranchDtoToBranch(branch: any): Branch {
     if (!branch) {
       throw new Error('Branch DTO is null or undefined');
     }
 
+    console.log('🔄 Converting branch DTO:', branch);
+
     return {
       id: branch.id?.toString() || '',
-      name: branch.nameEn || branch.nameAr || '',
-      address: branch.addressEn || branch.addressAr || '',
-      city: this.extractCityFromAddress(branch.addressEn || branch.addressAr || ''),
-      country: 'UAE', // Default country since API doesn't provide it
-      phone: branch.phoneNumber || '',
+      name: branch.name || '', // API returns single name field
+      address: branch.address || '', // API returns single address field
+      city: branch.city || '', // API provides city directly
+      country: branch.country || 'UAE', // API provides country directly
+      phone: branch.phone || '', // API uses 'phone' not 'phoneNumber'
       email: branch.email || '',
       coordinates: {
         lat: branch.latitude || 0,
@@ -3131,9 +3247,9 @@ export class CarRentalService {
       },
       operatingHours: this.parseWorkingHours(branch.workingHours || '24/7'),
       status: branch.isActive ? 'active' : 'inactive',
-      manager: 'Unknown', // API doesn't provide manager info
-      createdAt: new Date(), // API doesn't provide creation date
-      updatedAt: new Date() // API doesn't provide update date
+      manager: 'Unknown', // API doesn't provide manager info yet
+      createdAt: new Date(branch.createdAt || Date.now()),
+      updatedAt: new Date(branch.updatedAt || Date.now())
     };
   }
 
@@ -3514,47 +3630,5 @@ export class CarRentalService {
     );
   }
 
-  // Debug method to test Branch API with new structure
-  debugBranchApiDirect(): Observable<any> {
-    console.log('🔧 Testing Branch API with direct structure...');
-    console.log('🔧 Branch API Base URL:', this.branchApiService['baseUrl']);
-    console.log('🔧 Use Real API:', this.useRealApi);
-
-    if (!this.useRealApi) {
-      console.log('🎭 Real API is disabled, using mock data');
-      return of({ message: 'Real API is disabled' });
-    }
-
-    // Test creating a branch with the new structure
-    const testBranchData = {
-      nameAr: 'فرع تجريبي',
-      nameEn: 'Test Branch',
-      descriptionAr: 'وصف تجريبي',
-      descriptionEn: 'Test description',
-      address: 'Test Address',
-      city: 'Dubai',
-      country: 'UAE',
-      phone: '+971501234567',
-      email: 'test@example.com',
-      latitude: 25.2048,
-      longitude: 55.2708,
-      workingHours: '08:00-18:00 Mon-Fri',
-      isActive: true,
-      assignedStaffIds: [],
-      notes: 'Test branch for API testing'
-    };
-
-    console.log('🧪 Testing branch creation with data:', testBranchData);
-
-    return this.branchApiService.createBranch(testBranchData).pipe(
-      map(response => {
-        console.log('✅ Branch API direct test successful:', response);
-        return response;
-      }),
-      catchError(error => {
-        console.error('❌ Branch API direct test failed:', error);
-        return of({ error: error.message || 'Unknown error', details: error });
-      })
-    );
-  }
+ 
 }
