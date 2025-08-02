@@ -478,6 +478,65 @@ export class CarRentalService {
     return of(false).pipe(delay(1000));
   }
 
+  // Direct API methods for new branch structure
+  createBranchDirect(branchData: any): Observable<any> {
+    if (this.useRealApi) {
+      console.log('🏢 Creating branch with direct API call:', branchData);
+
+      return this.branchApiService.createBranch(branchData).pipe(
+        map((createdBranch) => {
+          console.log('✅ Branch created successfully:', createdBranch);
+          return createdBranch;
+        }),
+        catchError((error) => {
+          console.error('❌ Error creating branch:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for branch creation');
+    const newBranch = {
+      id: Date.now().toString(),
+      ...branchData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.mockBranches.push(newBranch as any);
+    return of(newBranch).pipe(delay(1000));
+  }
+
+  updateBranchDirect(id: string, branchData: any): Observable<any> {
+    if (this.useRealApi) {
+      console.log('🏢 Updating branch with direct API call:', id, branchData);
+
+      return this.branchApiService.updateBranch(parseInt(id), branchData).pipe(
+        map((updatedBranch) => {
+          console.log('✅ Branch updated successfully:', updatedBranch);
+          return updatedBranch;
+        }),
+        catchError((error) => {
+          console.error('❌ Error updating branch:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for branch update');
+    const index = this.mockBranches.findIndex(b => b.id === id);
+    if (index !== -1) {
+      this.mockBranches[index] = {
+        ...this.mockBranches[index],
+        ...branchData,
+        updatedAt: new Date()
+      };
+      return of(this.mockBranches[index]).pipe(delay(1000));
+    }
+    return of(null).pipe(delay(1000));
+  }
+
   // Vehicle Management
   getVehicles(filter?: VehicleFilter): Observable<Vehicle[]> {
     this.isLoading.set(true);
@@ -3451,6 +3510,50 @@ export class CarRentalService {
       catchError(error => {
         console.error('❌ Customer API test failed:', error);
         return of({ error: error.message || 'Unknown error' });
+      })
+    );
+  }
+
+  // Debug method to test Branch API with new structure
+  debugBranchApiDirect(): Observable<any> {
+    console.log('🔧 Testing Branch API with direct structure...');
+    console.log('🔧 Branch API Base URL:', this.branchApiService['baseUrl']);
+    console.log('🔧 Use Real API:', this.useRealApi);
+
+    if (!this.useRealApi) {
+      console.log('🎭 Real API is disabled, using mock data');
+      return of({ message: 'Real API is disabled' });
+    }
+
+    // Test creating a branch with the new structure
+    const testBranchData = {
+      nameAr: 'فرع تجريبي',
+      nameEn: 'Test Branch',
+      descriptionAr: 'وصف تجريبي',
+      descriptionEn: 'Test description',
+      address: 'Test Address',
+      city: 'Dubai',
+      country: 'UAE',
+      phone: '+971501234567',
+      email: 'test@example.com',
+      latitude: 25.2048,
+      longitude: 55.2708,
+      workingHours: '08:00-18:00 Mon-Fri',
+      isActive: true,
+      assignedStaffIds: [],
+      notes: 'Test branch for API testing'
+    };
+
+    console.log('🧪 Testing branch creation with data:', testBranchData);
+
+    return this.branchApiService.createBranch(testBranchData).pipe(
+      map(response => {
+        console.log('✅ Branch API direct test successful:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Branch API direct test failed:', error);
+        return of({ error: error.message || 'Unknown error', details: error });
       })
     );
   }

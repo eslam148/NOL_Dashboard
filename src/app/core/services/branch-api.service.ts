@@ -12,44 +12,55 @@ export interface BranchDto {
   id: number;
   nameAr: string;
   nameEn: string;
-  addressAr: string;
-  addressEn: string;
-  phoneNumber: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  address: string;
+  city: string;
+  country: string;
+  phone: string;
   email?: string;
   latitude: number;
   longitude: number;
-  isActive: boolean;
   workingHours: string;
-  totalCars: number;
-  availableCars: number;
-  totalBookings: number;
-  monthlyRevenue: number;
+  isActive: boolean;
+  assignedStaffIds?: string[];
+  notes?: string;
 }
 
 export interface CreateBranchDto {
   nameAr: string;
   nameEn: string;
-  addressAr: string;
-  addressEn: string;
-  phoneNumber: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  address: string;
+  city: string;
+  country: string;
+  phone: string;
   email?: string;
   latitude: number;
   longitude: number;
-  isActive?: boolean;
   workingHours: string;
+  isActive?: boolean;
+  assignedStaffIds?: string[];
+  notes?: string;
 }
 
 export interface UpdateBranchDto {
   nameAr?: string;
   nameEn?: string;
-  addressAr?: string;
-  addressEn?: string;
-  phoneNumber?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  phone?: string;
   email?: string;
   latitude?: number;
   longitude?: number;
-  isActive?: boolean;
   workingHours?: string;
+  isActive?: boolean;
+  assignedStaffIds?: string[];
+  notes?: string;
 }
 
 export interface BranchFilterDto {

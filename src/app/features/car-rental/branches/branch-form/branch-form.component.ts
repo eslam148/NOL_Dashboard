@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
-import { Branch } from '../../../../core/models/car-rental.models';
+
 
 @Component({
   selector: 'app-branch-form',
@@ -28,40 +28,25 @@ export class BranchFormComponent implements OnInit {
   branchId = signal<string | null>(null);
   errorMessage = signal<string>('');
 
-  // Operating hours for each day
-  daysOfWeek = [
-    { key: 'monday', label: 'branches.monday' },
-    { key: 'tuesday', label: 'branches.tuesday' },
-    { key: 'wednesday', label: 'branches.wednesday' },
-    { key: 'thursday', label: 'branches.thursday' },
-    { key: 'friday', label: 'branches.friday' },
-    { key: 'saturday', label: 'branches.saturday' },
-    { key: 'sunday', label: 'branches.sunday' }
-  ];
+
 
   constructor() {
     this.branchForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      nameAr: ['', [Validators.required, Validators.minLength(2)]],
+      nameEn: ['', [Validators.required, Validators.minLength(2)]],
+      descriptionAr: [''],
+      descriptionEn: [''],
       address: ['', [Validators.required]],
       city: ['', [Validators.required]],
-      country: ['', [Validators.required]],
-      phone: ['', [Validators.required]],
+      country: ['UAE', [Validators.required]],
+      phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{1,14}$/)]],
       email: ['', [Validators.required, Validators.email]],
-      manager: ['', [Validators.required]],
-      status: ['active', [Validators.required]],
-      coordinates: this.fb.group({
-        lat: [25.2048, [Validators.required, Validators.min(-90), Validators.max(90)]],
-        lng: [55.2708, [Validators.required, Validators.min(-180), Validators.max(180)]]
-      }),
-      operatingHours: this.fb.group({
-        monday: this.createDayGroup(),
-        tuesday: this.createDayGroup(),
-        wednesday: this.createDayGroup(),
-        thursday: this.createDayGroup(),
-        friday: this.createDayGroup(),
-        saturday: this.createDayGroup(),
-        sunday: this.createDayGroup()
-      })
+      latitude: [25.2048, [Validators.required, Validators.min(-90), Validators.max(90)]],
+      longitude: [55.2708, [Validators.required, Validators.min(-180), Validators.max(180)]],
+      workingHours: ['', [Validators.required]],
+      isActive: [true, [Validators.required]],
+      assignedStaffIds: [[]],
+      notes: ['']
     });
   }
 
@@ -74,13 +59,7 @@ export class BranchFormComponent implements OnInit {
     }
   }
 
-  private createDayGroup() {
-    return this.fb.group({
-      isOpen: [true],
-      open: ['08:00', [Validators.required]],
-      close: ['20:00', [Validators.required]]
-    });
-  }
+
 
   private loadBranch(id: string) {
     this.isLoading.set(true);
@@ -101,30 +80,23 @@ export class BranchFormComponent implements OnInit {
     });
   }
 
-  private populateForm(branch: Branch) {
+  private populateForm(branch: any) {
     this.branchForm.patchValue({
-      name: branch.name,
-      address: branch.address,
-      city: branch.city,
-      country: branch.country,
-      phone: branch.phone,
-      email: branch.email,
-      manager: branch.manager,
-      status: branch.status,
-      coordinates: {
-        lat: branch.coordinates.lat,
-        lng: branch.coordinates.lng
-      }
-    });
-
-    // Populate operating hours
-    Object.keys(branch.operatingHours).forEach(day => {
-      const dayData = branch.operatingHours[day];
-      this.branchForm.get(`operatingHours.${day}`)?.patchValue({
-        isOpen: dayData.isOpen,
-        open: dayData.open,
-        close: dayData.close
-      });
+      nameAr: branch.nameAr || '',
+      nameEn: branch.nameEn || '',
+      descriptionAr: branch.descriptionAr || '',
+      descriptionEn: branch.descriptionEn || '',
+      address: branch.address || '',
+      city: branch.city || '',
+      country: branch.country || '',
+      phone: branch.phone || '',
+      email: branch.email || '',
+      latitude: branch.latitude || 25.2048,
+      longitude: branch.longitude || 55.2708,
+      workingHours: branch.workingHours || '',
+      isActive: branch.isActive !== undefined ? branch.isActive : true,
+      assignedStaffIds: branch.assignedStaffIds || [],
+      notes: branch.notes || ''
     });
   }
 
@@ -134,11 +106,24 @@ export class BranchFormComponent implements OnInit {
       this.errorMessage.set('');
 
       const formData = this.branchForm.value;
-      
+
+      // Process the form data to match API structure
+      const processedData = {
+        ...formData,
+        // Ensure assignedStaffIds is an array
+        assignedStaffIds: Array.isArray(formData.assignedStaffIds)
+          ? formData.assignedStaffIds
+          : formData.assignedStaffIds
+            ? [formData.assignedStaffIds]
+            : []
+      };
+
+      console.log('Form data to submit:', processedData);
+
       if (this.isEditMode()) {
-        this.updateBranch(formData);
+        this.updateBranch(processedData);
       } else {
-        this.createBranch(formData);
+        this.createBranch(processedData);
       }
     } else {
       this.markFormGroupTouched();
@@ -146,12 +131,15 @@ export class BranchFormComponent implements OnInit {
   }
 
   private createBranch(branchData: any) {
-    this.carRentalService.createBranch(branchData).subscribe({
-      next: (branch) => {
+    // The form data is already in the correct API format
+    console.log('Creating branch with data:', branchData);
+
+    this.carRentalService.createBranchDirect(branchData).subscribe({
+      next: () => {
         this.isSaving.set(false);
         this.router.navigate(['/car-rental/branches']);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error creating branch:', error);
         this.errorMessage.set('Error creating branch');
         this.isSaving.set(false);
@@ -162,12 +150,15 @@ export class BranchFormComponent implements OnInit {
   private updateBranch(branchData: any) {
     const id = this.branchId();
     if (id) {
-      this.carRentalService.updateBranch(id, branchData).subscribe({
-        next: (branch) => {
+      // The form data is already in the correct API format
+      console.log('Updating branch with data:', branchData);
+
+      this.carRentalService.updateBranchDirect(id, branchData).subscribe({
+        next: () => {
           this.isSaving.set(false);
           this.router.navigate(['/car-rental/branches']);
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error updating branch:', error);
           this.errorMessage.set('Error updating branch');
           this.isSaving.set(false);
@@ -215,10 +206,8 @@ export class BranchFormComponent implements OnInit {
   onMapClick(event: any) {
     // Update coordinates when user clicks on map
     this.branchForm.patchValue({
-      coordinates: {
-        lat: event.lat,
-        lng: event.lng
-      }
+      latitude: event.lat,
+      longitude: event.lng
     });
   }
 
@@ -227,10 +216,8 @@ export class BranchFormComponent implements OnInit {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           this.branchForm.patchValue({
-            coordinates: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            }
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
           });
         },
         (error) => {
