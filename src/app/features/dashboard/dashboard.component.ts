@@ -15,7 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="user-menu">
             <div class="user-info">
               <span class="text-secondary">Welcome, </span>
-              <strong class="text-primary">{{ authService.currentUser()?.name }}</strong>
+              <strong class="text-primary">{{ authService.currentUser()?.fullName }}</strong>
               <span class="user-role bg-accent text-dark">{{ authService.currentUser()?.role }}</span>
             </div>
             <button class="btn btn-secondary" (click)="logout()">
