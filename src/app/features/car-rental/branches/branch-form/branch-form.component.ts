@@ -32,8 +32,10 @@ export class BranchFormComponent implements OnInit {
 
   constructor() {
     this.branchForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
+      nameAr: ['', [Validators.required, Validators.minLength(2)]],
+      nameEn: ['', [Validators.required, Validators.minLength(2)]],
+      descriptionAr: [''],
+      descriptionEn: [''],
       address: ['', [Validators.required]],
       city: ['', [Validators.required]],
       country: ['UAE', [Validators.required]],
@@ -42,7 +44,9 @@ export class BranchFormComponent implements OnInit {
       latitude: [25.2048, [Validators.required, Validators.min(-90), Validators.max(90)]],
       longitude: [55.2708, [Validators.required, Validators.min(-180), Validators.max(180)]],
       workingHours: ['', [Validators.required]],
-      isActive: [true, [Validators.required]]
+      isActive: [true, [Validators.required]],
+      assignedStaffIds: [[]],
+      notes: ['']
     });
   }
 
@@ -78,8 +82,10 @@ export class BranchFormComponent implements OnInit {
 
   private populateForm(branch: any) {
     this.branchForm.patchValue({
-      name: branch.name || '',
-      description: branch.description || '',
+      nameAr: branch.nameAr || branch.name || '',
+      nameEn: branch.nameEn || branch.name || '',
+      descriptionAr: branch.descriptionAr || branch.description || '',
+      descriptionEn: branch.descriptionEn || branch.description || '',
       address: branch.address || '',
       city: branch.city || '',
       country: branch.country || '',
@@ -88,7 +94,9 @@ export class BranchFormComponent implements OnInit {
       latitude: branch.latitude || 25.2048,
       longitude: branch.longitude || 55.2708,
       workingHours: branch.workingHours || '',
-      isActive: branch.isActive !== undefined ? branch.isActive : true
+      isActive: branch.isActive !== undefined ? branch.isActive : true,
+      assignedStaffIds: branch.assignedStaffIds || [],
+      notes: branch.notes || ''
     });
   }
 
@@ -99,12 +107,23 @@ export class BranchFormComponent implements OnInit {
 
       const formData = this.branchForm.value;
 
-      console.log('Form data to submit:', formData);
+      // Process the form data to match API structure
+      const processedData = {
+        ...formData,
+        // Ensure assignedStaffIds is an array
+        assignedStaffIds: Array.isArray(formData.assignedStaffIds)
+          ? formData.assignedStaffIds
+          : formData.assignedStaffIds
+            ? [formData.assignedStaffIds]
+            : []
+      };
+
+      console.log('Form data to submit:', processedData);
 
       if (this.isEditMode()) {
-        this.updateBranch(formData);
+        this.updateBranch(processedData);
       } else {
-        this.createBranch(formData);
+        this.createBranch(processedData);
       }
     } else {
       this.markFormGroupTouched();

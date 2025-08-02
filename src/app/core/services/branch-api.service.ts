@@ -51,8 +51,10 @@ export interface BranchDto {
 }
 
 export interface CreateBranchDto {
-  name: string;
-  description?: string;
+  nameAr: string;
+  nameEn: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
   address: string;
   city: string;
   country: string;
@@ -62,11 +64,15 @@ export interface CreateBranchDto {
   longitude: number;
   workingHours: string;
   isActive?: boolean;
+  assignedStaffIds?: string[];
+  notes?: string;
 }
 
 export interface UpdateBranchDto {
-  name?: string;
-  description?: string;
+  nameAr?: string;
+  nameEn?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
   address?: string;
   city?: string;
   country?: string;
@@ -76,6 +82,8 @@ export interface UpdateBranchDto {
   longitude?: number;
   workingHours?: string;
   isActive?: boolean;
+  assignedStaffIds?: string[];
+  notes?: string;
 }
 
 // Interface for the paginated API response structure
