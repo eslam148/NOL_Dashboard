@@ -1,4 +1,4 @@
-import { Injectable, model, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 export interface Translation {
   [key: string]: string | Translation;
@@ -87,6 +87,7 @@ export class TranslationService {
         previous: 'Previous',
         never: 'Never',
         update: 'Update',
+        saving: 'Saving...',
         nolLogo: 'NOL Logo',
         switchToEnglish: 'Switch to English',
         switchToArabic: 'Switch to Arabic',
@@ -858,6 +859,7 @@ export class TranslationService {
         previous: 'السابق',
         never: 'أبداً',
         update: 'تحديث',
+        saving: 'جاري الحفظ...',
         nolLogo: 'شعار نول',
         switchToEnglish: 'التبديل إلى الإنجليزية',
         switchToArabic: 'التبديل إلى العربية',
