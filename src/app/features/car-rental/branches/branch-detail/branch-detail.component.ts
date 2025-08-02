@@ -61,7 +61,7 @@ import { Branch } from '../../../../core/models/car-rental.models';
                   {{ 'branches.' + branch()!.status | translate }}
                 </span>
               </div>
-              <div class="detail-item">
+              <div class="detail-item" *ngIf="branch()!.manager && branch()!.manager !== 'Unknown'">
                 <span class="detail-label">{{ 'branches.manager' | translate }}</span>
                 <span class="detail-value">{{ branch()!.manager }}</span>
               </div>
@@ -102,18 +102,13 @@ import { Branch } from '../../../../core/models/car-rental.models';
             </div>
           </div>
 
-          <!-- Operating Hours -->
+          <!-- Working Hours -->
           <div class="detail-section span-2">
-            <h2 class="section-title">{{ 'branches.operatingHours' | translate }}</h2>
-            <div class="operating-hours">
-              <div class="day-schedule" *ngFor="let day of getDaysOfWeek()">
-                <span class="day-name">{{ 'branches.' + day.key | translate }}</span>
-                <span class="day-hours" *ngIf="branch()!.operatingHours[day.key].isOpen">
-                  {{ branch()!.operatingHours[day.key].open }} - {{ branch()!.operatingHours[day.key].close }}
-                </span>
-                <span class="day-closed" *ngIf="!branch()!.operatingHours[day.key].isOpen">
-                  {{ 'branches.closed' | translate }}
-                </span>
+            <h2 class="section-title">{{ 'branches.workingHours' | translate }}</h2>
+            <div class="detail-items">
+              <div class="detail-item">
+                <span class="detail-label">{{ 'branches.schedule' | translate }}</span>
+                <span class="detail-value">{{ getWorkingHoursDisplay() }}</span>
               </div>
             </div>
           </div>
@@ -351,15 +346,22 @@ export class BranchDetailComponent implements OnInit {
     }
   }
 
-  getDaysOfWeek() {
-    return [
-      { key: 'monday' },
-      { key: 'tuesday' },
-      { key: 'wednesday' },
-      { key: 'thursday' },
-      { key: 'friday' },
-      { key: 'saturday' },
-      { key: 'sunday' }
-    ];
+  getWorkingHoursDisplay(): string {
+    const branch = this.branch();
+    if (!branch) return 'Not available';
+
+    // Try to get working hours from operatingHours first (complex structure)
+    if (branch.operatingHours) {
+      const days = Object.keys(branch.operatingHours);
+      if (days.length > 0) {
+        const firstDay = branch.operatingHours[days[0]];
+        if (firstDay && firstDay.isOpen) {
+          return `${firstDay.open} - ${firstDay.close}`;
+        }
+      }
+    }
+
+    // Fallback to simple working hours string (from API)
+    return 'Standard business hours';
   }
 }

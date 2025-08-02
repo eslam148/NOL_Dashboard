@@ -401,6 +401,31 @@ export class CarRentalService {
   }
 
   getBranchById(id: string): Observable<Branch | null> {
+    if (this.useRealApi) {
+      console.log('🏢 Fetching branch by ID from API:', id);
+
+      return this.branchApiService.getBranchById(parseInt(id)).pipe(
+        map((branchDto) => {
+          console.log('✅ Branch API response:', branchDto);
+          return this.convertBranchDtoToBranch(branchDto);
+        }),
+        catchError((error) => {
+          console.error('❌ Error fetching branch by ID:', error);
+
+          // Check if it's a 404 error (branch not found)
+          if (error.status === 404) {
+            console.warn('🔍 Branch not found with ID:', id);
+            return of(null);
+          }
+
+          // For other errors, return null instead of throwing to prevent app crash
+          return of(null);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    console.log('🎭 Using mock data for branch by ID:', id);
     const branch = this.mockBranches.find(b => b.id === id) || null;
     return of(branch).pipe(delay(500));
   }
