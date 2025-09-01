@@ -121,7 +121,7 @@ export class BookingApiService {
           return {
             data: [],
             totalCount: 0,
-            pageNumber: 1,
+            currentPage: 1,
             pageSize: 10,
             totalPages: 0,
             hasPreviousPage: false,
@@ -132,18 +132,18 @@ export class BookingApiService {
         // The API returns an array directly, so we need to wrap it in a paginated response structure
         const bookingArray = Array.isArray(response.data) ? response.data : [];
         const pageSize = filter?.pageSize || 10;
-        const pageNumber = filter?.page || 1;
+        const currentPage = filter?.page || 1;
         const totalCount = bookingArray.length;
         const totalPages = Math.ceil(totalCount / pageSize);
         
         return {
           data: bookingArray,
           totalCount: totalCount,
-          pageNumber: pageNumber,
+          currentPage: currentPage,
           pageSize: pageSize,
           totalPages: totalPages,
-          hasPreviousPage: pageNumber > 1,
-          hasNextPage: pageNumber < totalPages
+          hasPreviousPage: currentPage > 1,
+          hasNextPage: currentPage < totalPages
         } as PaginatedResponse<AdminBookingDto>;
       }),
       catchError(this.handleError)

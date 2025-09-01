@@ -4,7 +4,9 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
+import { CarApiService } from '../../../../core/services/car-api.service';
 import { Vehicle, VehicleFilter, VehicleCategory, VehicleStatus } from '../../../../core/models/car-rental.models';
+import { AdminCarDto, CarFilterDto, PaginatedResponse } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-vehicles-list',
@@ -15,9 +17,11 @@ import { Vehicle, VehicleFilter, VehicleCategory, VehicleStatus } from '../../..
 })
 export class VehiclesListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private carApiService = inject(CarApiService);
   
-  vehicles = signal<Vehicle[]>([]);
-  filteredVehicles = signal<Vehicle[]>([]);
+  vehicles = signal<AdminCarDto[]>([]);
+  filteredVehicles = signal<AdminCarDto[]>([]);
+  paginationInfo = signal<PaginatedResponse<AdminCarDto> | null>(null);
   isLoading = signal(false);
   searchTerm = signal('');
   categoryFilter = signal<string>('all');
@@ -52,14 +56,30 @@ export class VehiclesListComponent implements OnInit {
 
   private loadVehicles() {
     this.isLoading.set(true);
-    this.carRentalService.getVehicles().subscribe({
-      next: (vehicles) => {
-        this.vehicles.set(vehicles);
+    
+    const filter: CarFilterDto = {
+      page: 1,
+      pageSize: 50, // Load more items for better user experience
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    };
+    
+    this.carApiService.getCars(filter).subscribe({
+      next: (paginatedResponse) => {
+        console.log('🚗 Vehicles API Response:', paginatedResponse);
+        console.log('🚗 Vehicles Data Array:', paginatedResponse.data);
+        console.log('🚗 Total Count:', paginatedResponse.totalCount);
+        
+        this.vehicles.set(paginatedResponse.data || []);
+        this.paginationInfo.set(paginatedResponse);
         this.applyFilters();
         this.isLoading.set(false);
+        
+        console.log('🚗 Vehicles Set:', this.vehicles());
+        console.log('🚗 Filtered Vehicles:', this.filteredVehicles());
       },
       error: (error) => {
-        console.error('Error loading vehicles:', error);
+        console.error('❌ Error loading vehicles:', error);
         this.isLoading.set(false);
       }
     });
@@ -86,60 +106,81 @@ export class VehiclesListComponent implements OnInit {
   }
 
   private applyFilters() {
+    console.log('🔍 Applying filters...');
+    console.log('🔍 Original vehicles count:', this.vehicles().length);
+    
     let filtered = [...this.vehicles()];
     
     // Apply search filter
     const search = this.searchTerm().toLowerCase();
     if (search) {
+      console.log('🔍 Applying search filter:', search);
       filtered = filtered.filter(vehicle => 
-        vehicle.make.toLowerCase().includes(search) ||
+        vehicle.brand.toLowerCase().includes(search) ||
         vehicle.model.toLowerCase().includes(search) ||
-        vehicle.licensePlate.toLowerCase().includes(search) ||
-        vehicle.year.toString().includes(search)
+        vehicle.year.toString().includes(search) ||
+        vehicle.category.name.toLowerCase().includes(search) ||
+        vehicle.branch.name.toLowerCase().includes(search)
       );
+      console.log('🔍 After search filter:', filtered.length);
     }
     
     // Apply category filter
     if (this.categoryFilter() !== 'all') {
-      filtered = filtered.filter(vehicle => vehicle.category === this.categoryFilter());
+      console.log('🔍 Applying category filter:', this.categoryFilter());
+      filtered = filtered.filter(vehicle => 
+        vehicle.category.name.toLowerCase() === this.categoryFilter().toLowerCase()
+      );
+      console.log('🔍 After category filter:', filtered.length);
     }
     
     // Apply status filter
     if (this.statusFilter() !== 'all') {
-      filtered = filtered.filter(vehicle => vehicle.status === this.statusFilter());
+      console.log('🔍 Applying status filter:', this.statusFilter());
+      filtered = filtered.filter(vehicle => 
+        vehicle.status.toLowerCase() === this.statusFilter().toLowerCase()
+      );
+      console.log('🔍 After status filter:', filtered.length);
     }
     
     // Apply make filter
     if (this.makeFilter() !== 'all') {
-      filtered = filtered.filter(vehicle => vehicle.make === this.makeFilter());
+      console.log('🔍 Applying make filter:', this.makeFilter());
+      filtered = filtered.filter(vehicle => 
+        vehicle.brand.toLowerCase() === this.makeFilter().toLowerCase()
+      );
+      console.log('🔍 After make filter:', filtered.length);
     }
     
+    console.log('🔍 Final filtered count:', filtered.length);
     this.filteredVehicles.set(filtered);
   }
 
   getUniqueMakes(): string[] {
-    const makes = this.vehicles().map(vehicle => vehicle.make);
+    const makes = this.vehicles().map(vehicle => vehicle.brand);
     return [...new Set(makes)].sort();
   }
 
-  getStatusBadgeClass(status: VehicleStatus): string {
-    switch (status) {
+  getStatusBadgeClass(status: string): string {
+    switch (status.toLowerCase()) {
       case 'available': return 'badge badge-success';
       case 'rented': return 'badge badge-primary';
       case 'maintenance': return 'badge badge-warning';
-      case 'out_of_service': return 'badge badge-error';
+      case 'outofservice': return 'badge badge-error';
       case 'reserved': return 'badge badge-info';
       default: return 'badge badge-gray';
     }
   }
 
-  getCategoryIcon(category: VehicleCategory): string {
-    switch (category) {
+  getCategoryIcon(categoryName: string): string {
+    switch (categoryName.toLowerCase()) {
       case 'economy': return 'bi-car-front';
       case 'compact': return 'bi-car-front';
+      case 'mid-size': return 'bi-car-front-fill';
       case 'midsize': return 'bi-car-front-fill';
       case 'fullsize': return 'bi-car-front-fill';
       case 'luxury': return 'bi-gem';
+      case 'sports': return 'bi-speedometer2';
       case 'suv': return 'bi-truck';
       case 'van': return 'bi-bus-front';
       case 'truck': return 'bi-truck-flatbed';
@@ -147,31 +188,19 @@ export class VehiclesListComponent implements OnInit {
     }
   }
 
-  updateVehicleStatus(vehicle: Vehicle, newStatus: VehicleStatus) {
-    this.carRentalService.updateVehicleStatus(vehicle.id, newStatus).subscribe({
-      next: (updatedVehicle) => {
-        // Update the vehicle in the list
-        const vehicles = this.vehicles();
-        const index = vehicles.findIndex(v => v.id === vehicle.id);
-        if (index !== -1) {
-          vehicles[index] = updatedVehicle;
-          this.vehicles.set([...vehicles]);
-          this.applyFilters();
-        }
-      },
-      error: (error) => {
-        console.error('Error updating vehicle status:', error);
-      }
-    });
+  updateVehicleStatus(vehicle: AdminCarDto, newStatus: string) {
+    // For now, just reload the list since we don't have a direct status update API
+    // In a real implementation, you'd call the appropriate API endpoint
+    console.log('Updating vehicle status:', vehicle.id, newStatus);
+    this.loadVehicles();
   }
 
-  deleteVehicle(vehicle: Vehicle) {
-    if (confirm(`Are you sure you want to delete ${vehicle.make} ${vehicle.model}?`)) {
-      this.carRentalService.deleteVehicle(vehicle.id).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadVehicles();
-          }
+  deleteVehicle(vehicle: AdminCarDto) {
+    if (confirm(`Are you sure you want to delete ${vehicle.brand} ${vehicle.model}?`)) {
+      this.carApiService.deleteCar(vehicle.id).subscribe({
+        next: () => {
+          console.log('Vehicle deleted successfully');
+          this.loadVehicles();
         },
         error: (error) => {
           console.error('Error deleting vehicle:', error);

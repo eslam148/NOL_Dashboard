@@ -104,21 +104,21 @@
     <div class="vehicle-card" *ngFor="let vehicle of filteredVehicles()">
       <!-- Vehicle Image -->
       <div class="vehicle-image">
-        <img 
-          [src]="vehicle.images?.[0] || 'assets/placeholder-car.jpg'"
-          [alt]="vehicle.make + ' ' + vehicle.model"
+                <img
+          [src]="vehicle.imageUrl || 'assets/placeholder-car.jpg'"
+          [alt]="vehicle.brand + ' ' + vehicle.model"
           class="vehicle-img"
         />
         <div class="vehicle-category">
-          <i [class]="'bi ' + getCategoryIcon(vehicle.category)"></i>
-          <span>{{ 'vehicles.' + vehicle.category | translate }}</span>
+          <i [class]="'bi ' + getCategoryIcon(vehicle.category.name)"></i>
+          <span>{{ vehicle.category.name }}</span>
         </div>
       </div>
 
       <!-- Vehicle Header -->
       <div class="vehicle-header">
         <div class="vehicle-info">
-          <h3 class="vehicle-name">{{ vehicle.make }} {{ vehicle.model }}</h3>
+          <h3 class="vehicle-name">{{ vehicle.brand }} {{ vehicle.model }}</h3>
           <p class="vehicle-year">{{ vehicle.year }}</p>
         </div>
         <span [class]="getStatusBadgeClass(vehicle.status)">
@@ -132,7 +132,7 @@
         <div class="detail-row">
           <div class="detail-item">
             <i class="bi bi-card-text detail-icon"></i>
-            <span class="detail-text">{{ vehicle.licensePlate }}</span>
+            <span class="detail-text">{{ vehicle.id }}</span>
           </div>
           <div class="detail-item">
             <i class="bi bi-fuel-pump detail-icon"></i>
@@ -143,11 +143,11 @@
         <div class="detail-row">
           <div class="detail-item">
             <i class="bi bi-gear detail-icon"></i>
-            <span class="detail-text">{{ 'vehicles.' + vehicle.transmission | translate }}</span>
+            <span class="detail-text">{{ vehicle.transmissionType }}</span>
           </div>
           <div class="detail-item">
             <i class="bi bi-people detail-icon"></i>
-            <span class="detail-text">{{ vehicle.seats }} {{ 'vehicles.seats' | translate }}</span>
+            <span class="detail-text">{{ vehicle.seatingCapacity }} {{ 'vehicles.seats' | translate }}</span>
           </div>
         </div>
 
@@ -167,11 +167,11 @@
       <div class="vehicle-pricing">
         <div class="price-item">
           <span class="price-label">{{ 'vehicles.dailyRate' | translate }}</span>
-          <span class="price-value">{{ formatCurrency(vehicle.dailyRate) }}</span>
+          <span class="price-value">{{ formatCurrency(vehicle.dailyPrice) }}</span>
         </div>
         <div class="price-item">
           <span class="price-label">{{ 'vehicles.weeklyRate' | translate }}</span>
-          <span class="price-value">{{ vehicle.weeklyRate ? formatCurrency(vehicle.weeklyRate) : 'N/A' }}</span>
+          <span class="price-value">{{ vehicle.weeklyPrice ? formatCurrency(vehicle.weeklyPrice) : 'N/A' }}</span>
         </div>
       </div>
 

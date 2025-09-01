@@ -16,9 +16,18 @@ import { CustomerApiService } from './customer-api.service';
 import {
   AdminCarDto,
   AdminCreateCarDto,
+  AdminUpdateCarDto,
   CarFilterDto,
   UpdateCarStatusDto,
   BulkCarOperationDto,
+  CarImportDto,
+  CarAnalyticsDto,
+  CarMaintenanceRecordDto,
+  MonthlyCarRevenueDto,
+  CarBookingTrendDto,
+  FuelType,
+  TransmissionType,
+  CarStatus,
   PaginatedResponse,
   AdminUserDto,
   CreateAdminUserDto,
@@ -577,7 +586,7 @@ export class CarRentalService {
             return {
               data: [],
               totalCount: 0,
-              pageNumber: 1,
+              currentPage: 1,
               pageSize: 10,
               totalPages: 0,
               hasPreviousPage: false,
@@ -591,7 +600,7 @@ export class CarRentalService {
             return {
               data: [],
               totalCount: 0,
-              pageNumber: 1,
+              currentPage: 1,
               pageSize: 10,
               totalPages: 0,
               hasPreviousPage: false,
@@ -607,7 +616,7 @@ export class CarRentalService {
           return {
             data: convertedBranches,
             totalCount: paginatedResponse.totalCount,
-            pageNumber: paginatedResponse.pageNumber,
+            currentPage: paginatedResponse.currentPage,
             pageSize: paginatedResponse.pageSize,
             totalPages: paginatedResponse.totalPages,
             hasPreviousPage: paginatedResponse.hasPreviousPage,
@@ -621,7 +630,7 @@ export class CarRentalService {
           return of({
             data: [],
             totalCount: 0,
-            pageNumber: 1,
+            currentPage: 1,
             pageSize: 10,
             totalPages: 0,
             hasPreviousPage: false,
@@ -634,8 +643,8 @@ export class CarRentalService {
     // Fallback to mock data with pagination simulation
     console.log('🎭 Using mock data for paginated branches');
     const pageSize = filter?.pageSize || 10;
-    const pageNumber = filter?.page || 1;
-    const startIndex = (pageNumber - 1) * pageSize;
+    const currentPage = filter?.page || 1;
+    const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
 
     let filteredBranches = [...this.mockBranches];
@@ -666,11 +675,11 @@ export class CarRentalService {
     return of({
       data: paginatedData,
       totalCount: totalCount,
-      pageNumber: pageNumber,
+      currentPage: currentPage,
       pageSize: pageSize,
       totalPages: totalPages,
-      hasPreviousPage: pageNumber > 1,
-      hasNextPage: pageNumber < totalPages
+      hasPreviousPage: currentPage > 1,
+      hasNextPage: currentPage < totalPages
     }).pipe(delay(800));
   }
 
@@ -796,6 +805,108 @@ export class CarRentalService {
     return of(newVehicle).pipe(delay(1000));
   }
 
+  // Direct AdminCarDto methods for forms
+  createCar(carDto: AdminCreateCarDto): Observable<Vehicle> {
+    if (this.useRealApi) {
+      return this.carApiService.createCar(carDto).pipe(
+        map((createdCar: AdminCarDto) => {
+          return this.convertAdminCarDtoToVehicle(createdCar);
+        }),
+        catchError((error) => {
+          console.error('Error creating car:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data - convert AdminCreateCarDto to Vehicle for mock
+    const mockVehicle: Vehicle = {
+      id: Date.now().toString(),
+      make: carDto.brandEn || carDto.brandAr,
+      model: carDto.modelEn || carDto.modelAr,
+      year: carDto.year,
+      licensePlate: carDto.plateNumber,
+      vin: `VIN${Date.now()}`,
+      category: 'economy' as VehicleCategory,
+      fuelType: 'gasoline' as any,
+      transmission: 'automatic' as any,
+      seats: carDto.seatingCapacity,
+      doors: carDto.numberOfDoors,
+      color: carDto.colorEn || carDto.colorAr,
+      mileage: carDto.mileage || 0,
+      dailyRate: carDto.dailyRate,
+      weeklyRate: carDto.weeklyRate,
+      monthlyRate: carDto.monthlyRate,
+      status: 'available' as VehicleStatus,
+      branchId: carDto.branchId.toString(),
+      features: carDto.features ? [carDto.features] : [],
+      images: [],
+      maintenanceHistory: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.mockVehicles.push(mockVehicle);
+    return of(mockVehicle).pipe(delay(1000));
+  }
+
+  updateCar(id: number, carDto: AdminCreateCarDto): Observable<Vehicle> {
+    if (this.useRealApi) {
+      // Convert AdminCreateCarDto to AdminUpdateCarDto
+      const updateDto: AdminUpdateCarDto = {
+        brandAr: carDto.brandAr,
+        brandEn: carDto.brandEn,
+        modelAr: carDto.modelAr,
+        modelEn: carDto.modelEn,
+        colorAr: carDto.colorAr,
+        colorEn: carDto.colorEn,
+        year: carDto.year,
+        plateNumber: carDto.plateNumber,
+        seatingCapacity: carDto.seatingCapacity,
+        numberOfDoors: carDto.numberOfDoors,
+        maxSpeed: carDto.maxSpeed,
+        engine: carDto.engine,
+        transmissionType: carDto.transmissionType,
+        fuelType: carDto.fuelType,
+        dailyRate: carDto.dailyRate,
+        weeklyRate: carDto.weeklyRate,
+        monthlyRate: carDto.monthlyRate,
+        status: carDto.status,
+        imageUrl: carDto.imageUrl,
+        descriptionAr: carDto.descriptionAr,
+        descriptionEn: carDto.descriptionEn,
+        mileage: carDto.mileage,
+        features: carDto.features,
+        categoryId: carDto.categoryId,
+        branchId: carDto.branchId
+      };
+
+      return this.carApiService.updateCar(id, updateDto).pipe(
+        map((updatedCar: AdminCarDto) => {
+          return this.convertAdminCarDtoToVehicle(updatedCar);
+        }),
+        catchError((error) => {
+          console.error('Error updating car:', error);
+          return throwError(() => error);
+        })
+      );
+    }
+
+    // Fallback to mock data
+    const vehicleIndex = this.mockVehicles.findIndex(v => v.id === id.toString());
+    if (vehicleIndex !== -1) {
+      const updatedVehicle = {
+        ...this.mockVehicles[vehicleIndex],
+        make: carDto.brandEn || carDto.brandAr,
+        model: carDto.modelEn || carDto.modelAr,
+        year: carDto.year,
+        updatedAt: new Date()
+      };
+      this.mockVehicles[vehicleIndex] = updatedVehicle;
+      return of(updatedVehicle).pipe(delay(1000));
+    }
+    return throwError(() => new Error('Vehicle not found'));
+  }
+
   updateVehicle(id: string, updates: Partial<Vehicle>): Observable<Vehicle> {
     if (this.useRealApi) {
       // Convert partial Vehicle updates to AdminCreateCarDto
@@ -848,7 +959,7 @@ export class CarRentalService {
   updateVehicleStatus(id: string, status: VehicleStatus): Observable<Vehicle> {
     if (this.useRealApi) {
       const statusUpdate: UpdateCarStatusDto = {
-        status: this.mapVehicleStatusToCarStatus(status) || 'Available'
+        status: this.mapVehicleStatusToCarStatus(status) || CarStatus.Available
       };
 
       return this.carApiService.updateCarStatus(parseInt(id), statusUpdate).pipe(
@@ -2615,8 +2726,8 @@ export class CarRentalService {
       brand: filter.make,
       dailyRateFrom: filter.minRate,
       dailyRateTo: filter.maxRate,
-      transmissionType: filter.transmission as 'Manual' | 'Automatic',
-      fuelType: filter.fuelType as 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid',
+      transmissionType: this.mapStringToTransmissionType(filter.transmission),
+      fuelType: this.mapStringToFuelType(filter.fuelType),
       page: 1,
       pageSize: 50
     };
@@ -2649,21 +2760,21 @@ export class CarRentalService {
       make: car.brand || '',
       model: car.model || '',
       year: car.year || new Date().getFullYear(),
-      licensePlate: car.plateNumber || '',
+      licensePlate: `ID-${car.id}`, // Use car ID as license plate since API doesn't provide it
       vin: `VIN${car.id || 'UNKNOWN'}`, // API doesn't provide VIN, so we generate a placeholder
-      category: this.mapCarCategoryToVehicleCategory(car.categoryId || 1),
-      fuelType: this.mapCarFuelTypeToVehicleFuelType(car.fuelType || 'Petrol'),
+      category: this.mapCarCategoryToVehicleCategory(car.category?.id || 1),
+      fuelType: this.mapCarFuelTypeToVehicleFuelType(car.fuelType || 'Gasoline'),
       transmission: (car.transmissionType || 'Manual').toLowerCase() as 'manual' | 'automatic',
       seats: car.seatingCapacity || 4,
-      doors: 4, // API doesn't provide doors, so we default to 4
-      color: 'Unknown', // API doesn't provide color
+      doors: car.numberOfDoors || 4,
+      color: car.color || 'Unknown',
       mileage: car.mileage || 0,
-      dailyRate: car.dailyRate || 0,
-      weeklyRate: car.weeklyRate || 0,
-      monthlyRate: car.monthlyRate || 0,
+      dailyRate: car.dailyPrice || 0,
+      weeklyRate: car.weeklyPrice || 0,
+      monthlyRate: car.monthlyPrice || 0,
       status: this.mapCarStatusToVehicleStatus(car.status || 'Available'),
-      branchId: car.branchId?.toString() || '1',
-      features: car.features ? car.features.split(',').map(f => f.trim()) : [],
+      branchId: car.branch?.id?.toString() || '1',
+      features: car.features ? car.features.split(',').map((f: string) => f.trim()) : (car.description ? [car.description] : []), // Use features or description
       images: car.imageUrl ? [car.imageUrl] : [],
       maintenanceHistory: [], // This would need to be fetched separately
       createdAt: car.createdAt ? new Date(car.createdAt) : new Date(),
@@ -2671,15 +2782,15 @@ export class CarRentalService {
     };
   }
 
-  private mapVehicleStatusToCarStatus(status?: VehicleStatus): 'Available' | 'Rented' | 'Maintenance' | 'OutOfService' | undefined {
+  private mapVehicleStatusToCarStatus(status?: VehicleStatus): CarStatus | undefined {
     if (!status) return undefined;
 
-    const statusMap: Record<VehicleStatus, 'Available' | 'Rented' | 'Maintenance' | 'OutOfService'> = {
-      'available': 'Available',
-      'rented': 'Rented',
-      'maintenance': 'Maintenance',
-      'out_of_service': 'OutOfService',
-      'reserved': 'Available' // Map reserved to available for API
+    const statusMap: Record<VehicleStatus, CarStatus> = {
+      'available': CarStatus.Available,
+      'rented': CarStatus.Rented,
+      'maintenance': CarStatus.Maintenance,
+      'out_of_service': CarStatus.OutOfService,
+      'reserved': CarStatus.Available // Map reserved to available for API
     };
 
     return statusMap[status];
@@ -2724,17 +2835,24 @@ export class CarRentalService {
 
   private convertVehicleToCreateCarDto(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): AdminCreateCarDto {
     return {
-      brand: vehicle.make,
-      model: vehicle.model,
+      brandAr: vehicle.make,
+      brandEn: vehicle.make,
+      modelAr: vehicle.model,
+      modelEn: vehicle.model,
       year: vehicle.year,
+      colorAr: vehicle.color,
+      colorEn: vehicle.color,
       plateNumber: vehicle.licensePlate,
       seatingCapacity: vehicle.seats,
-      transmissionType: vehicle.transmission === 'automatic' ? 'Automatic' : 'Manual',
+      numberOfDoors: vehicle.doors,
+      maxSpeed: 180, // Default value since not provided in Vehicle model
+      engine: 'Unknown', // Default value since not provided in Vehicle model
+      transmissionType: vehicle.transmission === 'automatic' ? TransmissionType.Automatic : TransmissionType.Manual,
       fuelType: this.mapVehicleFuelTypeToCarFuelType(vehicle.fuelType),
       dailyRate: vehicle.dailyRate,
       weeklyRate: vehicle.weeklyRate || vehicle.dailyRate * 7,
       monthlyRate: vehicle.monthlyRate || vehicle.dailyRate * 30,
-      status: this.mapVehicleStatusToCarStatus(vehicle.status) || 'Available',
+      status: this.mapVehicleStatusToCarStatus(vehicle.status) || CarStatus.Available,
       imageUrl: vehicle.images?.[0],
       mileage: vehicle.mileage,
       features: vehicle.features?.join(', '),
@@ -2743,14 +2861,45 @@ export class CarRentalService {
     };
   }
 
-  private mapVehicleFuelTypeToCarFuelType(fuelType: 'gasoline' | 'diesel' | 'electric' | 'hybrid'): 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid' {
-    const fuelTypeMap: Record<'gasoline' | 'diesel' | 'electric' | 'hybrid', 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid'> = {
-      'gasoline': 'Petrol',
-      'diesel': 'Diesel',
-      'electric': 'Electric',
-      'hybrid': 'Hybrid'
+  private mapVehicleFuelTypeToCarFuelType(fuelType: 'gasoline' | 'diesel' | 'electric' | 'hybrid'): FuelType {
+    const fuelTypeMap: Record<'gasoline' | 'diesel' | 'electric' | 'hybrid', FuelType> = {
+      'gasoline': FuelType.Gasoline,
+      'diesel': FuelType.Diesel,
+      'electric': FuelType.Electric,
+      'hybrid': FuelType.Hybrid
     };
 
+    return fuelTypeMap[fuelType];
+  }
+
+  private mapStringToTransmissionType(transmission?: string): TransmissionType | undefined {
+    if (!transmission) return undefined;
+    
+    const transmissionMap: Record<string, TransmissionType> = {
+      'manual': TransmissionType.Manual,
+      'automatic': TransmissionType.Automatic,
+      'Manual': TransmissionType.Manual,
+      'Automatic': TransmissionType.Automatic
+    };
+    
+    return transmissionMap[transmission];
+  }
+
+  private mapStringToFuelType(fuelType?: string): FuelType | undefined {
+    if (!fuelType) return undefined;
+    
+    const fuelTypeMap: Record<string, FuelType> = {
+      'gasoline': FuelType.Gasoline,
+      'diesel': FuelType.Diesel,
+      'electric': FuelType.Electric,
+      'hybrid': FuelType.Hybrid,
+      'Petrol': FuelType.Gasoline,
+      'Diesel': FuelType.Diesel,
+      'Electric': FuelType.Electric,
+      'Hybrid': FuelType.Hybrid,
+      'PluginHybrid': FuelType.PluginHybrid
+    };
+    
     return fuelTypeMap[fuelType];
   }
 
@@ -2769,15 +2918,26 @@ export class CarRentalService {
     return categoryMap[category] || 1;
   }
 
-  private convertPartialVehicleToUpdateCarDto(updates: Partial<Vehicle>): Partial<AdminCreateCarDto> {
-    const updateDto: Partial<AdminCreateCarDto> = {};
+  private convertPartialVehicleToUpdateCarDto(updates: Partial<Vehicle>): AdminUpdateCarDto {
+    const updateDto: AdminUpdateCarDto = {};
 
-    if (updates.make) updateDto.brand = updates.make;
-    if (updates.model) updateDto.model = updates.model;
+    if (updates.make) {
+      updateDto.brandAr = updates.make;
+      updateDto.brandEn = updates.make;
+    }
+    if (updates.model) {
+      updateDto.modelAr = updates.model;
+      updateDto.modelEn = updates.model;
+    }
+    if (updates.color) {
+      updateDto.colorAr = updates.color;
+      updateDto.colorEn = updates.color;
+    }
     if (updates.year) updateDto.year = updates.year;
     if (updates.licensePlate) updateDto.plateNumber = updates.licensePlate;
     if (updates.seats) updateDto.seatingCapacity = updates.seats;
-    if (updates.transmission) updateDto.transmissionType = updates.transmission === 'automatic' ? 'Automatic' : 'Manual';
+    if (updates.doors) updateDto.numberOfDoors = updates.doors;
+    if (updates.transmission) updateDto.transmissionType = this.mapStringToTransmissionType(updates.transmission);
     if (updates.fuelType) updateDto.fuelType = this.mapVehicleFuelTypeToCarFuelType(updates.fuelType);
     if (updates.dailyRate) updateDto.dailyRate = updates.dailyRate;
     if (updates.weeklyRate) updateDto.weeklyRate = updates.weeklyRate;

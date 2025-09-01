@@ -1,6 +1,89 @@
 // API Response Models based on the Admin API Documentation
 
 /**
+ * Enums matching C# backend
+ */
+export enum FuelType {
+  Gasoline = 1,
+  Diesel = 2,
+  Hybrid = 3,
+  Electric = 4,
+  PluginHybrid = 5
+}
+
+export enum TransmissionType {
+  Manual = 1,
+  Automatic = 2
+}
+
+export enum CarStatus {
+  Available = 1,
+  Rented = 2,
+  Maintenance = 3,
+  OutOfService = 4
+}
+
+/**
+ * Validation constants for AdminCreateCarDto
+ */
+export const CAR_VALIDATION = {
+  brandAr: { minLength: 2, maxLength: 100, required: true },
+  brandEn: { minLength: 2, maxLength: 100, required: true },
+  modelAr: { minLength: 2, maxLength: 100, required: true },
+  modelEn: { minLength: 2, maxLength: 100, required: true },
+  year: { min: 1900, max: 2030, required: true },
+  colorAr: { minLength: 2, maxLength: 50, required: true },
+  colorEn: { minLength: 2, maxLength: 50, required: true },
+  plateNumber: { minLength: 3, maxLength: 20, required: true },
+  seatingCapacity: { min: 1, max: 20, required: true },
+  numberOfDoors: { min: 2, max: 6, required: true },
+  maxSpeed: { min: 80, max: 400, required: true },
+  engine: { minLength: 3, maxLength: 200, required: true },
+  dailyRate: { min: 0.01, max: 10000, required: true },
+  weeklyRate: { min: 0.01, max: 50000, required: true },
+  monthlyRate: { min: 0.01, max: 200000, required: true },
+  descriptionAr: { maxLength: 1000, required: false },
+  descriptionEn: { maxLength: 1000, required: false },
+  mileage: { min: 0, max: 1000000, required: false }
+} as const;
+
+/**
+ * Default values for AdminCreateCarDto
+ */
+export const DEFAULT_CAR_VALUES: Partial<AdminCreateCarDto> = {
+  // Required string fields - provide empty strings so user must fill them
+  brandAr: '',
+  brandEn: '',
+  modelAr: '',
+  modelEn: '',
+  colorAr: '',
+  colorEn: '',
+  plateNumber: '',
+  engine: '',
+  
+  // Required numeric fields with sensible defaults
+  year: new Date().getFullYear(),
+  seatingCapacity: 5,
+  numberOfDoors: 4,
+  maxSpeed: 180,
+  dailyRate: 100,
+  weeklyRate: 600,
+  monthlyRate: 2400,
+  
+  // Required enums
+  transmissionType: TransmissionType.Automatic,
+  fuelType: FuelType.Gasoline,
+  
+  // Required IDs - will be set by form
+  categoryId: 1,
+  branchId: 1,
+  
+  // Optional fields
+  status: CarStatus.Available,
+  mileage: 0
+};
+
+/**
  * Standard API Response Format
  */
 export interface ApiResponse<T> {
@@ -17,9 +100,9 @@ export interface ApiResponse<T> {
  */
 export interface PaginatedResponse<T> {
   data: T[];
-  totalCount: number;
-  pageNumber: number;
+  currentPage: number;      // API uses "currentPage" instead of "pageNumber"
   pageSize: number;
+  totalCount: number;
   totalPages: number;
   hasPreviousPage: boolean;
   hasNextPage: boolean;
@@ -247,7 +330,7 @@ export interface NotificationDto {
  * Car Management DTOs
  */
 export interface CarFilterDto extends BaseFilterDto {
-  status?: 'Available' | 'Rented' | 'Maintenance' | 'OutOfService';
+  status?: CarStatus;
   categoryId?: number;
   branchId?: number;
   brand?: string;
@@ -256,17 +339,186 @@ export interface CarFilterDto extends BaseFilterDto {
   yearTo?: number;
   dailyRateFrom?: number;
   dailyRateTo?: number;
-  transmissionType?: 'Manual' | 'Automatic';
-  fuelType?: 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid';
+  transmissionType?: TransmissionType;
+  fuelType?: FuelType;
 }
 
 export interface AdminCarDto {
   id: number;
-  brand: string;
-  model: string;
+  brand: string;  // API returns single brand field, not bilingual
+  model: string;  // API returns single model field, not bilingual
   year: number;
+  color: string;  // API returns single color field, not bilingual
+  seatingCapacity: number;
+  numberOfDoors: number;
+  maxSpeed: number;
+  engine: string;
+  transmissionType: string;
+  fuelType: string;
+  dailyPrice: number;    // API uses "dailyPrice" not "dailyRate"
+  weeklyPrice: number;   // API uses "weeklyPrice" not "weeklyRate"
+  monthlyPrice: number;  // API uses "monthlyPrice" not "monthlyRate"
+  status: string;
+  imageUrl?: string;
+  description?: string;  // API uses single description field
+  mileage: number;
+  features?: string;     // Optional features field
+  category: {            // API returns full category object
+    id: number;
+    name: string;
+    description: string;
+    imageUrl: string;
+    sortOrder: number;
+  };
+  branch: {              // API returns full branch object
+    id: number;
+    name: string;
+    description: string;
+    address: string;
+    city: string;
+    country: string;
+    phone: string;
+    email: string;
+    latitude: number;
+    longitude: number;
+    workingHours: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  totalBookings: number;
+  totalRevenue: number;
+  utilizationRate: number;
+  lastBookingDate?: string;
+  nextMaintenanceDate?: string;
+  maintenanceHistory: CarMaintenanceRecordDto[];
+  isFavorite: boolean;
+  avrageRate: number;    // Note: API has typo "avrageRate" instead of "averageRate"
+  rateCount: number;
+}
+
+export interface AdminCreateCarDto {
+  // Required fields with validation constraints
+  brandAr: string;        // Required, 2-100 chars
+  brandEn: string;        // Required, 2-100 chars
+  modelAr: string;        // Required, 2-100 chars
+  modelEn: string;        // Required, 2-100 chars
+  year: number;           // Required, 1900-2030
+  colorAr: string;        // Required, 2-50 chars
+  colorEn: string;        // Required, 2-50 chars
+  plateNumber: string;    // Required, 3-20 chars
+  seatingCapacity: number; // Required, 1-20
+  numberOfDoors: number;   // Required, 2-6
+  maxSpeed: number;        // Required, 80-400 km/h
+  engine: string;          // Required, 3-200 chars
+  transmissionType: TransmissionType; // Required enum
+  fuelType: FuelType;      // Required enum
+  dailyRate: number;       // Required, 0.01-10000
+  weeklyRate: number;      // Required, 0.01-50000
+  monthlyRate: number;     // Required, 0.01-200000
+  categoryId: number;      // Required
+  branchId: number;        // Required
+  
+  // Optional fields
+  status?: CarStatus;      // Default: Available
+  imageUrl?: string;       // Optional URL
+  descriptionAr?: string;  // Optional, max 1000 chars
+  descriptionEn?: string;  // Optional, max 1000 chars
+  mileage?: number;        // Optional, 0-1000000
+  features?: string;       // Optional
+}
+
+export interface UpdateCarStatusDto {
+  status: CarStatus;
+  notes?: string;
+}
+
+export interface AdminUpdateCarDto {
+  brandAr?: string;
+  brandEn?: string;
+  modelAr?: string;
+  modelEn?: string;
+  year?: number;
+  colorAr?: string;
+  colorEn?: string;
+  plateNumber?: string;
+  seatingCapacity?: number;
+  numberOfDoors?: number;
+  maxSpeed?: number; // Maximum speed in km/h
+  engine?: string; // Engine specifications
+  transmissionType?: TransmissionType;
+  fuelType?: FuelType;
+  dailyRate?: number;
+  weeklyRate?: number;
+  monthlyRate?: number;
+  status?: CarStatus;
+  imageUrl?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  mileage?: number;
+  features?: string;
+  categoryId?: number;
+  branchId?: number;
+}
+
+export interface CarMaintenanceRecordDto {
+  id: number;
+  maintenanceDate: string;
+  maintenanceType: string;
+  description: string;
+  cost: number;
+  performedBy: string;
+  nextMaintenanceDate?: string;
+}
+
+export interface CarAnalyticsDto {
+  carId: number;
+  carInfo: string;
+  totalBookings: number;
+  totalRevenue: number;
+  utilizationRate: number;
+  averageBookingValue: number;
+  averageRating: number;
+  totalReviews: number;
+  monthlyRevenue: MonthlyCarRevenueDto[];
+  bookingTrends: CarBookingTrendDto[];
+}
+
+export interface MonthlyCarRevenueDto {
+  year: number;
+  month: number;
+  monthName: string;
+  revenue: number;
+  bookingCount: number;
+  daysRented: number;
+}
+
+export interface CarBookingTrendDto {
+  date: string;
+  bookingCount: number;
+  revenue: number;
+}
+
+export interface BulkCarOperationDto {
+  carIds: number[];
+  operation: 'delete' | 'updateStatus' | 'updateBranch' | 'updateCategory';
+  newStatus?: CarStatus;
+  newBranchId?: number;
+  newCategoryId?: number;
+}
+
+export interface CarImportDto {
+  brandAr: string;
+  brandEn: string;
+  modelAr: string;
+  modelEn: string;
+  year: number;
+  colorAr: string;
+  colorEn: string;
   plateNumber: string;
   seatingCapacity: number;
+  numberOfDoors: number;
+  maxSpeed: number; // Maximum speed in km/h
+  engine: string; // Engine specifications
   transmissionType: string;
   fuelType: string;
   dailyRate: number;
@@ -278,49 +530,8 @@ export interface AdminCarDto {
   descriptionEn?: string;
   mileage: number;
   features?: string;
-  categoryId: number;
-  branchId: number;
-  createdAt: string;
-  updatedAt: string;
-  totalBookings: number;
-  totalRevenue: number;
-  utilizationRate: number;
-  lastBookingDate?: string;
-  nextMaintenanceDate?: string;
-}
-
-export interface AdminCreateCarDto {
-  brand: string;
-  model: string;
-  year: number;
-  plateNumber: string;
-  seatingCapacity: number;
-  transmissionType: 'Manual' | 'Automatic';
-  fuelType: 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid';
-  dailyRate: number;
-  weeklyRate: number;
-  monthlyRate: number;
-  status?: 'Available' | 'Rented' | 'Maintenance' | 'OutOfService';
-  imageUrl?: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
-  mileage?: number;
-  features?: string;
-  categoryId: number;
-  branchId: number;
-}
-
-export interface UpdateCarStatusDto {
-  status: 'Available' | 'Rented' | 'Maintenance' | 'OutOfService';
-  notes?: string;
-}
-
-export interface BulkCarOperationDto {
-  carIds: number[];
-  operation: 'delete' | 'updateStatus' | 'updateBranch' | 'updateCategory';
-  newStatus?: string;
-  newBranchId?: number;
-  newCategoryId?: number;
+  categoryName: string;
+  branchName: string;
 }
 
 /**

@@ -177,7 +177,7 @@ export class BranchApiService {
           return {
             data: [],
             totalCount: 0,
-            pageNumber: 1,
+            currentPage: 1,
             pageSize: 10,
             totalPages: 0,
             hasPreviousPage: false,
@@ -194,7 +194,7 @@ export class BranchApiService {
           return {
             data: paginatedData.data,
             totalCount: paginatedData.totalCount,
-            pageNumber: paginatedData.currentPage,
+            currentPage: paginatedData.currentPage,
             pageSize: paginatedData.pageSize,
             totalPages: paginatedData.totalPages,
             hasPreviousPage: paginatedData.hasPreviousPage,
@@ -205,9 +205,9 @@ export class BranchApiService {
         // Fallback: API returns array directly (old structure)
         const branchArray = Array.isArray(response.data) ? response.data : [];
         const pageSize = filter?.pageSize || 10;
-        const pageNumber = filter?.page || 1;
+        const currentPage = filter?.page || 1;
 
-        console.log(`📊 Branch API returned ${branchArray.length} branches for page ${pageNumber}, pageSize ${pageSize} (legacy structure)`);
+        console.log(`📊 Branch API returned ${branchArray.length} branches for page ${currentPage}, pageSize ${pageSize} (legacy structure)`);
 
         // Check if API supports server-side pagination
         let paginatedData: any[];
@@ -222,26 +222,26 @@ export class BranchApiService {
           paginatedData = branchArray;
           totalCount = branchArray.length; // This should ideally come from API headers or response
           totalPages = Math.ceil(totalCount / pageSize);
-          hasPreviousPage = pageNumber > 1;
-          hasNextPage = pageNumber < totalPages;
+          hasPreviousPage = currentPage > 1;
+          hasNextPage = currentPage < totalPages;
         } else {
           // API returns all data, simulate pagination client-side
           console.log('🎭 Simulating client-side pagination');
-          const startIndex = (pageNumber - 1) * pageSize;
+          const startIndex = (currentPage - 1) * pageSize;
           const endIndex = startIndex + pageSize;
           paginatedData = branchArray.slice(startIndex, endIndex);
           totalCount = branchArray.length;
           totalPages = Math.ceil(totalCount / pageSize);
-          hasPreviousPage = pageNumber > 1;
-          hasNextPage = pageNumber < totalPages;
+          hasPreviousPage = currentPage > 1;
+          hasNextPage = currentPage < totalPages;
         }
 
-        console.log(`📄 Returning page ${pageNumber}/${totalPages} with ${paginatedData.length} items (total: ${totalCount})`);
+        console.log(`📄 Returning page ${currentPage}/${totalPages} with ${paginatedData.length} items (total: ${totalCount})`);
 
         return {
           data: paginatedData,
           totalCount: totalCount,
-          pageNumber: pageNumber,
+          currentPage: currentPage,
           pageSize: pageSize,
           totalPages: totalPages,
           hasPreviousPage: hasPreviousPage,

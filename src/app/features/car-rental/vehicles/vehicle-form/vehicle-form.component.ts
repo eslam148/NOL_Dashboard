@@ -6,6 +6,14 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { Vehicle, VehicleCategory, VehicleStatus, Branch } from '../../../../core/models/car-rental.models';
+import { 
+  AdminCreateCarDto, 
+  FuelType, 
+  TransmissionType, 
+  CarStatus, 
+  CAR_VALIDATION, 
+  DEFAULT_CAR_VALUES 
+} from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-vehicle-form',
@@ -41,62 +49,197 @@ export class VehicleFormComponent implements OnInit {
   ];
 
   fuelTypes = [
-    { value: 'gasoline', label: 'vehicles.gasoline' },
-    { value: 'diesel', label: 'vehicles.diesel' },
-    { value: 'hybrid', label: 'vehicles.hybrid' },
-    { value: 'electric', label: 'vehicles.electric' }
+    { value: FuelType.Gasoline, label: 'vehicles.gasoline' },
+    { value: FuelType.Diesel, label: 'vehicles.diesel' },
+    { value: FuelType.Hybrid, label: 'vehicles.hybrid' },
+    { value: FuelType.Electric, label: 'vehicles.electric' },
+    { value: FuelType.PluginHybrid, label: 'vehicles.pluginHybrid' }
   ];
 
   transmissionTypes = [
-    { value: 'manual', label: 'vehicles.manual' },
-    { value: 'automatic', label: 'vehicles.automatic' },
-    { value: 'cvt', label: 'vehicles.cvt' }
+    { value: TransmissionType.Manual, label: 'vehicles.manual' },
+    { value: TransmissionType.Automatic, label: 'vehicles.automatic' }
+  ];
+
+  statusOptions = [
+    { value: CarStatus.Available, label: 'vehicles.available' },
+    { value: CarStatus.Rented, label: 'vehicles.rented' },
+    { value: CarStatus.Maintenance, label: 'vehicles.maintenance' },
+    { value: CarStatus.OutOfService, label: 'vehicles.outOfService' }
   ];
 
   ngOnInit() {
     this.initializeForm();
     this.loadBranches();
     this.checkEditMode();
+    
+    // Note: Sample data population disabled for production
+    // if (!this.isEditMode()) {
+    //   this.populateWithSampleData();
+    // }
   }
 
   private initializeForm() {
     this.vehicleForm = this.fb.group({
-      // Basic Information
-      make: ['', [Validators.required, Validators.minLength(2)]],
-      model: ['', [Validators.required, Validators.minLength(2)]],
-      year: ['', [Validators.required, Validators.min(2000), Validators.max(new Date().getFullYear() + 1)]],
-      category: ['', Validators.required],
+      // Required bilingual brand information
+      brandAr: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.brandAr.minLength),
+          Validators.maxLength(CAR_VALIDATION.brandAr.maxLength)
+        ]
+      ],
+      brandEn: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.brandEn.minLength),
+          Validators.maxLength(CAR_VALIDATION.brandEn.maxLength)
+        ]
+      ],
 
-      // Identification
-      vin: ['', [Validators.required, Validators.minLength(17), Validators.maxLength(17)]],
-      licensePlate: ['', Validators.required],
+      // Required bilingual model information
+      modelAr: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.modelAr.minLength),
+          Validators.maxLength(CAR_VALIDATION.modelAr.maxLength)
+        ]
+      ],
+      modelEn: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.modelEn.minLength),
+          Validators.maxLength(CAR_VALIDATION.modelEn.maxLength)
+        ]
+      ],
 
-      // Specifications
-      fuelType: ['', Validators.required],
-      transmission: ['', Validators.required],
-      seats: ['', [Validators.required, Validators.min(2), Validators.max(9)]],
-      doors: ['', [Validators.required, Validators.min(2), Validators.max(5)]],
+      // Required bilingual color information
+      colorAr: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.colorAr.minLength),
+          Validators.maxLength(CAR_VALIDATION.colorAr.maxLength)
+        ]
+      ],
+      colorEn: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.colorEn.minLength),
+          Validators.maxLength(CAR_VALIDATION.colorEn.maxLength)
+        ]
+      ],
 
-      // Condition & Status
-      mileage: ['', [Validators.required, Validators.min(0)]],
-      color: ['', Validators.required],
-      status: ['available', Validators.required],
+      // Basic vehicle information
+      year: [
+        DEFAULT_CAR_VALUES.year, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.year.min), 
+          Validators.max(CAR_VALIDATION.year.max)
+        ]
+      ],
+      plateNumber: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.plateNumber.minLength),
+          Validators.maxLength(CAR_VALIDATION.plateNumber.maxLength)
+        ]
+      ],
 
-      // Pricing
-      dailyRate: ['', [Validators.required, Validators.min(1)]],
-      weeklyRate: [''],
-      monthlyRate: [''],
+      // Vehicle specifications
+      seatingCapacity: [
+        DEFAULT_CAR_VALUES.seatingCapacity, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.seatingCapacity.min),
+          Validators.max(CAR_VALIDATION.seatingCapacity.max)
+        ]
+      ],
+      numberOfDoors: [
+        DEFAULT_CAR_VALUES.numberOfDoors, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.numberOfDoors.min),
+          Validators.max(CAR_VALIDATION.numberOfDoors.max)
+        ]
+      ],
+      maxSpeed: [
+        DEFAULT_CAR_VALUES.maxSpeed, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.maxSpeed.min),
+          Validators.max(CAR_VALIDATION.maxSpeed.max)
+        ]
+      ],
+      engine: [
+        '', 
+        [
+          Validators.required, 
+          Validators.minLength(CAR_VALIDATION.engine.minLength),
+          Validators.maxLength(CAR_VALIDATION.engine.maxLength)
+        ]
+      ],
 
-      // Location
+      // Enum fields
+      transmissionType: [DEFAULT_CAR_VALUES.transmissionType, Validators.required],
+      fuelType: [DEFAULT_CAR_VALUES.fuelType, Validators.required],
+      status: [DEFAULT_CAR_VALUES.status],
+
+      // Pricing (all required)
+      dailyRate: [
+        DEFAULT_CAR_VALUES.dailyRate, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.dailyRate.min),
+          Validators.max(CAR_VALIDATION.dailyRate.max)
+        ]
+      ],
+      weeklyRate: [
+        DEFAULT_CAR_VALUES.weeklyRate, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.weeklyRate.min),
+          Validators.max(CAR_VALIDATION.weeklyRate.max)
+        ]
+      ],
+      monthlyRate: [
+        DEFAULT_CAR_VALUES.monthlyRate, 
+        [
+          Validators.required, 
+          Validators.min(CAR_VALIDATION.monthlyRate.min),
+          Validators.max(CAR_VALIDATION.monthlyRate.max)
+        ]
+      ],
+
+      // Required IDs
+      categoryId: [1, Validators.required],
       branchId: ['', Validators.required],
 
-      // Additional Information
-      features: [''],
-      notes: [''],
-
-      // Insurance & Registration
-      insuranceExpiry: ['', Validators.required],
-      registrationExpiry: ['', Validators.required]
+      // Optional fields
+      imageUrl: [''],
+      descriptionAr: [
+        '', 
+        [Validators.maxLength(CAR_VALIDATION.descriptionAr.maxLength)]
+      ],
+      descriptionEn: [
+        '', 
+        [Validators.maxLength(CAR_VALIDATION.descriptionEn.maxLength)]
+      ],
+      mileage: [
+        DEFAULT_CAR_VALUES.mileage, 
+        [
+          Validators.min(CAR_VALIDATION.mileage.min),
+          Validators.max(CAR_VALIDATION.mileage.max)
+        ]
+      ],
+      features: ['']
     });
   }
 
@@ -167,56 +310,118 @@ export class VehicleFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.vehicleForm.valid) {
-      this.isSubmitting.set(true);
-      const formData = this.prepareFormData();
-
-      const operation = this.isEditMode()
-        ? this.carRentalService.updateVehicle(this.vehicleId()!, formData)
-        : this.carRentalService.createVehicle(formData);
-
-      operation.subscribe({
-        next: (vehicle) => {
-          this.isSubmitting.set(false);
-          this.router.navigate(['/car-rental/vehicles']);
-        },
-        error: (error) => {
-          console.error('Error saving vehicle:', error);
-          this.isSubmitting.set(false);
-        }
-      });
-    } else {
+    if (this.vehicleForm.invalid) {
+      console.log('Form is invalid, marking all fields as touched');
       this.markFormGroupTouched();
+      console.log('Form validation errors:', this.getFormValidationErrors());
+      return;
     }
+
+    this.isSubmitting.set(true);
+    const formData = this.prepareFormData();
+
+    const operation = this.isEditMode()
+      ? this.carRentalService.updateCar(parseInt(this.vehicleId()!), formData)
+      : this.carRentalService.createCar(formData);
+
+    operation.subscribe({
+      next: (vehicle) => {
+        this.isSubmitting.set(false);
+        this.router.navigate(['/car-rental/vehicles']);
+      },
+      error: (error) => {
+        console.error('Error saving vehicle:', error);
+        console.error('Error details:', error.error);
+        this.isSubmitting.set(false);
+      }
+    });
   }
 
-  private prepareFormData(): Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'> {
+  private prepareFormData(): AdminCreateCarDto {
     const formValue = this.vehicleForm.value;
-    return {
-      make: formValue.make,
-      model: formValue.model,
-      year: parseInt(formValue.year),
-      category: formValue.category,
-      vin: formValue.vin,
-      licensePlate: formValue.licensePlate,
-      fuelType: formValue.fuelType,
-      transmission: formValue.transmission,
-      seats: parseInt(formValue.seats),
-      doors: parseInt(formValue.doors),
-      mileage: parseInt(formValue.mileage),
-      color: formValue.color,
-      status: formValue.status,
-      dailyRate: parseFloat(formValue.dailyRate),
-      ...(formValue.weeklyRate && { weeklyRate: parseFloat(formValue.weeklyRate) }),
-      ...(formValue.monthlyRate && { monthlyRate: parseFloat(formValue.monthlyRate) }),
-      branchId: formValue.branchId,
-      ...(formValue.features && { features: formValue.features.split(',').map((f: string) => f.trim()).filter((f: string) => f) }),
-      ...(formValue.notes && { notes: formValue.notes }),
-      ...(formValue.insuranceExpiry && { insuranceExpiry: new Date(formValue.insuranceExpiry) }),
-      ...(formValue.registrationExpiry && { registrationExpiry: new Date(formValue.registrationExpiry) }),
-      images: [],
-      maintenanceHistory: []
+    
+    const carDto: AdminCreateCarDto = {
+      // Required bilingual fields
+      brandAr: formValue.brandAr || '',
+      brandEn: formValue.brandEn || '',
+      modelAr: formValue.modelAr || '',
+      modelEn: formValue.modelEn || '',
+      colorAr: formValue.colorAr || '',
+      colorEn: formValue.colorEn || '',
+      
+      // Required basic information
+      year: parseInt(formValue.year) || DEFAULT_CAR_VALUES.year!,
+      plateNumber: formValue.plateNumber || '',
+      seatingCapacity: parseInt(formValue.seatingCapacity) || DEFAULT_CAR_VALUES.seatingCapacity!,
+      numberOfDoors: parseInt(formValue.numberOfDoors) || DEFAULT_CAR_VALUES.numberOfDoors!,
+      maxSpeed: parseInt(formValue.maxSpeed) || DEFAULT_CAR_VALUES.maxSpeed!,
+      engine: formValue.engine || '',
+      
+      // Required enums
+      transmissionType: formValue.transmissionType || DEFAULT_CAR_VALUES.transmissionType!,
+      fuelType: formValue.fuelType || DEFAULT_CAR_VALUES.fuelType!,
+      
+      // Required pricing
+      dailyRate: parseFloat(formValue.dailyRate) || DEFAULT_CAR_VALUES.dailyRate!,
+      weeklyRate: parseFloat(formValue.weeklyRate) || DEFAULT_CAR_VALUES.weeklyRate!,
+      monthlyRate: parseFloat(formValue.monthlyRate) || DEFAULT_CAR_VALUES.monthlyRate!,
+      
+      // Required IDs
+      categoryId: parseInt(formValue.categoryId) || 1,
+      branchId: parseInt(formValue.branchId) || 1,
+      
+      // Optional fields
+      status: formValue.status || DEFAULT_CAR_VALUES.status,
+      imageUrl: formValue.imageUrl || undefined,
+      descriptionAr: formValue.descriptionAr || undefined,
+      descriptionEn: formValue.descriptionEn || undefined,
+      mileage: parseInt(formValue.mileage) || DEFAULT_CAR_VALUES.mileage,
+      features: formValue.features || undefined
     };
+    
+    return carDto;
+  }
+
+  private getFormValidationErrors() {
+    const formErrors: any = {};
+    Object.keys(this.vehicleForm.controls).forEach(key => {
+      const controlErrors = this.vehicleForm.get(key)?.errors;
+      if (controlErrors) {
+        formErrors[key] = controlErrors;
+      }
+    });
+    return formErrors;
+  }
+
+  private populateWithSampleData() {
+    console.log('Populating form with sample data');
+    this.vehicleForm.patchValue({
+      brandAr: 'تويوتا',
+      brandEn: 'Toyota',
+      modelAr: 'كامري',
+      modelEn: 'Camry',
+      year: 2024,
+      colorAr: 'أبيض',
+      colorEn: 'White',
+      plateNumber: 'ABC-123',
+      seatingCapacity: 5,
+      numberOfDoors: 4,
+      maxSpeed: 180,
+      engine: '2.5L 4-Cylinder',
+      transmissionType: TransmissionType.Automatic,
+      fuelType: FuelType.Gasoline,
+      dailyRate: 150.00,
+      weeklyRate: 900.00,
+      monthlyRate: 3500.00,
+      status: CarStatus.Available,
+      categoryId: 1,
+      branchId: 1,
+      mileage: 0,
+      descriptionAr: 'سيارة ممتازة للإيجار',
+      descriptionEn: 'Excellent car for rental',
+      features: 'Air Conditioning, GPS, Bluetooth'
+    });
+    console.log('Sample data populated');
   }
 
   private markFormGroupTouched() {

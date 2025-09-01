@@ -38,39 +38,103 @@
         </div>
         
         <div class="form-grid">
-          <!-- Make -->
+          <!-- Brand Arabic -->
           <div class="form-group">
-            <label class="form-label" for="make">
-              {{ 'vehicles.make' | translate }} <span class="required">*</span>
+            <label class="form-label" for="brandAr">
+              {{ 'vehicles.brandAr' | translate }} <span class="required">*</span>
             </label>
             <input
               type="text"
-              id="make"
-              formControlName="make"
+              id="brandAr"
+              formControlName="brandAr"
               class="form-input"
-              [class.error]="isFieldInvalid('make')"
-              [placeholder]="'vehicles.makePlaceholder' | translate"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('make')">
-              {{ getFieldError('make') }}
+              [class.error]="vehicleForm.get('brandAr')?.invalid && vehicleForm.get('brandAr')?.touched"
+              [placeholder]="'vehicles.brandArPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('brandAr')?.invalid && vehicleForm.get('brandAr')?.touched">
+              <span *ngIf="vehicleForm.get('brandAr')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('brandAr')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('brandAr')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
             </div>
           </div>
 
-          <!-- Model -->
+          <!-- Brand English -->
           <div class="form-group">
-            <label class="form-label" for="model">
-              {{ 'vehicles.model' | translate }} <span class="required">*</span>
+            <label class="form-label" for="brandEn">
+              {{ 'vehicles.brandEn' | translate }} <span class="required">*</span>
             </label>
             <input
               type="text"
-              id="model"
-              formControlName="model"
+              id="brandEn"
+              formControlName="brandEn"
               class="form-input"
-              [class.error]="isFieldInvalid('model')"
-              [placeholder]="'vehicles.modelPlaceholder' | translate"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('model')">
-              {{ getFieldError('model') }}
+              [class.error]="vehicleForm.get('brandEn')?.invalid && vehicleForm.get('brandEn')?.touched"
+              [placeholder]="'vehicles.brandEnPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('brandEn')?.invalid && vehicleForm.get('brandEn')?.touched">
+              <span *ngIf="vehicleForm.get('brandEn')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('brandEn')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('brandEn')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Model Arabic -->
+          <div class="form-group">
+            <label class="form-label" for="modelAr">
+              {{ 'vehicles.modelAr' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="modelAr"
+              formControlName="modelAr"
+              class="form-input"
+              [class.error]="vehicleForm.get('modelAr')?.invalid && vehicleForm.get('modelAr')?.touched"
+              [placeholder]="'vehicles.modelArPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('modelAr')?.invalid && vehicleForm.get('modelAr')?.touched">
+              <span *ngIf="vehicleForm.get('modelAr')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('modelAr')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('modelAr')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Model English -->
+          <div class="form-group">
+            <label class="form-label" for="modelEn">
+              {{ 'vehicles.modelEn' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="modelEn"
+              formControlName="modelEn"
+              class="form-input"
+              [class.error]="vehicleForm.get('modelEn')?.invalid && vehicleForm.get('modelEn')?.touched"
+              [placeholder]="'vehicles.modelEnPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('modelEn')?.invalid && vehicleForm.get('modelEn')?.touched">
+              <span *ngIf="vehicleForm.get('modelEn')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('modelEn')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('modelEn')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
             </div>
           </div>
 
@@ -84,129 +148,72 @@
               id="year"
               formControlName="year"
               class="form-input"
-              [class.error]="isFieldInvalid('year')"
-              [placeholder]="'vehicles.yearPlaceholder' | translate"
-              min="2000"
-              [max]="2025"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('year')">
-              {{ getFieldError('year') }}
+              [class.error]="vehicleForm.get('year')?.invalid && vehicleForm.get('year')?.touched"
+              [min]="1900"
+              [max]="2030">
+            <div class="form-error" *ngIf="vehicleForm.get('year')?.invalid && vehicleForm.get('year')?.touched">
+              <span *ngIf="vehicleForm.get('year')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('year')?.errors?.['min'] || vehicleForm.get('year')?.errors?.['max']">
+                {{ 'validation.yearRange' | translate }}
+              </span>
             </div>
           </div>
 
-          <!-- Category -->
+          <!-- Color Arabic -->
           <div class="form-group">
-            <label class="form-label" for="category">
-              {{ 'vehicles.category' | translate }} <span class="required">*</span>
-            </label>
-            <select
-              id="category"
-              formControlName="category"
-              class="form-select"
-              [class.error]="isFieldInvalid('category')"
-            >
-              <option value="">{{ 'vehicles.selectCategory' | translate }}</option>
-              <option *ngFor="let cat of categories" [value]="cat.value">
-                {{ cat.label | translate }}
-              </option>
-            </select>
-            <div class="error-message" *ngIf="isFieldInvalid('category')">
-              {{ getFieldError('category') }}
-            </div>
-          </div>
-
-          <!-- Color -->
-          <div class="form-group">
-            <label class="form-label" for="color">
-              {{ 'vehicles.color' | translate }} <span class="required">*</span>
+            <label class="form-label" for="colorAr">
+              {{ 'vehicles.colorAr' | translate }} <span class="required">*</span>
             </label>
             <input
               type="text"
-              id="color"
-              formControlName="color"
+              id="colorAr"
+              formControlName="colorAr"
               class="form-input"
-              [class.error]="isFieldInvalid('color')"
-              [placeholder]="'vehicles.colorPlaceholder' | translate"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('color')">
-              {{ getFieldError('color') }}
+              [class.error]="vehicleForm.get('colorAr')?.invalid && vehicleForm.get('colorAr')?.touched"
+              [placeholder]="'vehicles.colorArPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('colorAr')?.invalid && vehicleForm.get('colorAr')?.touched">
+              <span *ngIf="vehicleForm.get('colorAr')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('colorAr')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('colorAr')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
             </div>
           </div>
 
-          <!-- Branch -->
+          <!-- Color English -->
           <div class="form-group">
-            <label class="form-label" for="branchId">
-              {{ 'vehicles.branch' | translate }} <span class="required">*</span>
+            <label class="form-label" for="colorEn">
+              {{ 'vehicles.colorEn' | translate }} <span class="required">*</span>
             </label>
-            <select
-              id="branchId"
-              formControlName="branchId"
-              class="form-select"
-              [class.error]="isFieldInvalid('branchId')"
-            >
-              <option value="">{{ 'vehicles.selectBranch' | translate }}</option>
-              <option *ngFor="let branch of branches()" [value]="branch.id">
-                {{ branch.name }}
-              </option>
-            </select>
-            <div class="error-message" *ngIf="isFieldInvalid('branchId')">
-              {{ getFieldError('branchId') }}
+            <input
+              type="text"
+              id="colorEn"
+              formControlName="colorEn"
+              class="form-input"
+              [class.error]="vehicleForm.get('colorEn')?.invalid && vehicleForm.get('colorEn')?.touched"
+              [placeholder]="'vehicles.colorEnPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('colorEn')?.invalid && vehicleForm.get('colorEn')?.touched">
+              <span *ngIf="vehicleForm.get('colorEn')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('colorEn')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('colorEn')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Identification Section -->
-      <div class="form-section">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="bi bi-card-text"></i>
-            {{ 'vehicles.identification' | translate }}
-          </h2>
-          <p class="section-description">{{ 'vehicles.identificationDesc' | translate }}</p>
-        </div>
-        
-        <div class="form-grid">
-          <!-- VIN -->
-          <div class="form-group">
-            <label class="form-label" for="vin">
-              {{ 'vehicles.vin' | translate }} <span class="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="vin"
-              formControlName="vin"
-              class="form-input"
-              [class.error]="isFieldInvalid('vin')"
-              [placeholder]="'vehicles.vinPlaceholder' | translate"
-              maxlength="17"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('vin')">
-              {{ getFieldError('vin') }}
-            </div>
-          </div>
-
-          <!-- License Plate -->
-          <div class="form-group">
-            <label class="form-label" for="licensePlate">
-              {{ 'vehicles.licensePlate' | translate }} <span class="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="licensePlate"
-              formControlName="licensePlate"
-              class="form-input"
-              [class.error]="isFieldInvalid('licensePlate')"
-              [placeholder]="'vehicles.licensePlatePlaceholder' | translate"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('licensePlate')">
-              {{ getFieldError('licensePlate') }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Specifications Section -->
+      <!-- Vehicle Specifications Section -->
       <div class="form-section">
         <div class="section-header">
           <h2 class="section-title">
@@ -217,6 +224,147 @@
         </div>
         
         <div class="form-grid">
+          <!-- Plate Number -->
+          <div class="form-group">
+            <label class="form-label" for="plateNumber">
+              {{ 'vehicles.plateNumber' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="plateNumber"
+              formControlName="plateNumber"
+              class="form-input"
+              [class.error]="vehicleForm.get('plateNumber')?.invalid && vehicleForm.get('plateNumber')?.touched"
+              [placeholder]="'vehicles.plateNumberPlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('plateNumber')?.invalid && vehicleForm.get('plateNumber')?.touched">
+              <span *ngIf="vehicleForm.get('plateNumber')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('plateNumber')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('plateNumber')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Seating Capacity -->
+          <div class="form-group">
+            <label class="form-label" for="seatingCapacity">
+              {{ 'vehicles.seatingCapacity' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="seatingCapacity"
+              formControlName="seatingCapacity"
+              class="form-input"
+              [class.error]="vehicleForm.get('seatingCapacity')?.invalid && vehicleForm.get('seatingCapacity')?.touched"
+              [min]="1"
+              [max]="20">
+            <div class="form-error" *ngIf="vehicleForm.get('seatingCapacity')?.invalid && vehicleForm.get('seatingCapacity')?.touched">
+              <span *ngIf="vehicleForm.get('seatingCapacity')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('seatingCapacity')?.errors?.['min'] || vehicleForm.get('seatingCapacity')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Number of Doors -->
+          <div class="form-group">
+            <label class="form-label" for="numberOfDoors">
+              {{ 'vehicles.numberOfDoors' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="numberOfDoors"
+              formControlName="numberOfDoors"
+              class="form-input"
+              [class.error]="vehicleForm.get('numberOfDoors')?.invalid && vehicleForm.get('numberOfDoors')?.touched"
+              [min]="2"
+              [max]="6">
+            <div class="form-error" *ngIf="vehicleForm.get('numberOfDoors')?.invalid && vehicleForm.get('numberOfDoors')?.touched">
+              <span *ngIf="vehicleForm.get('numberOfDoors')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('numberOfDoors')?.errors?.['min'] || vehicleForm.get('numberOfDoors')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Max Speed -->
+          <div class="form-group">
+            <label class="form-label" for="maxSpeed">
+              {{ 'vehicles.maxSpeed' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              id="maxSpeed"
+              formControlName="maxSpeed"
+              class="form-input"
+              [class.error]="vehicleForm.get('maxSpeed')?.invalid && vehicleForm.get('maxSpeed')?.touched"
+              [min]="80"
+              [max]="400">
+            <div class="form-error" *ngIf="vehicleForm.get('maxSpeed')?.invalid && vehicleForm.get('maxSpeed')?.touched">
+              <span *ngIf="vehicleForm.get('maxSpeed')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('maxSpeed')?.errors?.['min'] || vehicleForm.get('maxSpeed')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Engine -->
+          <div class="form-group">
+            <label class="form-label" for="engine">
+              {{ 'vehicles.engine' | translate }} <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="engine"
+              formControlName="engine"
+              class="form-input"
+              [class.error]="vehicleForm.get('engine')?.invalid && vehicleForm.get('engine')?.touched"
+              [placeholder]="'vehicles.enginePlaceholder' | translate">
+            <div class="form-error" *ngIf="vehicleForm.get('engine')?.invalid && vehicleForm.get('engine')?.touched">
+              <span *ngIf="vehicleForm.get('engine')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('engine')?.errors?.['minlength']">
+                {{ 'validation.minLength' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('engine')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Transmission Type -->
+          <div class="form-group">
+            <label class="form-label" for="transmissionType">
+              {{ 'vehicles.transmissionType' | translate }} <span class="required">*</span>
+            </label>
+            <select
+              id="transmissionType"
+              formControlName="transmissionType"
+              class="form-select"
+              [class.error]="vehicleForm.get('transmissionType')?.invalid && vehicleForm.get('transmissionType')?.touched">
+              <option value="">{{ 'common.selectOption' | translate }}</option>
+              <option *ngFor="let type of transmissionTypes" [value]="type.value">
+                {{ type.label | translate }}
+              </option>
+            </select>
+            <div class="form-error" *ngIf="vehicleForm.get('transmissionType')?.invalid && vehicleForm.get('transmissionType')?.touched">
+              <span *ngIf="vehicleForm.get('transmissionType')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+            </div>
+          </div>
+
           <!-- Fuel Type -->
           <div class="form-group">
             <label class="form-label" for="fuelType">
@@ -226,117 +374,32 @@
               id="fuelType"
               formControlName="fuelType"
               class="form-select"
-              [class.error]="isFieldInvalid('fuelType')"
-            >
-              <option value="">{{ 'vehicles.selectFuelType' | translate }}</option>
-              <option *ngFor="let fuel of fuelTypes" [value]="fuel.value">
-                {{ fuel.label | translate }}
+              [class.error]="vehicleForm.get('fuelType')?.invalid && vehicleForm.get('fuelType')?.touched">
+              <option value="">{{ 'common.selectOption' | translate }}</option>
+              <option *ngFor="let type of fuelTypes" [value]="type.value">
+                {{ type.label | translate }}
               </option>
             </select>
-            <div class="error-message" *ngIf="isFieldInvalid('fuelType')">
-              {{ getFieldError('fuelType') }}
-            </div>
-          </div>
-
-          <!-- Transmission -->
-          <div class="form-group">
-            <label class="form-label" for="transmission">
-              {{ 'vehicles.transmission' | translate }} <span class="required">*</span>
-            </label>
-            <select
-              id="transmission"
-              formControlName="transmission"
-              class="form-select"
-              [class.error]="isFieldInvalid('transmission')"
-            >
-              <option value="">{{ 'vehicles.selectTransmission' | translate }}</option>
-              <option *ngFor="let trans of transmissionTypes" [value]="trans.value">
-                {{ trans.label | translate }}
-              </option>
-            </select>
-            <div class="error-message" *ngIf="isFieldInvalid('transmission')">
-              {{ getFieldError('transmission') }}
-            </div>
-          </div>
-
-          <!-- Seats -->
-          <div class="form-group">
-            <label class="form-label" for="seats">
-              {{ 'vehicles.seats' | translate }} <span class="required">*</span>
-            </label>
-            <input
-              type="number"
-              id="seats"
-              formControlName="seats"
-              class="form-input"
-              [class.error]="isFieldInvalid('seats')"
-              [placeholder]="'vehicles.seatsPlaceholder' | translate"
-              min="2"
-              max="9"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('seats')">
-              {{ getFieldError('seats') }}
-            </div>
-          </div>
-
-          <!-- Doors -->
-          <div class="form-group">
-            <label class="form-label" for="doors">
-              {{ 'vehicles.doors' | translate }} <span class="required">*</span>
-            </label>
-            <input
-              type="number"
-              id="doors"
-              formControlName="doors"
-              class="form-input"
-              [class.error]="isFieldInvalid('doors')"
-              [placeholder]="'vehicles.doorsPlaceholder' | translate"
-              min="2"
-              max="5"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('doors')">
-              {{ getFieldError('doors') }}
-            </div>
-          </div>
-
-          <!-- Mileage -->
-          <div class="form-group">
-            <label class="form-label" for="mileage">
-              {{ 'vehicles.mileage' | translate }} <span class="required">*</span>
-            </label>
-            <input
-              type="number"
-              id="mileage"
-              formControlName="mileage"
-              class="form-input"
-              [class.error]="isFieldInvalid('mileage')"
-              [placeholder]="'vehicles.mileagePlaceholder' | translate"
-              min="0"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('mileage')">
-              {{ getFieldError('mileage') }}
+            <div class="form-error" *ngIf="vehicleForm.get('fuelType')?.invalid && vehicleForm.get('fuelType')?.touched">
+              <span *ngIf="vehicleForm.get('fuelType')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
             </div>
           </div>
 
           <!-- Status -->
           <div class="form-group">
             <label class="form-label" for="status">
-              {{ 'vehicles.status' | translate }} <span class="required">*</span>
+              {{ 'vehicles.status' | translate }}
             </label>
             <select
               id="status"
               formControlName="status"
-              class="form-select"
-              [class.error]="isFieldInvalid('status')"
-            >
-              <option value="available">{{ 'vehicles.available' | translate }}</option>
-              <option value="rented">{{ 'vehicles.rented' | translate }}</option>
-              <option value="maintenance">{{ 'vehicles.maintenance' | translate }}</option>
-              <option value="out_of_service">{{ 'vehicles.outOfService' | translate }}</option>
+              class="form-select">
+              <option *ngFor="let status of statusOptions" [value]="status.value">
+                {{ status.label | translate }}
+              </option>
             </select>
-            <div class="error-message" *ngIf="isFieldInvalid('status')">
-              {{ getFieldError('status') }}
-            </div>
           </div>
         </div>
       </div>
@@ -357,106 +420,127 @@
             <label class="form-label" for="dailyRate">
               {{ 'vehicles.dailyRate' | translate }} <span class="required">*</span>
             </label>
-            <div class="input-with-currency">
-              <span class="currency-symbol">$</span>
-              <input
-                type="number"
-                id="dailyRate"
-                formControlName="dailyRate"
-                class="form-input with-currency"
-                [class.error]="isFieldInvalid('dailyRate')"
-                [placeholder]="'vehicles.dailyRatePlaceholder' | translate"
-                min="1"
-                step="0.01"
-              />
-            </div>
-            <div class="error-message" *ngIf="isFieldInvalid('dailyRate')">
-              {{ getFieldError('dailyRate') }}
+            <input
+              type="number"
+              id="dailyRate"
+              formControlName="dailyRate"
+              class="form-input"
+              [class.error]="vehicleForm.get('dailyRate')?.invalid && vehicleForm.get('dailyRate')?.touched"
+              step="0.01"
+              [min]="0.01"
+              [max]="10000">
+            <div class="form-error" *ngIf="vehicleForm.get('dailyRate')?.invalid && vehicleForm.get('dailyRate')?.touched">
+              <span *ngIf="vehicleForm.get('dailyRate')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('dailyRate')?.errors?.['min'] || vehicleForm.get('dailyRate')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
             </div>
           </div>
 
           <!-- Weekly Rate -->
           <div class="form-group">
             <label class="form-label" for="weeklyRate">
-              {{ 'vehicles.weeklyRate' | translate }}
+              {{ 'vehicles.weeklyRate' | translate }} <span class="required">*</span>
             </label>
-            <div class="input-with-currency">
-              <span class="currency-symbol">$</span>
-              <input
-                type="number"
-                id="weeklyRate"
-                formControlName="weeklyRate"
-                class="form-input with-currency"
-                [placeholder]="'vehicles.weeklyRatePlaceholder' | translate"
-                min="1"
-                step="0.01"
-              />
+            <input
+              type="number"
+              id="weeklyRate"
+              formControlName="weeklyRate"
+              class="form-input"
+              [class.error]="vehicleForm.get('weeklyRate')?.invalid && vehicleForm.get('weeklyRate')?.touched"
+              step="0.01"
+              [min]="0.01"
+              [max]="50000">
+            <div class="form-error" *ngIf="vehicleForm.get('weeklyRate')?.invalid && vehicleForm.get('weeklyRate')?.touched">
+              <span *ngIf="vehicleForm.get('weeklyRate')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('weeklyRate')?.errors?.['min'] || vehicleForm.get('weeklyRate')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
             </div>
           </div>
 
           <!-- Monthly Rate -->
           <div class="form-group">
             <label class="form-label" for="monthlyRate">
-              {{ 'vehicles.monthlyRate' | translate }}
+              {{ 'vehicles.monthlyRate' | translate }} <span class="required">*</span>
             </label>
-            <div class="input-with-currency">
-              <span class="currency-symbol">$</span>
-              <input
-                type="number"
-                id="monthlyRate"
-                formControlName="monthlyRate"
-                class="form-input with-currency"
-                [placeholder]="'vehicles.monthlyRatePlaceholder' | translate"
-                min="1"
-                step="0.01"
-              />
+            <input
+              type="number"
+              id="monthlyRate"
+              formControlName="monthlyRate"
+              class="form-input"
+              [class.error]="vehicleForm.get('monthlyRate')?.invalid && vehicleForm.get('monthlyRate')?.touched"
+              step="0.01"
+              [min]="0.01"
+              [max]="200000">
+            <div class="form-error" *ngIf="vehicleForm.get('monthlyRate')?.invalid && vehicleForm.get('monthlyRate')?.touched">
+              <span *ngIf="vehicleForm.get('monthlyRate')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
+              <span *ngIf="vehicleForm.get('monthlyRate')?.errors?.['min'] || vehicleForm.get('monthlyRate')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Documentation Section -->
+      <!-- Location & Categories Section -->
       <div class="form-section">
         <div class="section-header">
           <h2 class="section-title">
-            <i class="bi bi-file-earmark-text"></i>
-            {{ 'vehicles.documentation' | translate }}
+            <i class="bi bi-geo-alt"></i>
+            {{ 'vehicles.locationCategories' | translate }}
           </h2>
-          <p class="section-description">{{ 'vehicles.documentationDesc' | translate }}</p>
+          <p class="section-description">{{ 'vehicles.locationCategoriesDesc' | translate }}</p>
         </div>
         
         <div class="form-grid">
-          <!-- Insurance Expiry -->
+          <!-- Category -->
           <div class="form-group">
-            <label class="form-label" for="insuranceExpiry">
-              {{ 'vehicles.insuranceExpiry' | translate }} <span class="required">*</span>
+            <label class="form-label" for="categoryId">
+              {{ 'vehicles.category' | translate }} <span class="required">*</span>
             </label>
-            <input
-              type="date"
-              id="insuranceExpiry"
-              formControlName="insuranceExpiry"
-              class="form-input"
-              [class.error]="isFieldInvalid('insuranceExpiry')"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('insuranceExpiry')">
-              {{ getFieldError('insuranceExpiry') }}
+            <select
+              id="categoryId"
+              formControlName="categoryId"
+              class="form-select"
+              [class.error]="vehicleForm.get('categoryId')?.invalid && vehicleForm.get('categoryId')?.touched">
+              <option value="">{{ 'common.selectOption' | translate }}</option>
+              <option *ngFor="let category of categories" [value]="category.value">
+                {{ category.label | translate }}
+              </option>
+            </select>
+            <div class="form-error" *ngIf="vehicleForm.get('categoryId')?.invalid && vehicleForm.get('categoryId')?.touched">
+              <span *ngIf="vehicleForm.get('categoryId')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
             </div>
           </div>
 
-          <!-- Registration Expiry -->
+          <!-- Branch -->
           <div class="form-group">
-            <label class="form-label" for="registrationExpiry">
-              {{ 'vehicles.registrationExpiry' | translate }} <span class="required">*</span>
+            <label class="form-label" for="branchId">
+              {{ 'vehicles.branch' | translate }} <span class="required">*</span>
             </label>
-            <input
-              type="date"
-              id="registrationExpiry"
-              formControlName="registrationExpiry"
-              class="form-input"
-              [class.error]="isFieldInvalid('registrationExpiry')"
-            />
-            <div class="error-message" *ngIf="isFieldInvalid('registrationExpiry')">
-              {{ getFieldError('registrationExpiry') }}
+            <select
+              id="branchId"
+              formControlName="branchId"
+              class="form-select"
+              [class.error]="vehicleForm.get('branchId')?.invalid && vehicleForm.get('branchId')?.touched">
+              <option value="">{{ 'common.selectOption' | translate }}</option>
+              <option *ngFor="let branch of branches()" [value]="branch.id">
+                {{ branch.name }}
+              </option>
+            </select>
+            <div class="form-error" *ngIf="vehicleForm.get('branchId')?.invalid && vehicleForm.get('branchId')?.touched">
+              <span *ngIf="vehicleForm.get('branchId')?.errors?.['required']">
+                {{ 'validation.required' | translate }}
+              </span>
             </div>
           </div>
         </div>
@@ -466,15 +550,88 @@
       <div class="form-section">
         <div class="section-header">
           <h2 class="section-title">
-            <i class="bi bi-plus-circle"></i>
-            {{ 'vehicles.additionalInfo' | translate }}
+            <i class="bi bi-info-square"></i>
+            {{ 'vehicles.additionalInformation' | translate }}
           </h2>
-          <p class="section-description">{{ 'vehicles.additionalInfoDesc' | translate }}</p>
+          <p class="section-description">{{ 'vehicles.additionalInformationDesc' | translate }}</p>
         </div>
         
         <div class="form-grid">
-          <!-- Features -->
+          <!-- Image URL -->
           <div class="form-group full-width">
+            <label class="form-label" for="imageUrl">
+              {{ 'vehicles.imageUrl' | translate }}
+            </label>
+            <input
+              type="url"
+              id="imageUrl"
+              formControlName="imageUrl"
+              class="form-input"
+              [placeholder]="'vehicles.imageUrlPlaceholder' | translate">
+          </div>
+
+          <!-- Description Arabic -->
+          <div class="form-group full-width">
+            <label class="form-label" for="descriptionAr">
+              {{ 'vehicles.descriptionAr' | translate }}
+            </label>
+            <textarea
+              id="descriptionAr"
+              formControlName="descriptionAr"
+              class="form-textarea"
+              rows="3"
+              [class.error]="vehicleForm.get('descriptionAr')?.invalid && vehicleForm.get('descriptionAr')?.touched"
+              [placeholder]="'vehicles.descriptionArPlaceholder' | translate">
+            </textarea>
+            <div class="form-error" *ngIf="vehicleForm.get('descriptionAr')?.invalid && vehicleForm.get('descriptionAr')?.touched">
+              <span *ngIf="vehicleForm.get('descriptionAr')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Description English -->
+          <div class="form-group full-width">
+            <label class="form-label" for="descriptionEn">
+              {{ 'vehicles.descriptionEn' | translate }}
+            </label>
+            <textarea
+              id="descriptionEn"
+              formControlName="descriptionEn"
+              class="form-textarea"
+              rows="3"
+              [class.error]="vehicleForm.get('descriptionEn')?.invalid && vehicleForm.get('descriptionEn')?.touched"
+              [placeholder]="'vehicles.descriptionEnPlaceholder' | translate">
+            </textarea>
+            <div class="form-error" *ngIf="vehicleForm.get('descriptionEn')?.invalid && vehicleForm.get('descriptionEn')?.touched">
+              <span *ngIf="vehicleForm.get('descriptionEn')?.errors?.['maxlength']">
+                {{ 'validation.maxLength' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Mileage -->
+          <div class="form-group">
+            <label class="form-label" for="mileage">
+              {{ 'vehicles.mileage' | translate }}
+            </label>
+            <input
+              type="number"
+              id="mileage"
+              formControlName="mileage"
+              class="form-input"
+              [class.error]="vehicleForm.get('mileage')?.invalid && vehicleForm.get('mileage')?.touched"
+              [min]="0"
+              [max]="1000000">
+            <div class="form-error" *ngIf="vehicleForm.get('mileage')?.invalid && vehicleForm.get('mileage')?.touched">
+              <span *ngIf="vehicleForm.get('mileage')?.errors?.['min'] || vehicleForm.get('mileage')?.errors?.['max']">
+                {{ 'validation.range' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="form-group">
             <label class="form-label" for="features">
               {{ 'vehicles.features' | translate }}
             </label>
@@ -482,24 +639,9 @@
               id="features"
               formControlName="features"
               class="form-textarea"
-              rows="3"
-              [placeholder]="'vehicles.featuresPlaceholder' | translate"
-            ></textarea>
-            <div class="form-help">{{ 'vehicles.featuresHelp' | translate }}</div>
-          </div>
-
-          <!-- Notes -->
-          <div class="form-group full-width">
-            <label class="form-label" for="notes">
-              {{ 'vehicles.notes' | translate }}
-            </label>
-            <textarea
-              id="notes"
-              formControlName="notes"
-              class="form-textarea"
-              rows="4"
-              [placeholder]="'vehicles.notesPlaceholder' | translate"
-            ></textarea>
+              rows="2"
+              [placeholder]="'vehicles.featuresPlaceholder' | translate">
+            </textarea>
           </div>
         </div>
       </div>
@@ -507,23 +649,21 @@
 
     <!-- Form Actions -->
     <div class="form-actions">
-      <button
-        type="button"
-        class="btn btn-ghost"
-        (click)="onCancel()"
-        [disabled]="isSubmitting()"
-      >
+      <button type="button" class="btn btn-secondary" routerLink="/car-rental/vehicles">
         {{ 'common.cancel' | translate }}
       </button>
-      
-      <button
-        type="submit"
+      <button 
+        type="submit" 
         class="btn btn-primary"
         [disabled]="vehicleForm.invalid || isSubmitting()"
-      >
-        <div class="spinner-sm" *ngIf="isSubmitting()"></div>
-        <i class="bi bi-check-circle" *ngIf="!isSubmitting()"></i>
-        {{ isEditMode() ? ('common.update' | translate) : ('common.save' | translate) }}
+        [class.loading]="isSubmitting()">
+        <span *ngIf="!isSubmitting()">
+          {{ isEditMode() ? ('common.update' | translate) : ('common.create' | translate) }}
+        </span>
+        <span *ngIf="isSubmitting()" class="flex items-center gap-2">
+          <div class="spinner-sm"></div>
+          {{ 'common.saving' | translate }}
+        </span>
       </button>
     </div>
   </form>

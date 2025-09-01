@@ -8,9 +8,16 @@ import {
   PaginatedResponse,
   AdminCarDto, 
   AdminCreateCarDto,
+  AdminUpdateCarDto,
   CarFilterDto,
   UpdateCarStatusDto,
   BulkCarOperationDto,
+  CarImportDto,
+  CarAnalyticsDto,
+  CarMaintenanceRecordDto,
+  FuelType,
+  TransmissionType,
+  CarStatus,
   BulkOperationResult,
   ImportResult
 } from '../models/api.models';
@@ -46,7 +53,7 @@ export class CarApiService {
       if (filter.pageSize) params = params.set('pageSize', filter.pageSize.toString());
     }
 
-    return this.http.get<ApiResponse<AdminCarDto[]>>(this.baseUrl, { params }).pipe(
+    return this.http.get<ApiResponse<PaginatedResponse<AdminCarDto>>>(this.baseUrl, { params }).pipe(
       map(response => {
         // Add debugging logs
         if (environment.logging.enableApiLogging) {
@@ -67,7 +74,7 @@ export class CarApiService {
           return {
             data: [],
             totalCount: 0,
-            pageNumber: 1,
+            currentPage: 1,
             pageSize: 10,
             totalPages: 0,
             hasPreviousPage: false,
@@ -75,21 +82,17 @@ export class CarApiService {
           };
         }
 
-        // The API returns an array directly, so we need to wrap it in a paginated response structure
-        const carArray = Array.isArray(response.data) ? response.data : [];
-        const pageSize = filter?.pageSize || 10;
-        const pageNumber = filter?.page || 1;
-        const totalCount = carArray.length;
-        const totalPages = Math.ceil(totalCount / pageSize);
-
+        // The API returns a properly paginated response structure
+        const paginatedData = response.data;
+        
         return {
-          data: carArray,
-          totalCount: totalCount,
-          pageNumber: pageNumber,
-          pageSize: pageSize,
-          totalPages: totalPages,
-          hasPreviousPage: pageNumber > 1,
-          hasNextPage: pageNumber < totalPages
+          data: paginatedData.data || [],
+          totalCount: paginatedData.totalCount || 0,
+          currentPage: paginatedData.currentPage || 1,
+          pageSize: paginatedData.pageSize || 10,
+          totalPages: paginatedData.totalPages || 0,
+          hasPreviousPage: paginatedData.hasPreviousPage || false,
+          hasNextPage: paginatedData.hasNextPage || false
         } as PaginatedResponse<AdminCarDto>;
       }),
       catchError(this.handleError)
@@ -115,7 +118,7 @@ export class CarApiService {
    * Create new car
    */
   createCar(car: AdminCreateCarDto): Observable<AdminCarDto> {
-    return this.http.post<ApiResponse<AdminCarDto>>(this.baseUrl, car).pipe(
+    return this.http.post<ApiResponse<AdminCarDto>>(this.baseUrl, car ).pipe(
       map(response => {
         if (!response.succeeded) {
           throw new Error(response.message || 'Failed to create car');
@@ -129,7 +132,7 @@ export class CarApiService {
   /**
    * Update existing car
    */
-  updateCar(id: number, car: Partial<AdminCreateCarDto>): Observable<AdminCarDto> {
+  updateCar(id: number, car: AdminUpdateCarDto): Observable<AdminCarDto> {
     return this.http.put<ApiResponse<AdminCarDto>>(`${this.baseUrl}/${id}`, car).pipe(
       map(response => {
         if (!response.succeeded) {
@@ -189,19 +192,33 @@ export class CarApiService {
   /**
    * Import cars from file
    */
-  importCars(file: File): Observable<ImportResult<AdminCarDto>> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http.post<ApiResponse<ImportResult<AdminCarDto>>>(`${this.baseUrl}/import`, formData).pipe(
-      map(response => {
-        if (!response.succeeded) {
-          throw new Error(response.message || 'Failed to import cars');
-        }
-        return response.data;
-      }),
-      catchError(this.handleError)
-    );
+  importCars(file: File): Observable<ImportResult<AdminCarDto>>;
+  importCars(cars: CarImportDto[]): Observable<ImportResult<AdminCarDto>>;
+  importCars(fileOrCars: File | CarImportDto[]): Observable<ImportResult<AdminCarDto>> {
+    if (fileOrCars instanceof File) {
+      const formData = new FormData();
+      formData.append('file', fileOrCars);
+      
+      return this.http.post<ApiResponse<ImportResult<AdminCarDto>>>(`${this.baseUrl}/import`, formData).pipe(
+        map(response => {
+          if (!response.succeeded) {
+            throw new Error(response.message || 'Failed to import cars');
+          }
+          return response.data;
+        }),
+        catchError(this.handleError)
+      );
+    } else {
+      return this.http.post<ApiResponse<ImportResult<AdminCarDto>>>(`${this.baseUrl}/import`, fileOrCars).pipe(
+        map(response => {
+          if (!response.succeeded) {
+            throw new Error(response.message || 'Failed to import cars');
+          }
+          return response.data;
+        }),
+        catchError(this.handleError)
+      );
+    }
   }
 
   /**
@@ -227,7 +244,7 @@ export class CarApiService {
   }
 
   /**
-   * Get car analytics
+   * Get car analytics (general)
    */
   getCarAnalytics(filter?: CarFilterDto): Observable<any> {
     let params = new HttpParams();
@@ -238,6 +255,21 @@ export class CarApiService {
     }
 
     return this.http.get<ApiResponse<any>>(`${this.baseUrl}/analytics`, { params }).pipe(
+      map(response => {
+        if (!response.succeeded) {
+          throw new Error(response.message || 'Failed to fetch car analytics');
+        }
+        return response.data;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get specific car analytics
+   */
+  getCarAnalyticsById(id: number): Observable<CarAnalyticsDto> {
+    return this.http.get<ApiResponse<CarAnalyticsDto>>(`${this.baseUrl}/${id}/analytics`).pipe(
       map(response => {
         if (!response.succeeded) {
           throw new Error(response.message || 'Failed to fetch car analytics');
@@ -279,6 +311,36 @@ export class CarApiService {
       map(response => {
         if (!response.succeeded) {
           throw new Error(response.message || 'Failed to fetch car booking history');
+        }
+        return response.data;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get car maintenance history
+   */
+  getCarMaintenanceHistory(id: number): Observable<CarMaintenanceRecordDto[]> {
+    return this.http.get<ApiResponse<CarMaintenanceRecordDto[]>>(`${this.baseUrl}/${id}/maintenance`).pipe(
+      map(response => {
+        if (!response.succeeded) {
+          throw new Error(response.message || 'Failed to fetch maintenance history');
+        }
+        return response.data;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Add maintenance record
+   */
+  addMaintenanceRecord(carId: number, record: Omit<CarMaintenanceRecordDto, 'id'>): Observable<CarMaintenanceRecordDto> {
+    return this.http.post<ApiResponse<CarMaintenanceRecordDto>>(`${this.baseUrl}/${carId}/maintenance`, record).pipe(
+      map(response => {
+        if (!response.succeeded) {
+          throw new Error(response.message || 'Failed to add maintenance record');
         }
         return response.data;
       }),
