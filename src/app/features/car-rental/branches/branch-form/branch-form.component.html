@@ -80,8 +80,8 @@
               class="form-select focus-ring"
               [class.error]="isFieldInvalid('isActive')"
             >
-              <option [value]="true">{{ 'common.status.active' | translate }}</option>
-              <option [value]="false">{{ 'common.status.inactive' | translate }}</option>
+              <option value="true">{{ 'common.status.active' | translate }}</option>
+              <option value="false">{{ 'common.status.inactive' | translate }}</option>
             </select>
             <div class="form-error" *ngIf="isFieldInvalid('isActive')">
               <i class="bi bi-exclamation-circle"></i>
@@ -178,9 +178,9 @@
         <h2 class="section-title">{{ 'branches.contactInfo' | translate }}</h2>
         
         <div class="form-grid">
-          <!-- Phone -->
+          <!-- Phone (Optional) -->
           <div class="form-group">
-            <label for="phone" class="form-label required">{{ 'branches.phone' | translate }}</label>
+            <label for="phone" class="form-label">{{ 'branches.phone' | translate }}</label>
             <input
               id="phone"
               type="tel"
@@ -193,11 +193,12 @@
               <i class="bi bi-exclamation-circle"></i>
               {{ getFieldError('phone') }}
             </div>
+            <small class="form-help">{{ 'branches.phoneHelp' | translate }}</small>
           </div>
 
-          <!-- Email -->
+          <!-- Email (Optional) -->
           <div class="form-group">
-            <label for="email" class="form-label required">{{ 'branches.email' | translate }}</label>
+            <label for="email" class="form-label">{{ 'branches.email' | translate }}</label>
             <input
               id="email"
               type="email"
@@ -210,6 +211,7 @@
               <i class="bi bi-exclamation-circle"></i>
               {{ getFieldError('email') }}
             </div>
+            <small class="form-help">{{ 'branches.emailHelp' | translate }}</small>
           </div>
         </div>
 
@@ -280,9 +282,9 @@
         <h2 class="section-title">{{ 'branches.additionalInfo' | translate }}</h2>
 
         <div class="form-grid">
-          <!-- Working Hours -->
+          <!-- Working Hours (Optional) -->
           <div class="form-group">
-            <label for="workingHours" class="form-label required">{{ 'branches.workingHours' | translate }}</label>
+            <label for="workingHours" class="form-label">{{ 'branches.workingHours' | translate }}</label>
             <input
               id="workingHours"
               type="text"

@@ -81,11 +81,36 @@ export class BranchFormComponent implements OnInit {
   }
 
   private populateForm(branch: any) {
+    console.log('🏢 Populating form with branch data:', branch);
+    console.log('🏢 Branch data type:', typeof branch);
+    console.log('🏢 Branch keys:', Object.keys(branch || {}));
+    
+    // Enhanced debugging for description fields specifically
+    console.log('🏢 Description field analysis:', {
+      'branch.descriptionAr': branch.descriptionAr,
+      'branch.descriptionEn': branch.descriptionEn,
+      'branch.description': branch.description,
+      'descriptionAr exists': 'descriptionAr' in branch,
+      'descriptionEn exists': 'descriptionEn' in branch,
+      'description exists': 'description' in branch,
+      'descriptionAr type': typeof branch.descriptionAr,
+      'descriptionEn type': typeof branch.descriptionEn,
+      'descriptionAr value': JSON.stringify(branch.descriptionAr),
+      'descriptionEn value': JSON.stringify(branch.descriptionEn)
+    });
+    
     this.branchForm.patchValue({
+      // API returns 'name' field - use it for both nameAr and nameEn since API doesn't have separate fields
       nameAr: branch.nameAr || branch.name || '',
       nameEn: branch.nameEn || branch.name || '',
-      descriptionAr: branch.descriptionAr || branch.description || '',
-      descriptionEn: branch.descriptionEn || branch.description || '',
+      
+      // Enhanced description mapping with explicit handling
+      descriptionAr: branch.descriptionAr !== undefined && branch.descriptionAr !== null ? branch.descriptionAr : 
+                    (branch.description !== undefined && branch.description !== null ? branch.description : ''),
+      descriptionEn: branch.descriptionEn !== undefined && branch.descriptionEn !== null ? branch.descriptionEn : 
+                    (branch.description !== undefined && branch.description !== null ? branch.description : ''),
+      
+      // Direct field mappings from API response
       address: branch.address || '',
       city: branch.city || '',
       country: branch.country || '',
@@ -95,8 +120,37 @@ export class BranchFormComponent implements OnInit {
       longitude: branch.longitude || 55.2708,
       workingHours: branch.workingHours || '',
       isActive: branch.isActive !== undefined ? branch.isActive : true,
-      assignedStaffIds: branch.assignedStaffIds || [],
+      
+      // API has 'staff' array, map to assignedStaffIds
+      assignedStaffIds: Array.isArray(branch.assignedStaffIds) ? branch.assignedStaffIds : 
+                       Array.isArray(branch.staff) ? branch.staff.map((s: any) => s.id || s) : [],
+      
       notes: branch.notes || ''
+    });
+
+    console.log('🏢 Form populated with values:', this.branchForm.value);
+    console.log('🏢 After population - Form control values:', {
+      'Form nameAr': this.branchForm.get('nameAr')?.value,
+      'Form nameEn': this.branchForm.get('nameEn')?.value,
+      'Form descriptionAr': this.branchForm.get('descriptionAr')?.value,
+      'Form descriptionEn': this.branchForm.get('descriptionEn')?.value,
+      'Form descriptionAr control': this.branchForm.get('descriptionAr'),
+      'Form descriptionEn control': this.branchForm.get('descriptionEn')
+    });
+    
+    // Force update description fields if they're still empty
+    if (!this.branchForm.get('descriptionAr')?.value && branch.descriptionAr) {
+      console.log('🔧 Force setting descriptionAr:', branch.descriptionAr);
+      this.branchForm.get('descriptionAr')?.setValue(branch.descriptionAr);
+    }
+    if (!this.branchForm.get('descriptionEn')?.value && branch.descriptionEn) {
+      console.log('🔧 Force setting descriptionEn:', branch.descriptionEn);
+      this.branchForm.get('descriptionEn')?.setValue(branch.descriptionEn);
+    }
+    
+    console.log('🏢 Final form values after force update:', {
+      'descriptionAr': this.branchForm.get('descriptionAr')?.value,
+      'descriptionEn': this.branchForm.get('descriptionEn')?.value
     });
   }
 

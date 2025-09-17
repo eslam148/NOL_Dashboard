@@ -51,21 +51,24 @@ export interface BranchDto {
 }
 
 export interface CreateBranchDto {
-  nameAr: string;
-  nameEn: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
-  address: string;
-  city: string;
-  country: string;
-  phone: string;
-  email?: string;
-  latitude: number;
-  longitude: number;
-  workingHours: string;
-  isActive?: boolean;
-  assignedStaffIds?: string[];
-  notes?: string;
+  // Required fields matching backend AdminCreateBranchDto
+  nameAr: string;           // Required, StringLength(100, MinimumLength = 2)
+  nameEn: string;           // Required, StringLength(100, MinimumLength = 2)
+  address: string;          // Required, StringLength(200, MinimumLength = 5)
+  city: string;             // Required, StringLength(50, MinimumLength = 2)
+  country: string;          // Required, StringLength(50, MinimumLength = 2)
+  latitude: number;         // Required, Range(-90, 90)
+  longitude: number;        // Required, Range(-180, 180)
+  
+  // Optional fields
+  descriptionAr?: string;   // Optional, StringLength(500)
+  descriptionEn?: string;   // Optional, StringLength(500)
+  phone?: string;           // Optional, [Phone] attribute
+  email?: string;           // Optional, [EmailAddress] attribute
+  workingHours?: string;    // Optional, StringLength(500)
+  isActive?: boolean;       // Optional, defaults to true
+  assignedStaffIds?: string[]; // Optional, List<string>
+  notes?: string;           // Optional, StringLength(1000)
 }
 
 export interface UpdateBranchDto {
@@ -271,14 +274,42 @@ export class BranchApiService {
    * Create new branch
    */
   createBranch(branch: CreateBranchDto): Observable<BranchDto> {
+    // Log the request data for debugging
+    if (environment.logging.enableApiLogging) {
+      console.log('🏢 Branch API - Creating branch with data:', branch);
+      console.log('🏢 Branch API - Request URL:', this.baseUrl);
+      console.log('🏢 Branch API - Data types:', {
+        nameAr: typeof branch.nameAr,
+        nameEn: typeof branch.nameEn,
+        isActive: typeof branch.isActive,
+        latitude: typeof branch.latitude,
+        longitude: typeof branch.longitude
+      });
+    }
+
+    // Try sending the data directly first, but if that fails, we might need to wrap it
     return this.http.post<ApiResponse<BranchDto>>(this.baseUrl, branch).pipe(
       map(response => {
+        if (environment.logging.enableApiLogging) {
+          console.log('🏢 Branch API - Response:', response);
+        }
+        
         if (!response.succeeded) {
           throw new Error(response.message || 'Failed to create branch');
         }
         return response.data;
       }),
-      catchError(this.handleError)
+      catchError((error) => {
+        if (environment.logging.enableApiLogging) {
+          console.error('🏢 Branch API - Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            url: error.url,
+            error: error.error
+          });
+        }
+        return this.handleError(error);
+      })
     );
   }
 

@@ -1,104 +1,125 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { CarApiService } from '../../../../core/services/car-api.service';
+import { AdminCarDto } from '../../../../core/models/api.models';
 
 @Component({
   selector: 'app-vehicle-detail',
   standalone: true,
   imports: [CommonModule, RouterModule, TranslatePipe],
-  template: `
-    <div class="vehicle-detail-container">
-      <div class="page-header">
-        <div class="flex items-center gap-4">
-          <a routerLink="/car-rental/vehicles" class="btn btn-ghost btn-sm">
-            <i class="bi bi-arrow-left"></i>
-            {{ 'common.back' | translate }}
-          </a>
-          <div>
-            <h1 class="page-title">{{ 'vehicles.vehicleDetails' | translate }}</h1>
-            <p class="page-subtitle">{{ 'vehicles.vehicleDetailsDesc' | translate }}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="detail-placeholder">
-        <div class="placeholder-icon">
-          <i class="bi bi-car-front"></i>
-        </div>
-        <h3>{{ 'vehicles.detailComingSoon' | translate }}</h3>
-        <p>{{ 'vehicles.detailComingSoonDesc' | translate }}</p>
-        <a routerLink="/car-rental/vehicles" class="btn btn-primary">
-          <i class="bi bi-arrow-left"></i>
-          {{ 'common.back' | translate }}
-        </a>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .vehicle-detail-container {
-      padding: 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    
-    .page-header {
-      margin-bottom: 2rem;
-    }
-    
-    .page-title {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .page-subtitle {
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    
-    .detail-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--white);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .placeholder-icon {
-      width: 4rem;
-      height: 4rem;
-      border-radius: var(--radius-full);
-      background: var(--gray-100);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    .placeholder-icon i {
-      font-size: 1.5rem;
-      color: var(--text-muted);
-    }
-    
-    .detail-placeholder h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 0.75rem 0;
-    }
-    
-    .detail-placeholder p {
-      color: var(--text-secondary);
-      margin: 0 0 2rem 0;
-      max-width: 400px;
-    }
-  `]
+  templateUrl: './vehicle-detail.component.html',
+  styleUrls: ['./vehicle-detail.component.css']
 })
-export class VehicleDetailComponent { }
+export class VehicleDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private carApiService = inject(CarApiService);
+
+  car = signal<AdminCarDto | null>(null);
+  isLoading = signal(false);
+  errorMessage = signal<string>('');
+  carId = signal<number | null>(null);
+
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.carId.set(parseInt(id));
+      this.loadCarDetails(parseInt(id));
+    } else {
+      this.errorMessage.set('No car ID provided');
+    }
+  }
+
+  private loadCarDetails(id: number) {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.carApiService.getCarById(id).subscribe({
+      next: (car) => {
+        console.log('🚗 Car details loaded:', car);
+        this.car.set(car);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('❌ Error loading car details:', error);
+        this.errorMessage.set('Failed to load car details');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'available': return 'badge badge-success';
+      case 'rented': return 'badge badge-primary';
+      case 'maintenance': return 'badge badge-warning';
+      case 'outofservice': return 'badge badge-error';
+      case 'reserved': return 'badge badge-info';
+      default: return 'badge badge-gray';
+    }
+  }
+
+  getFuelTypeIcon(fuelType: string): string {
+    switch (fuelType.toLowerCase()) {
+      case 'gasoline': return 'bi-fuel-pump';
+      case 'diesel': return 'bi-fuel-pump-diesel';
+      case 'electric': return 'bi-lightning-charge';
+      case 'hybrid': return 'bi-battery-half';
+      case 'pluginhybrid': return 'bi-plug';
+      default: return 'bi-fuel-pump';
+    }
+  }
+
+  getTransmissionIcon(transmission: string): string {
+    switch (transmission.toLowerCase()) {
+      case 'manual': return 'bi-gear';
+      case 'automatic': return 'bi-gear-fill';
+      default: return 'bi-gear';
+    }
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  formatDate(dateString: string | undefined): string {
+    if (!dateString) {
+      return 'N/A';
+    }
+    return new Date(dateString).toLocaleDateString();
+  }
+
+  onEdit() {
+    const id = this.carId();
+    if (id) {
+      this.router.navigate(['/car-rental/vehicles', id, 'edit']);
+    }
+  }
+
+  onDelete() {
+    const car = this.car();
+    const id = this.carId();
+    
+    if (car && id && confirm(`Are you sure you want to delete ${car.brand} ${car.model}?`)) {
+      this.carApiService.deleteCar(id).subscribe({
+        next: () => {
+          console.log('✅ Car deleted successfully');
+          this.router.navigate(['/car-rental/vehicles']);
+        },
+        error: (error) => {
+          console.error('❌ Error deleting car:', error);
+          this.errorMessage.set('Failed to delete car');
+        }
+      });
+    }
+  }
+
+  onBack() {
+    this.router.navigate(['/car-rental/vehicles']);
+  }
+}

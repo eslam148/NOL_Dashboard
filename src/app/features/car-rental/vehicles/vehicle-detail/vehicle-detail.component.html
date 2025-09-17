@@ -1,0 +1,330 @@
+<div class="vehicle-detail-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-4">
+      <button class="btn btn-ghost btn-sm" (click)="onBack()">
+        <i class="bi bi-arrow-left"></i>
+        Back
+      </button>
+      <div>
+        <h1 class="page-title">Vehicle Details</h1>
+        <p class="page-subtitle" *ngIf="car()">{{ car()!.brand }} {{ car()!.model }} ({{ car()!.year }})</p>
+      </div>
+    </div>
+    <div class="flex gap-3" *ngIf="car() && !isLoading()">
+      <button class="btn btn-secondary" (click)="onEdit()">
+        <i class="bi bi-pencil"></i>
+        Edit
+      </button>
+      <button class="btn btn-error" (click)="onDelete()">
+        <i class="bi bi-trash"></i>
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p class="text-muted">{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="alert alert-error" *ngIf="errorMessage() && !isLoading()">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Vehicle Details -->
+  <div class="vehicle-details" *ngIf="!isLoading() && car()">
+    <div class="details-grid">
+      <!-- Vehicle Image -->
+      <div class="detail-section vehicle-image-section">
+        <div class="vehicle-image">
+          <img 
+            [src]="car()!.imageUrl || '/assets/car-placeholder.jpg'" 
+            [alt]="car()!.brand + ' ' + car()!.model"
+            (error)="$any($event.target).src='/assets/car-placeholder.jpg'"
+          />
+          <div class="status-overlay">
+            <span [class]="getStatusBadgeClass(car()!.status)">
+              <i class="bi bi-circle-fill status-icon"></i>
+              {{ car()!.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Information -->
+      <div class="detail-section">
+        <h2 class="section-title">Basic Information</h2>
+        <div class="detail-items">
+          <div class="detail-item">
+            <span class="detail-label">Brand</span>
+            <span class="detail-value">{{ car()!.brand }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Model</span>
+            <span class="detail-value">{{ car()!.model }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Year</span>
+            <span class="detail-value">{{ car()!.year }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Color</span>
+            <span class="detail-value">{{ car()!.color }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Category</span>
+            <span class="detail-value">{{ car()!.category.name }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Mileage</span>
+            <span class="detail-value">{{ car()!.mileage | number }} km</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Stats -->
+      <div class="detail-section">
+        <h2 class="section-title">Performance</h2>
+        <div class="detail-items">
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-calendar-check"></i>
+              Total Bookings
+            </span>
+            <span class="detail-value">{{ car()!.totalBookings }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-currency-dollar"></i>
+              Total Revenue
+            </span>
+            <span class="detail-value pricing-highlight">{{ formatCurrency(car()!.totalRevenue) }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-graph-up"></i>
+              Utilization Rate
+            </span>
+            <span class="detail-value">{{ car()!.utilizationRate }}%</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-star"></i>
+              Rating
+            </span>
+            <span class="detail-value">{{ car()!.avrageRate }}/5 ({{ car()!.rateCount }} reviews)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="detail-section">
+        <h2 class="section-title">Pricing</h2>
+        <div class="detail-items">
+          <div class="detail-item">
+            <span class="detail-label">Daily Rate</span>
+            <span class="detail-value pricing-highlight">{{ formatCurrency(car()!.dailyPrice) }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Weekly Rate</span>
+            <span class="detail-value pricing-highlight">{{ formatCurrency(car()!.weeklyPrice) }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Monthly Rate</span>
+            <span class="detail-value pricing-highlight">{{ formatCurrency(car()!.monthlyPrice) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Specifications -->
+      <div class="detail-section">
+        <h2 class="section-title">Specifications</h2>
+        <div class="detail-items">
+          <div class="detail-item">
+            <span class="detail-label">
+              <i [class]="getFuelTypeIcon(car()!.fuelType)"></i>
+              Fuel Type
+            </span>
+            <span class="detail-value">{{ car()!.fuelType }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i [class]="getTransmissionIcon(car()!.transmissionType)"></i>
+              Transmission
+            </span>
+            <span class="detail-value">{{ car()!.transmissionType }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-people"></i>
+              Seating Capacity
+            </span>
+            <span class="detail-value">{{ car()!.seatingCapacity }} seats</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-door-open"></i>
+              Number of Doors
+            </span>
+            <span class="detail-value">{{ car()!.numberOfDoors }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-speedometer2"></i>
+              Maximum Speed
+            </span>
+            <span class="detail-value">{{ car()!.maxSpeed }} km/h</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">
+              <i class="bi bi-wrench"></i>
+              Engine
+            </span>
+            <span class="detail-value">{{ car()!.engine }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="detail-section span-2">
+        <h2 class="section-title">Location & Branch</h2>
+        <div class="detail-items">
+          <div class="detail-item">
+            <span class="detail-label">Branch</span>
+            <span class="detail-value">{{ car()!.branch.name }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Address</span>
+            <span class="detail-value">{{ car()!.branch.address }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">City & Country</span>
+            <span class="detail-value">{{ car()!.branch.city }}, {{ car()!.branch.country }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Phone</span>
+            <a [href]="'tel:' + car()!.branch.phone" class="detail-link">{{ car()!.branch.phone }}</a>
+          </div>
+          
+          <div class="detail-item" *ngIf="car()!.branch.email">
+            <span class="detail-label">Email</span>
+            <a [href]="'mailto:' + car()!.branch.email" class="detail-link">{{ car()!.branch.email }}</a>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Coordinates</span>
+            <span class="detail-value">{{ car()!.branch.latitude }}, {{ car()!.branch.longitude }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="info-section" *ngIf="car()!.description">
+        <h2 class="section-title">Description</h2>
+        <div class="section-content">
+          <p class="description-text">{{ car()!.description }}</p>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="info-section" *ngIf="car()!.features">
+        <h2 class="section-title">Features</h2>
+        <div class="section-content">
+          <div class="features-list">
+            <span class="feature-tag" *ngFor="let feature of car()!.features?.split(',')">
+              {{ feature.trim() }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance History -->
+      <div class="info-section" *ngIf="car()!.maintenanceHistory && car()!.maintenanceHistory.length > 0">
+        <h2 class="section-title">{{ 'vehicles.maintenanceHistory' | translate }}</h2>
+        
+        <div class="maintenance-list">
+          <div class="maintenance-item" *ngFor="let record of car()!.maintenanceHistory">
+            <div class="maintenance-date">
+              <i class="bi bi-calendar"></i>
+              {{ formatDate(record.maintenanceDate) }}
+            </div>
+            <div class="maintenance-details">
+              <h4>{{ record.maintenanceType }}</h4>
+              <p>{{ record.description }}</p>
+              <span class="maintenance-cost">{{ formatCurrency(record.cost) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="info-section">
+        <h2 class="section-title">Timeline</h2>
+        <div class="section-content">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-icon">
+                <i class="bi bi-plus-circle"></i>
+              </div>
+              <div class="timeline-content">
+                <h4>Added</h4>
+                <p>{{ formatDate(car()!.createdAt) }}</p>
+              </div>
+            </div>
+            
+            <div class="timeline-item">
+              <div class="timeline-icon">
+                <i class="bi bi-pencil"></i>
+              </div>
+              <div class="timeline-content">
+                <h4>Last Updated</h4>
+                <p>{{ formatDate(car()!.updatedAt) }}</p>
+              </div>
+            </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>Last Booking</h4>
+              <p>{{ formatDate(car()!.lastBookingDate) }}</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-icon">
+              <i class="bi bi-wrench"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>Next Maintenance</h4>
+              <p>{{ formatDate(car()!.nextMaintenanceDate) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
