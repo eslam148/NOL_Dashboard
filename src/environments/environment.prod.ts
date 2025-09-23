@@ -3,7 +3,7 @@ export const environment = {
   
   // API Configuration
   api: {
-    baseUrl: 'https://your-production-api-url.com/api',
+    baseUrl: 'https://nolrental.runasp.net/api',
     timeout: 30000,
     retryAttempts: 3,
     retryDelay: 1000

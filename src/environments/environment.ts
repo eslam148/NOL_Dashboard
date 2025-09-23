@@ -3,7 +3,8 @@ export const environment = {
   
   // API Configuration
   api: {
-    baseUrl: 'https://localhost:44384/api',
+    // baseUrl: 'https://localhost:44384/api',
+    baseUrl: 'https://nolrental.runasp.net/api',
     timeout: 30000,
     retryAttempts: 3,
     retryDelay: 1000
