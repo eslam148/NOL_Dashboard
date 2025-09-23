@@ -29,12 +29,16 @@ export class AdvertisementFormComponent implements OnInit {
   advertisementId = signal<string | null>(null);
 
   // Advertisement types and options
-  advertisementTypes: { value: AdvertisementType; label: string }[] = [
-    { value: 'banner', label: 'advertisements.banner' },
-    { value: 'popup', label: 'advertisements.popup' },
-    { value: 'sidebar', label: 'advertisements.sidebar' },
-    { value: 'featured', label: 'advertisements.featured' },
-    { value: 'promotion', label: 'advertisements.promotion' }
+  // Use server enums for type to match API exactly
+  advertisementTypes = [
+    { value: 'Special', label: 'advertisements.special' },
+    { value: 'Discount', label: 'advertisements.discount' },
+    { value: 'Seasonal', label: 'advertisements.seasonal' },
+    { value: 'Flash', label: 'advertisements.flash' },
+    { value: 'Weekend', label: 'advertisements.weekend' },
+    { value: 'Holiday', label: 'advertisements.holiday' },
+    { value: 'NewArrival', label: 'advertisements.newArrival' },
+    { value: 'Popular', label: 'advertisements.popular' }
   ];
 
   genderOptions = [
@@ -54,20 +58,29 @@ export class AdvertisementFormComponent implements OnInit {
       // Basic Information
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
-      type: ['', Validators.required],
+      type: ['Discount', Validators.required],
       status: ['draft', Validators.required],
       
       // Campaign Duration
-      startDate: ['', Validators.required],
-      endDate: ['', Validators.required],
+      startDate: [this.formatDateForInput(new Date()), Validators.required],
+      endDate: [this.formatDateForInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), Validators.required],
       
       // Media
-      imageUrl: ['', Validators.required],
+      imageUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\//)]],
       targetUrl: [''],
       
       // Budget & Priority
       budget: [''],
       priority: [1, [Validators.required, Validators.min(1), Validators.max(10)]],
+      // Pricing & Flags to match API
+      price: [0, [Validators.min(0), Validators.max(10000)]],
+      discountPercentage: [null, [Validators.min(0), Validators.max(100)]],
+      discountPrice: [null, [Validators.min(0), Validators.max(10000)]],
+      isFeatured: [false],
+      isActive: [true],
+      carId: [null],
+      categoryId: [null],
+      notes: ['', [Validators.maxLength(500)]],
       
       // Target Audience
       ageMin: [18, [Validators.min(18), Validators.max(100)]],
@@ -76,8 +89,8 @@ export class AdvertisementFormComponent implements OnInit {
       locations: [''],
       interests: [''],
       
-      // Branch Selection
-      branchIds: ['']
+      // Branch Selection (multi-select)
+      branchIds: [[]]
     });
   }
 
@@ -175,19 +188,24 @@ export class AdvertisementFormComponent implements OnInit {
     const interests = formValue.interests ? 
       formValue.interests.split(',').map((i: string) => i.trim()).filter((i: string) => i) : [];
     
-    const branchIds = formValue.branchIds ? 
-      formValue.branchIds.split(',').map((b: string) => b.trim()).filter((b: string) => b) : [];
+    // branchIds may be an array (from multi-select) or a comma-separated string; normalize to string[]
+    let branchIds: string[] = [];
+    if (Array.isArray(formValue.branchIds)) {
+      branchIds = formValue.branchIds.map((b: any) => String(b)).filter((b: string) => b);
+    } else if (typeof formValue.branchIds === 'string') {
+      branchIds = formValue.branchIds.split(',').map((b: string) => b.trim()).filter((b: string) => b);
+    }
 
     return {
       title: formValue.title,
       description: formValue.description,
       type: formValue.type,
-      status: formValue.status,
+      status: formValue.isActive ? 'active' : 'paused',
       startDate: new Date(formValue.startDate),
       endDate: new Date(formValue.endDate),
       imageUrl: formValue.imageUrl,
       targetUrl: formValue.targetUrl || undefined,
-      budget: formValue.budget ? parseFloat(formValue.budget) : undefined,
+      budget: formValue.price ?? (formValue.budget ? parseFloat(formValue.budget) : undefined),
       priority: parseInt(formValue.priority),
       targetAudience: {
         ageRange: {
@@ -196,9 +214,18 @@ export class AdvertisementFormComponent implements OnInit {
         },
         gender: formValue.gender,
         location: locations.length > 0 ? locations : undefined,
-        interests: interests.length > 0 ? interests : undefined
+        interests: [
+          ...(interests.length > 0 ? interests : []),
+          ...(formValue.isFeatured ? ['featured'] : [])
+        ]
       },
       branchIds: branchIds.length > 0 ? branchIds : undefined,
+      // Extra metadata (unused in mapping but kept for future)
+      discountPercentage: formValue.discountPercentage ?? undefined,
+      discountPrice: formValue.discountPrice ?? undefined,
+      carId: formValue.carId ?? undefined,
+      categoryId: formValue.categoryId ?? undefined,
+      notes: formValue.notes || undefined,
       createdBy: '1' // This should come from auth service
     };
   }

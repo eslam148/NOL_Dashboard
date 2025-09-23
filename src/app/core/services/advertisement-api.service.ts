@@ -10,23 +10,28 @@ import {
 
 export interface AdminAdvertisementDto {
   id: number;
-  titleAr: string;
-  titleEn: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
-  imageUrl: string;
-  linkUrl?: string;
-  type: string;
-  status: string;
+  title: string;
+  description: string;
+  price?: number;
+  discountPrice?: number;
+  discountPercentage?: number;
   startDate: string;
   endDate: string;
-  displayOrder: number;
-  targetAudience?: string;
-  clickCount: number;
-  impressionCount: number;
-  clickThroughRate: number;
+  imageUrl: string;
+  type: string; // e.g., Discount, Seasonal
+  status: string; // Draft, Active, Paused, Expired, Canceled
+  viewCount?: number;
+  clickCount?: number;
+  isFeatured?: boolean;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
+  createdByAdminName?: string;
+  clickThroughRate?: number;
+  conversionCount?: number;
+  conversionRate?: number;
+  revenueGenerated?: number;
+  performanceScore?: number;
 }
 
 export interface AdminCreateAdvertisementDto {
@@ -34,28 +39,42 @@ export interface AdminCreateAdvertisementDto {
   titleEn: string;
   descriptionAr?: string;
   descriptionEn?: string;
-  imageUrl: string;
-  linkUrl?: string;
-  type: 'Banner' | 'Popup' | 'Sidebar';
-  status: 'Active' | 'Inactive' | 'Scheduled';
+  type: 'Special' | 'Discount' | 'Seasonal' | 'Flash' | 'Weekend' | 'Holiday' | 'NewArrival' | 'Popular';
   startDate: string;
   endDate: string;
-  displayOrder?: number;
-  targetAudience?: string;
+  price?: number;
+  imageUrl: string;
+  discountPercentage?: number;
+  discountPrice?: number;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  isActive?: boolean;
+  carId?: number;
+  categoryId?: number;
+  notes?: string;
 }
 
 export interface AdvertisementFilterDto {
-  title?: string;
-  status?: 'Active' | 'Inactive' | 'Scheduled' | 'Expired';
-  type?: 'Banner' | 'Popup' | 'Sidebar';
+  type?: string;
+  status?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  carId?: number;
+  categoryId?: number;
+  createdByAdminId?: string;
   startDateFrom?: string;
   startDateTo?: string;
   endDateFrom?: string;
   endDateTo?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  createdDateFrom?: string;
+  createdDateTo?: string;
+  minDiscountPercentage?: number;
+  maxDiscountPercentage?: number;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  searchTerm?: string;
 }
 
 export interface UpdateAdvertisementStatusDto {
@@ -105,64 +124,63 @@ export class AdvertisementApiService {
     let params = new HttpParams();
     
     if (filter) {
-      if (filter.title) params = params.set('title', filter.title);
-      if (filter.status) params = params.set('status', filter.status);
-      if (filter.type) params = params.set('type', filter.type);
-      if (filter.startDateFrom) params = params.set('startDateFrom', filter.startDateFrom);
-      if (filter.startDateTo) params = params.set('startDateTo', filter.startDateTo);
-      if (filter.endDateFrom) params = params.set('endDateFrom', filter.endDateFrom);
-      if (filter.endDateTo) params = params.set('endDateTo', filter.endDateTo);
-      if (filter.sortBy) params = params.set('sortBy', filter.sortBy);
-      if (filter.sortOrder) params = params.set('sortOrder', filter.sortOrder);
-      if (filter.page) params = params.set('page', filter.page.toString());
-      if (filter.pageSize) params = params.set('pageSize', filter.pageSize.toString());
+      const setIfString = (key: string, value?: string) => {
+        const v = (value ?? '').trim();
+        if (v) params = params.set(key, v);
+      };
+      const setIfBool = (key: string, value?: boolean) => {
+        if (value === true || value === false) params = params.set(key, String(value));
+      };
+      const setIfNumber = (key: string, value?: number) => {
+        if (value !== undefined && value !== null && !Number.isNaN(value)) params = params.set(key, String(value));
+      };
+
+      setIfString('searchTerm', filter.searchTerm);
+     
+       setIfBool('isFeatured', filter.isFeatured);
+      setIfNumber('carId', filter.carId);
+      setIfNumber('categoryId', filter.categoryId);
+      setIfString('createdByAdminId', filter.createdByAdminId);
+
+      setIfString('startDateFrom', filter.startDateFrom);
+      setIfString('startDateTo', filter.startDateTo);
+      setIfString('endDateFrom', filter.endDateFrom);
+      setIfString('endDateTo', filter.endDateTo);
+      setIfString('createdDateFrom', filter.createdDateFrom);
+      setIfString('createdDateTo', filter.createdDateTo);
+
+      setIfNumber('minDiscountPercentage', filter.minDiscountPercentage);
+      setIfNumber('maxDiscountPercentage', filter.maxDiscountPercentage);
+
+      setIfString('sortBy', filter.sortBy);
+      setIfString('sortOrder', filter.sortOrder);
+      setIfNumber('page', filter.page);
+      setIfNumber('pageSize', filter.pageSize);
     }
 
-    return this.http.get<ApiResponse<AdminAdvertisementDto[]>>(this.baseUrl, { params }).pipe(
+    return this.http.get<ApiResponse<PaginatedResponse<AdminAdvertisementDto>>>(this.baseUrl, { params }).pipe(
       map(response => {
-        // Add debugging logs
         if (environment.logging.enableApiLogging) {
           console.log('Advertisement API Response:', response);
         }
-        
         if (!response) {
           throw new Error('No response received from advertisement API');
         }
-        
         if (!response.succeeded) {
           throw new Error(response.message || 'Failed to fetch advertisements');
         }
-        
         if (!response.data) {
-          console.warn('Advertisement API response succeeded but data is null/undefined:', response);
-          // Return empty paginated response structure
           return {
             data: [],
             totalCount: 0,
             currentPage: 1,
-            pageSize: 10,
+            pageSize: filter?.pageSize || 10,
             totalPages: 0,
             hasPreviousPage: false,
             hasNextPage: false
-          };
+          } as PaginatedResponse<AdminAdvertisementDto>;
         }
-        
-        // The API returns an array directly, so we need to wrap it in a paginated response structure
-        const advertisementArray = Array.isArray(response.data) ? response.data : [];
-        const pageSize = filter?.pageSize || 10;
-        const currentPage = filter?.page || 1;
-        const totalCount = advertisementArray.length;
-        const totalPages = Math.ceil(totalCount / pageSize);
-        
-        return {
-          data: advertisementArray,
-          totalCount: totalCount,
-          currentPage: currentPage,
-          pageSize: pageSize,
-          totalPages: totalPages,
-          hasPreviousPage: currentPage > 1,
-          hasNextPage: currentPage < totalPages
-        } as PaginatedResponse<AdminAdvertisementDto>;
+        return response.data as PaginatedResponse<AdminAdvertisementDto>;
       }),
       catchError(this.handleError)
     );

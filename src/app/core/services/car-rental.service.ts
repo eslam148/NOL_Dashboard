@@ -13,6 +13,7 @@ import { AdvertisementApiService } from './advertisement-api.service';
 import { BranchApiService } from './branch-api.service';
 import { DashboardApiService } from './dashboard-api.service';
 import { CustomerApiService } from './customer-api.service';
+import { ExtrasApiService, ExtraDto } from './extras-api.service';
 import {
   AdminCarDto,
   AdminCreateCarDto,
@@ -51,6 +52,7 @@ export class CarRentalService {
   private branchApiService = inject(BranchApiService);
   private dashboardApiService = inject(DashboardApiService);
   private customerApiService = inject(CustomerApiService);
+  private extrasApiService = inject(ExtrasApiService);
   private isLoading = signal(false);
 
   // Feature flags for API integration
@@ -1056,6 +1058,21 @@ export class CarRentalService {
 
   getAdditionalServices(): Observable<AdditionalService[]> {
     this.isLoading.set(true);
+    if (this.useRealApi) {
+      return this.extrasApiService.getActive().pipe(
+        map((extras: ExtraDto[]) => {
+          const mapped = extras.map(e => this.mapExtraDtoToAdditionalService(e));
+          this.isLoading.set(false);
+          return mapped;
+        }),
+        catchError(error => {
+          console.error('Error fetching extras from API:', error);
+          this.isLoading.set(false);
+          return of([]);
+        })
+      );
+    }
+
     return of([...this.mockServices]).pipe(
       delay(800),
       map(services => {
@@ -1066,6 +1083,16 @@ export class CarRentalService {
   }
 
   getServiceById(id: string): Observable<AdditionalService | null> {
+    if (this.useRealApi) {
+      return this.extrasApiService.getById(parseInt(id)).pipe(
+        map((dto: ExtraDto) => this.mapExtraDtoToAdditionalService(dto)),
+        catchError(error => {
+          console.error('Error fetching extra by id:', error);
+          return of(null);
+        })
+      );
+    }
+
     const service = this.mockServices.find(s => s.id === id) || null;
     return of(service).pipe(delay(500));
   }
@@ -1114,6 +1141,59 @@ export class CarRentalService {
       return of(service).pipe(delay(500));
     }
     throw new Error('Service not found');
+  }
+
+  private mapExtraDtoToAdditionalService(dto: ExtraDto): AdditionalService {
+    return {
+      id: dto.id.toString(),
+      name: dto.name,
+      description: dto.description,
+      category: this.mapExtraTypeToCategory(dto.extraType),
+      dailyRate: dto.dailyPrice,
+      weeklyRate: dto.weeklyPrice,
+      monthlyRate: dto.monthlyPrice,
+      isAvailable: true,
+      maxQuantity: 10,
+      icon: this.mapExtraTypeToIcon(dto.extraType),
+      image: undefined,
+      features: undefined,
+      restrictions: undefined,
+      minimumRentalDays: undefined,
+      availableAtBranches: undefined,
+      popularityScore: undefined,
+      discountPercentage: undefined,
+      tags: undefined,
+      notes: undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: 'api'
+    };
+  }
+
+  private mapExtraTypeToCategory(type: string): 'navigation' | 'safety' | 'comfort' | 'insurance' | 'equipment' {
+    const t = (type || '').toLowerCase();
+    if (t === 'gps' || t === 'wifihotspot' || t === 'phonecharger' || t === 'bluetooth') return 'navigation';
+    if (t === 'insurance') return 'insurance';
+    if (t === 'childseat' || t === 'additionaldriver') return 'safety';
+    if (t === 'roofrack' || t === 'skirack' || t === 'bikerack') return 'equipment';
+    return 'comfort';
+  }
+
+  private mapExtraTypeToIcon(type: string): string {
+    const t = (type || '').toLowerCase();
+    switch (t) {
+      case 'gps': return 'bi-compass';
+      case 'childseat': return 'bi-baby';
+      case 'additionaldriver': return 'bi-person-plus';
+      case 'insurance': return 'bi-shield-check';
+      case 'wifihotspot': return 'bi-wifi';
+      case 'phonecharger': return 'bi-phone';
+      case 'bluetooth': return 'bi-bluetooth';
+      case 'roofrack': return 'bi-building';
+      case 'skirack': return 'bi-snow';
+      case 'bikerack': return 'bi-bicycle';
+      default: return 'bi-plus-circle';
+    }
   }
 
   // Admin User Management
@@ -3229,15 +3309,14 @@ export class CarRentalService {
   // Advertisement conversion methods
   private convertAdvertisementFilterToDto(filter?: AdvertisementFilter): any {
     if (!filter) return {};
-
-    return {
-      status: this.mapAdvertisementStatusToApiStatus(filter.status),
-      type: this.mapAdvertisementTypeToApiType(filter.type),
-      startDateFrom: filter.startDate?.toISOString(),
-      startDateTo: filter.endDate?.toISOString(),
-      page: 1,
-      pageSize: 50
-    };
+    const dto: any = {};
+    if (filter.status) dto.status = this.mapAdvertisementStatusToApiStatus(filter.status);
+    if (filter.type) dto.type = this.mapAdvertisementTypeToApiType(filter.type);
+    if (filter.startDate) dto.startDateFrom = filter.startDate.toISOString();
+    if (filter.endDate) dto.startDateTo = filter.endDate.toISOString();
+    dto.page = 1;
+    dto.pageSize = 50;
+    return dto;
   }
 
   private convertAdminAdvertisementDtosToAdvertisements(advertisements: any[]): Advertisement[] {
@@ -3264,15 +3343,15 @@ export class CarRentalService {
 
     return {
       id: advertisement.id?.toString() || '',
-      title: advertisement.titleEn || advertisement.titleAr || '',
-      description: advertisement.descriptionEn || advertisement.descriptionAr || '',
+      title: advertisement.title || advertisement.titleEn || advertisement.titleAr || '',
+      description: advertisement.description || advertisement.descriptionEn || advertisement.descriptionAr || '',
       imageUrl: advertisement.imageUrl || '',
       targetUrl: advertisement.linkUrl,
       type: this.mapApiTypeToAdvertisementType(advertisement.type || 'Banner'),
       status: this.mapApiStatusToAdvertisementStatus(advertisement.status || 'Active'),
       startDate: advertisement.startDate ? new Date(advertisement.startDate) : new Date(),
       endDate: advertisement.endDate ? new Date(advertisement.endDate) : new Date(),
-      priority: advertisement.displayOrder || 0,
+      priority: (advertisement.sortOrder ?? advertisement.displayOrder) || 0,
       branchIds: [], // API doesn't provide branch IDs directly
       targetAudience: {
         gender: 'all',
@@ -3292,40 +3371,38 @@ export class CarRentalService {
 
   private convertAdvertisementToCreateDto(advertisement: Omit<Advertisement, 'id' | 'createdAt' | 'updatedAt' | 'impressions' | 'clicks' | 'conversions'>): any {
     return {
-      titleAr: advertisement.title, // Using title for both languages for now
+      titleAr: advertisement.title,
       titleEn: advertisement.title,
       descriptionAr: advertisement.description,
       descriptionEn: advertisement.description,
-      imageUrl: advertisement.imageUrl,
-      linkUrl: advertisement.targetUrl,
       type: this.mapAdvertisementTypeToApiType(advertisement.type),
-      status: this.mapAdvertisementStatusToApiStatus(advertisement.status),
       startDate: advertisement.startDate.toISOString(),
       endDate: advertisement.endDate.toISOString(),
-      displayOrder: advertisement.priority,
-      targetAudience: advertisement.targetAudience
+      price: advertisement.budget ?? 0,
+      imageUrl: advertisement.imageUrl,
+      discountPercentage: undefined,
+      discountPrice: undefined,
+      isFeatured: advertisement.targetAudience?.interests?.includes('featured') || false,
+      sortOrder: advertisement.priority ?? 0,
+      isActive: advertisement.status ? this.mapAdvertisementStatusToApiStatus(advertisement.status) === 'Active' : true,
+      carId: undefined,
+      categoryId: undefined,
+      notes: undefined
     };
   }
 
   private convertPartialAdvertisementToUpdateDto(advertisement: Partial<Advertisement>): any {
     const updateDto: any = {};
 
-    if (advertisement.title) {
-      updateDto.titleAr = advertisement.title;
-      updateDto.titleEn = advertisement.title;
-    }
-    if (advertisement.description) {
-      updateDto.descriptionAr = advertisement.description;
-      updateDto.descriptionEn = advertisement.description;
-    }
-    if (advertisement.imageUrl) updateDto.imageUrl = advertisement.imageUrl;
-    if (advertisement.targetUrl) updateDto.linkUrl = advertisement.targetUrl;
+    if (advertisement.title) { updateDto.titleAr = advertisement.title; updateDto.titleEn = advertisement.title; }
+    if (advertisement.description) { updateDto.descriptionAr = advertisement.description; updateDto.descriptionEn = advertisement.description; }
     if (advertisement.type) updateDto.type = this.mapAdvertisementTypeToApiType(advertisement.type);
-    if (advertisement.status) updateDto.status = this.mapAdvertisementStatusToApiStatus(advertisement.status);
     if (advertisement.startDate) updateDto.startDate = advertisement.startDate.toISOString();
     if (advertisement.endDate) updateDto.endDate = advertisement.endDate.toISOString();
-    if (advertisement.priority !== undefined) updateDto.displayOrder = advertisement.priority;
-    if (advertisement.targetAudience) updateDto.targetAudience = advertisement.targetAudience;
+    if (advertisement.budget !== undefined) updateDto.price = advertisement.budget;
+    if (advertisement.imageUrl) updateDto.imageUrl = advertisement.imageUrl;
+    if (advertisement.priority !== undefined) updateDto.sortOrder = advertisement.priority;
+    if (advertisement.status) updateDto.isActive = this.mapAdvertisementStatusToApiStatus(advertisement.status) === 'Active';
 
     return updateDto;
   }
@@ -3355,18 +3432,20 @@ export class CarRentalService {
     return statusMap[status] || 'active';
   }
 
-  private mapAdvertisementTypeToApiType(type?: AdvertisementType): string {
-    if (!type) return 'Banner';
-
-    const typeMap: Record<AdvertisementType, string> = {
-      'banner': 'Banner',
-      'popup': 'Popup',
-      'sidebar': 'Sidebar',
-      'featured': 'Banner', // Map featured to Banner since API doesn't have featured
-      'promotion': 'Banner' // Map promotion to Banner since API doesn't have promotion
+  private mapAdvertisementTypeToApiType(type?: any): string {
+    if (!type) return 'Discount';
+    // Pass through if already one of the server enums
+    const serverTypes = ['Special','Discount','Seasonal','Flash','Weekend','Holiday','NewArrival','Popular'];
+    if (serverTypes.includes(type)) return type;
+    // Backward compatibility mapping from old UI types
+    const legacyMap: Record<string, string> = {
+      'banner': 'Special',
+      'popup': 'Special',
+      'sidebar': 'Special',
+      'featured': 'NewArrival',
+      'promotion': 'Discount'
     };
-
-    return typeMap[type] || 'Banner';
+    return legacyMap[String(type)] || 'Discount';
   }
 
   private mapApiTypeToAdvertisementType(type: string): AdvertisementType {
