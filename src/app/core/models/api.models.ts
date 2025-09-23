@@ -349,6 +349,7 @@ export interface AdminCarDto {
   model: string;  // API returns single model field, not bilingual
   year: number;
   color: string;  // API returns single color field, not bilingual
+  plateNumber?: string; // Optional: include if API provides plate number
   seatingCapacity: number;
   numberOfDoors: number;
   maxSpeed: number;

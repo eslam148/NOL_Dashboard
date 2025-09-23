@@ -5,9 +5,11 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
+import { CarApiService } from '../../../../core/services/car-api.service';
 import { Vehicle, VehicleCategory, VehicleStatus, Branch } from '../../../../core/models/car-rental.models';
 import { 
   AdminCreateCarDto, 
+  AdminCarDto,
   FuelType, 
   TransmissionType, 
   CarStatus, 
@@ -25,6 +27,7 @@ import {
 export class VehicleFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private carRentalService = inject(CarRentalService);
+  private carApiService = inject(CarApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private translationService = inject(TranslationService);
@@ -69,6 +72,10 @@ export class VehicleFormComponent implements OnInit {
   ];
 
   ngOnInit() {
+    console.log('🚗 VehicleFormComponent ngOnInit called');
+    console.log('🚗 Current route URL:', this.router.url);
+    console.log('🚗 Route params:', this.route.snapshot.paramMap);
+    
     this.initializeForm();
     this.loadBranches();
     this.checkEditMode();
@@ -256,29 +263,130 @@ export class VehicleFormComponent implements OnInit {
 
   private checkEditMode() {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
+    console.log('🚗 Checking edit mode - Route ID:', id);
+    console.log('🚗 Route snapshot params:', this.route.snapshot.paramMap);
+    console.log('🚗 Current URL:', this.router.url);
+    
+    if (id && id !== 'new') {
+      console.log('🚗 Edit mode detected - Vehicle ID:', id);
       this.isEditMode.set(true);
       this.vehicleId.set(id);
       this.loadVehicle(id);
+    } else {
+      console.log('🚗 Create mode detected');
+      this.isEditMode.set(false);
     }
   }
 
   private loadVehicle(id: string) {
+    console.log('🚗 loadVehicle called with ID:', id);
     this.isLoading.set(true);
-    this.carRentalService.getVehicleById(id).subscribe({
-      next: (vehicle) => {
-        if (vehicle) {
-          this.populateForm(vehicle);
+    
+    // Load vehicle data directly from API service to get the correct structure
+    console.log('🚗 CarApiService available, calling getCarById...');
+    
+    this.carApiService.getCarById(parseInt(id)).subscribe({
+      next: (car) => {
+        console.log('🚗 ✅ Car data received from API:', car);
+        if (car) {
+          console.log('🚗 Calling populateFormFromApiData...');
+          this.populateFormFromApiData(car);
+        } else {
+          console.log('🚗 ❌ No car data received');
         }
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading vehicle:', error);
+        console.error('🚗 ❌ Error loading vehicle from API:', error);
+        console.error('🚗 Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url,
+          message: error.message
+        });
         this.isLoading.set(false);
       }
     });
   }
 
+  private populateFormFromApiData(car: AdminCarDto) {
+    console.log('🚗 Populating form with API car data:', car);
+    
+    // Map the actual API response structure to form fields
+    this.vehicleForm.patchValue({
+      // Map API fields to form fields
+      brandAr: car.brand || '',  // API returns single brand field
+      brandEn: car.brand || '',  // Use same value for both languages
+      modelAr: car.model || '',  // API returns single model field  
+      modelEn: car.model || '',  // Use same value for both languages
+      year: car.year || new Date().getFullYear(),
+      colorAr: car.color || '',  // API returns single color field
+      colorEn: car.color || '',  // Use same value for both languages
+      plateNumber: car.plateNumber || '',
+      seatingCapacity: car.seatingCapacity || 5,
+      numberOfDoors: car.numberOfDoors || 4,
+      maxSpeed: car.maxSpeed || 180,
+      engine: car.engine || '',
+      transmissionType: this.mapTransmissionType(car.transmissionType),
+      fuelType: this.mapFuelType(car.fuelType),
+      dailyRate: car.dailyPrice || 0,
+      weeklyRate: car.weeklyPrice || 0,
+      monthlyRate: car.monthlyPrice || 0,
+      status: this.mapCarStatus(car.status),
+      imageUrl: car.imageUrl || '',
+      descriptionAr: car.description || '',
+      descriptionEn: car.description || '',
+      mileage: car.mileage || 0,
+      features: car.features || '',
+      categoryId: car.category?.id || 1,
+      branchId: car.branch?.id || 1
+    });
+
+    console.log('🚗 Form populated with values:', this.vehicleForm.value);
+    console.log('🚗 Form field mapping details:', {
+      'API brand': car.brand,
+      'API model': car.model,
+      'API fuelType': car.fuelType,
+      'API transmissionType': car.transmissionType,
+      'API status': car.status,
+      'Form brandAr': this.vehicleForm.get('brandAr')?.value,
+      'Form brandEn': this.vehicleForm.get('brandEn')?.value,
+      'Form fuelType': this.vehicleForm.get('fuelType')?.value,
+      'Form transmissionType': this.vehicleForm.get('transmissionType')?.value
+    });
+  }
+
+  // Helper methods to map API values to form enum values
+  private mapFuelType(fuelType: string): FuelType {
+    switch (fuelType.toLowerCase()) {
+      case 'gasoline': return FuelType.Gasoline;
+      case 'diesel': return FuelType.Diesel;
+      case 'hybrid': return FuelType.Hybrid;
+      case 'electric': return FuelType.Electric;
+      case 'pluginhybrid': return FuelType.PluginHybrid;
+      default: return FuelType.Gasoline;
+    }
+  }
+
+  private mapTransmissionType(transmission: string): TransmissionType {
+    switch (transmission.toLowerCase()) {
+      case 'manual': return TransmissionType.Manual;
+      case 'automatic': return TransmissionType.Automatic;
+      default: return TransmissionType.Automatic;
+    }
+  }
+
+  private mapCarStatus(status: string): CarStatus {
+    switch (status.toLowerCase()) {
+      case 'available': return CarStatus.Available;
+      case 'rented': return CarStatus.Rented;
+      case 'maintenance': return CarStatus.Maintenance;
+      case 'outofservice': return CarStatus.OutOfService;
+      default: return CarStatus.Available;
+    }
+  }
+
+  // Keep the old method for backward compatibility
   private populateForm(vehicle: Vehicle) {
     this.vehicleForm.patchValue({
       make: vehicle.make,

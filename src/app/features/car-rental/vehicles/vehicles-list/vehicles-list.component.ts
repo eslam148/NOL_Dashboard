@@ -219,4 +219,34 @@ export class VehiclesListComponent implements OnInit {
       currency: 'USD'
     }).format(amount);
   }
+
+  getRatingDisplay(rating: number): string {
+    if (!rating || rating === 0) {
+      return 'No rating';
+    }
+    return `${rating.toFixed(1)}/5`;
+  }
+
+  getRatingStars(rating: number): string[] {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    // Add full stars
+    for (let i = 0; i < fullStars; i++) {
+      stars.push('bi-star-fill');
+    }
+    
+    // Add half star if needed
+    if (hasHalfStar) {
+      stars.push('bi-star-half');
+    }
+    
+    // Add empty stars to make 5 total
+    while (stars.length < 5) {
+      stars.push('bi-star');
+    }
+    
+    return stars;
+  }
 }
