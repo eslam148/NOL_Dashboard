@@ -203,6 +203,7 @@ export class CarRentalService {
           this.isLoading.set(false);
 
           console.log('📦 Dashboard Stats API Response:', dashboardStatsDto);
+          this.isLoading.set(false);
 
           // Convert DashboardStatsDto to DashboardStats
           const convertedStats = this.convertDashboardStatsDtoToStats(dashboardStatsDto);

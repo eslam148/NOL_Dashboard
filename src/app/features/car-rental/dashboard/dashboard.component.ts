@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { finalize, take } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
@@ -21,24 +21,26 @@ export class CarRentalDashboardComponent implements OnInit, OnDestroy {
   private navSub?: Subscription;
   
   stats: DashboardStats | null = null;
-  isLoading = false;
+  isLoading = signal(false);
 
   ngOnInit() {
     this.loadDashboardStats();
     this.navSub = this.router.events.subscribe(evt => {
       if (evt instanceof NavigationStart || evt instanceof NavigationEnd || evt instanceof NavigationCancel || evt instanceof NavigationError) {
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }
 
   private loadDashboardStats() {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.carRentalService.getDashboardStats()
-      .pipe(take(1), finalize(() => { this.isLoading = false; }))
+      .pipe(take(1), finalize(() => { this.isLoading.set(false); }))
       .subscribe({
         next: (stats) => {
           this.stats = stats;
+          this.isLoading.set(false);
+
         },
         error: (error) => {
           console.error('Error loading dashboard stats:', error);
