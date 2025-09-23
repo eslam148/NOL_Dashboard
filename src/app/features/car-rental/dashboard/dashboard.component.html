@@ -66,7 +66,8 @@
   <main class="dashboard-main">
     <div class="container">
       <!-- Dashboard Overview -->
-      <div class="dashboard-overview" *ngIf="!isLoading && stats">
+       @if(!isLoading && stats){
+    <div class="dashboard-overview" >
         <div class="stats-grid">
           <!-- Total Vehicles -->
           <div class="stat-card">
@@ -157,12 +158,18 @@
           </div>
         </div>
       </div>
+       }
+       @else {
+          <div class="loading-container">
+              <div class="spinner"></div>
+              <p class="text-muted">{{ 'common.loading' | translate }}</p>
+            </div>
 
-      <!-- Loading State -->
-      <div class="loading-container" *ngIf="isLoading">
-        <div class="spinner"></div>
-        <p class="text-muted">{{ 'common.loading' | translate }}</p>
-      </div>
+       }
+   
+
+    
+     
 
       <!-- Quick Actions -->
       <div class="quick-actions" *ngIf="!isLoading">

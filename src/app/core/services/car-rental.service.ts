@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Observable, of, delay, map, catchError, throwError, switchMap } from 'rxjs';
+import { Observable, of, delay, map, catchError, throwError, switchMap, finalize } from 'rxjs';
 import {
   Branch, Vehicle, Booking, Customer, AdditionalService, AdminUser, AdminRole,
   DashboardStats, VehicleFilter, BookingFilter, BranchFilter,
@@ -226,6 +226,10 @@ export class CarRentalService {
 
           // Return fallback mock data instead of throwing error to prevent app crash
           return of(this.getMockDashboardStats());
+        }),
+        finalize(() => {
+          // Guarantee loading flag is cleared on navigation/unsubscribe
+          this.isLoading.set(false);
         })
       );
     }
