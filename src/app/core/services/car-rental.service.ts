@@ -2667,6 +2667,16 @@ export class CarRentalService {
   }
 
   getAdvertisementById(id: string): Observable<Advertisement | null> {
+    if (this.useRealApi) {
+      return this.advertisementApiService.getAdvertisementById(parseInt(id)).pipe(
+        map((dto) => this.convertAdminAdvertisementDtoToAdvertisement(dto)),
+        catchError((error) => {
+          console.error('Error fetching advertisement by ID:', error);
+          return of(null);
+        })
+      );
+    }
+
     const advertisement = this.mockAdvertisements.find(ad => ad.id === id) || null;
     return of(advertisement).pipe(delay(500));
   }
