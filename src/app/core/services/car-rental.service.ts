@@ -2134,7 +2134,7 @@ export class CarRentalService {
       fees: 10,
       totalAmount: 430,
       paidAmount: 430,
-      status: 'active',
+      status: 'Open',
       paymentStatus: 'paid',
       pickupLocation: 'Business Bay',
       dropoffLocation: 'Business Bay',
@@ -2220,7 +2220,7 @@ export class CarRentalService {
       fees: 5,
       totalAmount: 215,
       paidAmount: 215,
-      status: 'cancelled',
+      status: 'Canceled',
       paymentStatus: 'refunded',
       pickupLocation: 'Dubai International Airport',
       dropoffLocation: 'Dubai International Airport',
@@ -3201,14 +3201,14 @@ export class CarRentalService {
     };
   }
 
-  private mapBookingStatusToApiStatus(status: BookingStatus): 'Pending' | 'Confirmed' | 'Active' | 'Completed' | 'Cancelled' {
-    const statusMap: Record<BookingStatus, 'Pending' | 'Confirmed' | 'Active' | 'Completed' | 'Cancelled'> = {
+  private mapBookingStatusToApiStatus(status: BookingStatus): 'Pending' | 'Confirmed' | 'Open' | 'Completed' | 'Canceled'{
+    const statusMap: Record<BookingStatus, 'Pending' | 'Confirmed' | 'Open' | 'Completed' | 'Canceled'> = {
       'pending': 'Pending',
       'confirmed': 'Confirmed',
-      'active': 'Active',
+      'Open': 'Open',
       'completed': 'Completed',
-      'cancelled': 'Cancelled',
-      'no_show': 'Cancelled' // Map no_show to Cancelled since API doesn't have no_show status
+      'Canceled': 'Canceled'
+    // Map no_show to Cancelled since API doesn't have no_show status
     };
 
     return statusMap[status] || 'Pending';
@@ -3218,9 +3218,9 @@ export class CarRentalService {
     const statusMap: Record<string, BookingStatus> = {
       'Pending': 'pending',
       'Confirmed': 'confirmed',
-      'Active': 'active',
+      'Open': 'Open',
       'Completed': 'completed',
-      'Cancelled': 'cancelled'
+      'Canceled': 'Canceled'
     };
 
     return statusMap[status] || 'pending';

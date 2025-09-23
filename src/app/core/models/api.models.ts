@@ -603,7 +603,7 @@ export interface AdminCreateBookingDto {
 }
 
 export interface UpdateBookingStatusDto {
-  status: 'Pending' | 'Confirmed' | 'Active' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Confirmed' | 'Open' | 'Completed' | 'Canceled';
   notes?: string;
 }
 

@@ -232,18 +232,18 @@
                   <i class="bi bi-check-circle"></i>
                   {{ 'bookings.confirm' | translate }}
                 </button>
-                <button class="dropdown-item" (click)="updateBookingStatus(booking, 'active')" 
+                <button class="dropdown-item" (click)="updateBookingStatus(booking, 'Open')" 
                         *ngIf="booking.status === 'confirmed'">
                   <i class="bi bi-play-circle"></i>
                   {{ 'bookings.activate' | translate }}
                 </button>
                 <button class="dropdown-item" (click)="updateBookingStatus(booking, 'completed')" 
-                        *ngIf="booking.status === 'active'">
+                        *ngIf="booking.status === 'Open'">
                   <i class="bi bi-check-circle-fill"></i>
                   {{ 'bookings.complete' | translate }}
                 </button>
-                <button class="dropdown-item text-red-600" (click)="updateBookingStatus(booking, 'cancelled')" 
-                        *ngIf="booking.status !== 'completed' && booking.status !== 'cancelled'">
+                <button class="dropdown-item text-red-600" (click)="updateBookingStatus(booking, 'Canceled')" 
+                        *ngIf="booking.status !== 'completed' && booking.status !== 'Canceled'">
                   <i class="bi bi-x-circle"></i>
                   {{ 'bookings.cancel' | translate }}
                 </button>

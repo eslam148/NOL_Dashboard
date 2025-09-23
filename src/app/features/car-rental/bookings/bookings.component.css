@@ -139,7 +139,8 @@
 .booking-card {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  /* Allow dropdown menus to render outside the card bounds */
+  overflow: visible;
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-sm);
 }
@@ -335,6 +336,11 @@
 }
 
 .dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+/* Also open on focus for better usability (click/tap) */
+.dropdown:focus-within .dropdown-menu {
   display: block;
 }
 

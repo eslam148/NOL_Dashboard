@@ -184,7 +184,7 @@ export class BookingApiService {
    * Update booking status
    */
   updateBookingStatus(id: number, statusUpdate: UpdateBookingStatusDto): Observable<AdminBookingDto> {
-    return this.http.put<ApiResponse<AdminBookingDto>>(`${this.baseUrl}/${id}/status`, statusUpdate).pipe(
+    return this.http.patch<ApiResponse<AdminBookingDto>>(`${this.baseUrl}/${id}/status`, statusUpdate).pipe(
       map(response => {
         if (!response.succeeded) {
           throw new Error(response.message || 'Failed to update booking status');

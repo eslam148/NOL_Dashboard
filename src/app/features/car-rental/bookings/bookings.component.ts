@@ -112,10 +112,9 @@ export class BookingsComponent implements OnInit {
     switch (status) {
       case 'pending': return 'badge badge-warning';
       case 'confirmed': return 'badge badge-info';
-      case 'active': return 'badge badge-success';
+      case 'Open': return 'badge badge-success';
       case 'completed': return 'badge badge-primary';
-      case 'cancelled': return 'badge badge-error';
-      case 'no_show': return 'badge badge-gray';
+      case 'Canceled': return 'badge badge-error';
       default: return 'badge badge-gray';
     }
   }
@@ -135,10 +134,9 @@ export class BookingsComponent implements OnInit {
     switch (status) {
       case 'pending': return 'bi-clock';
       case 'confirmed': return 'bi-check-circle';
-      case 'active': return 'bi-play-circle';
+      case 'Open': return 'bi-play-circle';
       case 'completed': return 'bi-check-circle-fill';
-      case 'cancelled': return 'bi-x-circle';
-      case 'no_show': return 'bi-person-x';
+      case 'Canceled': return 'bi-x-circle';
       default: return 'bi-question-circle';
     }
   }
@@ -243,9 +241,9 @@ export class BookingsComponent implements OnInit {
       total: bookings.length,
       pending: bookings.filter(b => b.status === 'pending').length,
       confirmed: bookings.filter(b => b.status === 'confirmed').length,
-      active: bookings.filter(b => b.status === 'active').length,
+      active: bookings.filter(b => b.status === 'Open').length,
       completed: bookings.filter(b => b.status === 'completed').length,
-      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+      cancelled: bookings.filter(b => b.status === 'Canceled').length,
       totalRevenue: bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0),
       pendingPayments: bookings.filter(b => b.paymentStatus === 'pending').reduce((sum, b) => sum + b.totalAmount, 0)
     };

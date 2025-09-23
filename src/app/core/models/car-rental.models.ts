@@ -116,7 +116,7 @@ export interface Booking {
   notes?: string;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled' | 'no_show';
+export type BookingStatus = 'pending' | 'confirmed' | 'Open' | 'completed' | 'Canceled' ;
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded' | 'failed';
 export type CustomerType = 'regular' | 'premium' | 'corporate';
 
