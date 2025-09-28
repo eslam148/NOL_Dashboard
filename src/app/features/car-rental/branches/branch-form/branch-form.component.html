@@ -277,56 +277,6 @@
         </div>
       </div>
 
-      <!-- Working Hours and Additional Information -->
-      <div class="form-section">
-        <h2 class="section-title">{{ 'branches.additionalInfo' | translate }}</h2>
-
-        <div class="form-grid">
-          <!-- Working Hours (Optional) -->
-          <div class="form-group">
-            <label for="workingHours" class="form-label">{{ 'branches.workingHours' | translate }}</label>
-            <input
-              id="workingHours"
-              type="text"
-              formControlName="workingHours"
-              class="form-input focus-ring"
-              [class.error]="isFieldInvalid('workingHours')"
-              [placeholder]="'branches.workingHoursPlaceholder' | translate"
-            />
-            <div class="form-error" *ngIf="isFieldInvalid('workingHours')">
-              <i class="bi bi-exclamation-circle"></i>
-              {{ getFieldError('workingHours') }}
-            </div>
-            <small class="form-help">{{ 'branches.workingHoursHelp' | translate }}</small>
-          </div>
-
-          <!-- Assigned Staff IDs -->
-          <div class="form-group">
-            <label for="assignedStaffIds" class="form-label">{{ 'branches.assignedStaff' | translate }}</label>
-            <input
-              id="assignedStaffIds"
-              type="text"
-              formControlName="assignedStaffIds"
-              class="form-input focus-ring"
-              [placeholder]="'branches.assignedStaffPlaceholder' | translate"
-              readonly
-            />
-            <small class="form-help">{{ 'branches.assignedStaffHelp' | translate }}</small>
-          </div>
-        </div>
-
-        <!-- Notes -->
-        <div class="form-group">
-          <label for="notes" class="form-label">{{ 'branches.notes' | translate }}</label>
-          <textarea
-            id="notes"
-            formControlName="notes"
-            class="form-textarea focus-ring"
-            rows="4"
-            [placeholder]="'branches.notesPlaceholder' | translate"
-          ></textarea>
-        </div>
-      </div>
     </div>
 
     <!-- Form Actions -->

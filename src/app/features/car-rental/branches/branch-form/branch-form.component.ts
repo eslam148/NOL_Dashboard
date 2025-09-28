@@ -43,10 +43,7 @@ export class BranchFormComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       latitude: [25.2048, [Validators.required, Validators.min(-90), Validators.max(90)]],
       longitude: [55.2708, [Validators.required, Validators.min(-180), Validators.max(180)]],
-      workingHours: ['', [Validators.required]],
-      isActive: [true, [Validators.required]],
-      assignedStaffIds: [[]],
-      notes: ['']
+      isActive: [true, [Validators.required]]
     });
   }
 
@@ -118,14 +115,7 @@ export class BranchFormComponent implements OnInit {
       email: branch.email || '',
       latitude: branch.latitude || 25.2048,
       longitude: branch.longitude || 55.2708,
-      workingHours: branch.workingHours || '',
-      isActive: branch.isActive !== undefined ? branch.isActive : true,
-      
-      // API has 'staff' array, map to assignedStaffIds
-      assignedStaffIds: Array.isArray(branch.assignedStaffIds) ? branch.assignedStaffIds : 
-                       Array.isArray(branch.staff) ? branch.staff.map((s: any) => s.id || s) : [],
-      
-      notes: branch.notes || ''
+      isActive: branch.isActive !== undefined ? branch.isActive : true
     });
 
     console.log('🏢 Form populated with values:', this.branchForm.value);
@@ -163,13 +153,7 @@ export class BranchFormComponent implements OnInit {
 
       // Process the form data to match API structure
       const processedData = {
-        ...formData,
-        // Ensure assignedStaffIds is an array
-        assignedStaffIds: Array.isArray(formData.assignedStaffIds)
-          ? formData.assignedStaffIds
-          : formData.assignedStaffIds
-            ? [formData.assignedStaffIds]
-            : []
+        ...formData
       };
 
       console.log('Form data to submit:', processedData);
