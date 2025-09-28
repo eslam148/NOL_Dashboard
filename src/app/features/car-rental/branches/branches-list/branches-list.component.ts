@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
+import { TranslationService } from '../../../../core/services/translation.service';
 import { Branch, BranchFilter } from '../../../../core/models/car-rental.models';
 import { PaginatedResponse } from '../../../../core/models/api.models';
 
@@ -16,6 +17,7 @@ import { PaginatedResponse } from '../../../../core/models/api.models';
 })
 export class BranchesListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private translationService = inject(TranslationService);
 
   branches = signal<Branch[]>([]);
   isLoading = signal(false);
@@ -229,5 +231,22 @@ export class BranchesListComponent implements OnInit {
     }
 
     return 'Closed';
+  }
+  
+  // RTL/LTR Arrow Direction Methods
+  getFirstPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-double-right' : 'bi-chevron-double-left';
+  }
+  
+  getPreviousPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-right' : 'bi-chevron-left';
+  }
+  
+  getNextPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-left' : 'bi-chevron-right';
+  }
+  
+  getLastPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-double-left' : 'bi-chevron-double-right';
   }
 }

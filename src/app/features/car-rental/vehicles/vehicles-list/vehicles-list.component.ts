@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { CarApiService } from '../../../../core/services/car-api.service';
+import { TranslationService } from '../../../../core/services/translation.service';
 import { Vehicle, VehicleFilter, VehicleCategory, VehicleStatus } from '../../../../core/models/car-rental.models';
 import { AdminCarDto, CarFilterDto, PaginatedResponse } from '../../../../core/models/api.models';
 
@@ -18,6 +19,7 @@ import { AdminCarDto, CarFilterDto, PaginatedResponse } from '../../../../core/m
 export class VehiclesListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
   private carApiService = inject(CarApiService);
+  private translationService = inject(TranslationService);
   
   vehicles = signal<AdminCarDto[]>([]);
   filteredVehicles = signal<AdminCarDto[]>([]);
@@ -247,6 +249,23 @@ export class VehiclesListComponent implements OnInit {
 
   getEndIndex(): number {
     return Math.min(this.currentPage() * this.pageSize(), this.totalCount());
+  }
+  
+  // RTL/LTR Arrow Direction Methods
+  getFirstPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-double-right' : 'bi-chevron-double-left';
+  }
+  
+  getPreviousPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-right' : 'bi-chevron-left';
+  }
+  
+  getNextPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-left' : 'bi-chevron-right';
+  }
+  
+  getLastPageIcon(): string {
+    return this.translationService.isRTL() ? 'bi-chevron-double-left' : 'bi-chevron-double-right';
   }
 
   formatCurrency(amount: number): string {

@@ -250,7 +250,7 @@
         (click)="goToFirstPage()"
         [title]="'common.firstPage' | translate"
       >
-        <i class="bi bi-chevron-double-left"></i>
+        <i [class]="'bi ' + getFirstPageIcon()"></i>
       </button>
 
       <!-- Previous Page -->
@@ -260,7 +260,7 @@
         (click)="goToPreviousPage()"
         [title]="'common.previousPage' | translate"
       >
-        <i class="bi bi-chevron-left"></i>
+        <i [class]="'bi ' + getPreviousPageIcon()"></i>
       </button>
 
       <!-- Page Numbers -->
@@ -283,7 +283,7 @@
         (click)="goToNextPage()"
         [title]="'common.nextPage' | translate"
       >
-        <i class="bi bi-chevron-right"></i>
+        <i [class]="'bi ' + getNextPageIcon()"></i>
       </button>
 
       <!-- Last Page -->
@@ -293,7 +293,7 @@
         (click)="goToLastPage()"
         [title]="'common.lastPage' | translate"
       >
-        <i class="bi bi-chevron-double-right"></i>
+        <i [class]="'bi ' + getLastPageIcon()"></i>
       </button>
     </div>
   </div>
