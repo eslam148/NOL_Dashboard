@@ -560,8 +560,7 @@
           <!-- Vehicle Image Upload -->
           <div class="form-group full-width">
             <app-image-upload
-              [ngModel]="uploadedImages()"
-              (ngModelChange)="onUploadedImagesChange($event)"
+              formControlName="imageUrl"
               [config]="imageUploadConfig"
               [disabled]="isSubmitting() || isUploadingImage()"
               [errorMessage]="uploadError()"

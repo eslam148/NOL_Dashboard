@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, forwardRef, signal, ChangeDetec
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { FileUploadService } from '../../../core/services/file-upload.service';
 
 export interface ImageUploadConfig {
   maxFiles?: number;
@@ -16,7 +17,8 @@ export interface ImageUploadConfig {
 
 export interface UploadedImage {
   id: string;
-  file: File;
+  file?: File;
+  url?: string;
   preview: string;
   name: string;
   size: number;
@@ -39,6 +41,7 @@ export interface UploadedImage {
 })
 export class ImageUploadComponent implements ControlValueAccessor, OnInit {
   private cdr = inject(ChangeDetectorRef);
+  private fileUploadService = inject(FileUploadService);
   
   @Input() config: ImageUploadConfig = {};
   @Input() disabled = false;
@@ -71,21 +74,40 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
   }
 
   // ControlValueAccessor implementation
-  private onChange = (value: UploadedImage[]) => {};
+  private onChange = (value: any) => {};
   private onTouched = () => {};
 
   ngOnInit() {
     console.log('📸 ImageUploadComponent initialized');
   }
 
-  writeValue(value: UploadedImage[]): void {
+  writeValue(value: any): void {
     console.log('📸 ImageUpload writeValue called with:', value);
-    this.uploadedImages.set(value || []);
+    
+    if (typeof value === 'string' && value) {
+      // Handle string URL value from form control
+      const image: UploadedImage = {
+        id: Date.now().toString(),
+        name: this.fileUploadService.getFileNameFromUrl(value),
+        url: value,
+        preview: value,
+        size: 0,
+        type: 'image/*'
+      };
+      this.uploadedImages.set([image]);
+    } else if (Array.isArray(value)) {
+      // Handle array of UploadedImage objects
+      this.uploadedImages.set(value || []);
+    } else {
+      // Handle null/undefined values
+      this.uploadedImages.set([]);
+    }
+    
     console.log('📸 ImageUpload uploadedImages set to:', this.uploadedImages());
     this.cdr.detectChanges();
   }
 
-  registerOnChange(fn: (value: UploadedImage[]) => void): void {
+  registerOnChange(fn: (value: any) => void): void {
     this.onChange = fn;
   }
 
@@ -163,7 +185,9 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
 
       console.log('📸 ImageUpload handleFiles - setting uploadedImages to:', updatedImages);
       this.uploadedImages.set(updatedImages);
-      this.onChange(updatedImages);
+      // Emit the URL string for reactive forms
+      const imageUrl = updatedImages.length > 0 ? updatedImages[0].url : '';
+      this.onChange(imageUrl);
       this.onTouched();
       this.filesSelected.emit(updatedImages);
       console.log('📸 ImageUpload handleFiles - uploadedImages after set:', this.uploadedImages());
@@ -237,7 +261,9 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
     const updatedImages = currentImages.filter(img => img.id !== imageId);
     
     this.uploadedImages.set(updatedImages);
-    this.onChange(updatedImages);
+    // Emit the URL string for reactive forms
+    const imageUrl = updatedImages.length > 0 ? updatedImages[0].url : '';
+    this.onChange(imageUrl);
     this.onTouched();
     this.fileRemoved.emit(imageId);
     

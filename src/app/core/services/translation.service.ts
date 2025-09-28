@@ -1731,6 +1731,10 @@ export class TranslationService {
     console.log('Current language:', this.currentLanguage());
     console.log('Available translations:', this.translations);
     console.log('imageUpload translations:', this.translations[this.currentLanguage()]?.['imageUpload']);
+    console.log('vehicles.available:', this.translate('vehicles.available'));
+    console.log('vehicles.rented:', this.translate('vehicles.rented'));
+    console.log('vehicles.maintenance:', this.translate('vehicles.maintenance'));
+    console.log('vehicles.outOfService:', this.translate('vehicles.outOfService'));
   }
 
   private updateDirection(): void {
@@ -1741,5 +1745,25 @@ export class TranslationService {
 
   isRTL(): boolean {
     return this.currentLanguage() === 'ar';
+  }
+
+  // Test method to verify specific translations
+  testVehicleStatusTranslations(): void {
+    console.log('=== Vehicle Status Translation Test ===');
+    console.log('Current language:', this.currentLanguage());
+    console.log('vehicles.available:', this.translate('vehicles.available'));
+    console.log('vehicles.rented:', this.translate('vehicles.rented'));
+    console.log('vehicles.maintenance:', this.translate('vehicles.maintenance'));
+    console.log('vehicles.outOfService:', this.translate('vehicles.outOfService'));
+    
+    // Test direct access with proper type casting
+    const lang = this.currentLanguage();
+    const vehicles = this.translations[lang]?.['vehicles'] as any;
+    console.log('Direct access test:');
+    console.log('Available:', vehicles?.['available']);
+    console.log('Rented:', vehicles?.['rented']);
+    console.log('Maintenance:', vehicles?.['maintenance']);
+    console.log('OutOfService:', vehicles?.['outOfService']);
+    console.log('=== End Test ===');
   }
 }

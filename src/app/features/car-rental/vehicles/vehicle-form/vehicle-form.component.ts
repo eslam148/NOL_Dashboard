@@ -98,6 +98,10 @@ export class VehicleFormComponent implements OnInit {
     console.log('🚗 Current route URL:', this.router.url);
     console.log('🚗 Route params:', this.route.snapshot.paramMap);
     
+    // Debug translations
+    console.log('🚗 Testing status translations:');
+    this.translationService.testVehicleStatusTranslations();
+    
     this.initializeForm();
     this.loadBranches();
     this.checkEditMode();
@@ -598,6 +602,13 @@ export class VehicleFormComponent implements OnInit {
     }
 
     const image = images[0]; // Since we only allow single image
+    
+    // Check if image has a file to upload
+    if (!image.file) {
+      console.log('🚗 Image does not have a file to upload');
+      return;
+    }
+    
     this.isUploadingImage.set(true);
 
     // Upload the file to the server
@@ -657,10 +668,6 @@ export class VehicleFormComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  onUploadedImagesChange(images: UploadedImage[]): void {
-    this.uploadedImages.set(images);
-    this.cdr.detectChanges();
-  }
 
   // Initialize uploaded images from existing imageUrl
   private initializeUploadedImages(): void {
