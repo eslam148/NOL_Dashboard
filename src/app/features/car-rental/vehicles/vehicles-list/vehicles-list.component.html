@@ -79,6 +79,20 @@
           </option>
         </select>
       </div>
+      
+      <!-- Page Size Selector -->
+      <div class="filter-group">
+        <label class="filter-label">{{ 'common.itemsPerPage' | translate }}</label>
+        <select
+          class="form-select"
+          [value]="pageSize()"
+          (change)="onPageSizeChange(+$any($event.target).value)"
+        >
+          <option *ngFor="let option of pageSizeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -86,9 +100,9 @@
   <div class="results-summary" *ngIf="!isLoading()">
     <p class="text-secondary">
       {{ 'vehicles.showingResults' | translate }} 
-      <strong>{{ filteredVehicles().length }}</strong> 
+      <strong>{{ getStartIndex() }}</strong> - <strong>{{ getEndIndex() }}</strong>
       {{ 'vehicles.of' | translate }} 
-      <strong>{{ vehicles().length }}</strong> 
+      <strong>{{ totalCount() }}</strong> 
       {{ 'vehicles.vehicles' | translate }}
     </p>
   </div>
@@ -218,5 +232,69 @@
       <i class="bi bi-plus-circle"></i>
       {{ 'vehicles.addFirstVehicle' | translate }}
     </a>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-container" *ngIf="!isLoading() && totalPages() > 1">
+    <div class="pagination-info">
+      <span class="text-sm text-secondary">
+        {{ 'common.page' | translate }} {{ currentPage() }} {{ 'common.of' | translate }} {{ totalPages() }}
+      </span>
+    </div>
+
+    <div class="pagination-controls">
+      <!-- First Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasPreviousPage()"
+        (click)="goToFirstPage()"
+        [title]="'common.firstPage' | translate"
+      >
+        <i class="bi bi-chevron-double-left"></i>
+      </button>
+
+      <!-- Previous Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasPreviousPage()"
+        (click)="goToPreviousPage()"
+        [title]="'common.previousPage' | translate"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <!-- Page Numbers -->
+      <div class="page-numbers">
+        <button
+          *ngFor="let pageNum of getPageNumbers()"
+          class="btn btn-sm"
+          [class.btn-primary]="pageNum === currentPage()"
+          [class.btn-ghost]="pageNum !== currentPage()"
+          (click)="onPageChange(pageNum)"
+        >
+          {{ pageNum }}
+        </button>
+      </div>
+
+      <!-- Next Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasNextPage()"
+        (click)="goToNextPage()"
+        [title]="'common.nextPage' | translate"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      <!-- Last Page -->
+      <button
+        class="btn btn-ghost btn-sm"
+        [disabled]="!hasNextPage()"
+        (click)="goToLastPage()"
+        [title]="'common.lastPage' | translate"
+      >
+        <i class="bi bi-chevron-double-right"></i>
+      </button>
+    </div>
   </div>
 </div>

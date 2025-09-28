@@ -28,6 +28,14 @@ export class VehiclesListComponent implements OnInit {
   statusFilter = signal<string>('all');
   makeFilter = signal<string>('all');
   
+  // Pagination properties
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalCount = signal(0);
+  totalPages = signal(0);
+  hasPreviousPage = signal(false);
+  hasNextPage = signal(false);
+  
   // Filter options
   categoryOptions = [
     { value: 'all', label: 'vehicles.allCategories' },
@@ -49,6 +57,14 @@ export class VehiclesListComponent implements OnInit {
     { value: 'out_of_service', label: 'vehicles.outOfService' },
     { value: 'reserved', label: 'vehicles.reserved' }
   ];
+  
+  // Page size options
+  pageSizeOptions = [
+    { value: 5, label: '5' },
+    { value: 10, label: '10' },
+    { value: 20, label: '20' },
+    { value: 50, label: '50' }
+  ];
 
   ngOnInit() {
     this.loadVehicles();
@@ -58,24 +74,22 @@ export class VehiclesListComponent implements OnInit {
     this.isLoading.set(true);
     
     const filter: CarFilterDto = {
-      page: 1,
-      pageSize: 50, // Load more items for better user experience
+      page: this.currentPage(),
+      pageSize: this.pageSize(),
       sortBy: 'createdAt',
       sortOrder: 'desc'
     };
     
     this.carApiService.getCars(filter).subscribe({
       next: (paginatedResponse) => {
-     
         this.vehicles.set(paginatedResponse.data || []);
         this.paginationInfo.set(paginatedResponse);
+        this.updatePaginationInfo(paginatedResponse);
         this.applyFilters();
         this.isLoading.set(false);
-        
-      
       },
       error: (error) => {
-        
+        console.error('Error loading vehicles:', error);
         this.isLoading.set(false);
       }
     });
@@ -83,71 +97,45 @@ export class VehiclesListComponent implements OnInit {
 
   onSearchChange(term: string) {
     this.searchTerm.set(term);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when searching
+    this.loadVehicles();
   }
 
   onCategoryFilterChange(category: string) {
     this.categoryFilter.set(category);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when filtering
+    this.loadVehicles();
   }
 
   onStatusFilterChange(status: string) {
     this.statusFilter.set(status);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when filtering
+    this.loadVehicles();
   }
 
   onMakeFilterChange(make: string) {
     this.makeFilter.set(make);
-    this.applyFilters();
+    this.currentPage.set(1); // Reset to first page when filtering
+    this.loadVehicles();
+  }
+  
+  onPageSizeChange(newPageSize: number) {
+    this.pageSize.set(newPageSize);
+    this.currentPage.set(1); // Reset to first page when changing page size
+    this.loadVehicles();
+  }
+
+  private updatePaginationInfo(paginatedResponse: PaginatedResponse<AdminCarDto>) {
+    this.totalCount.set(paginatedResponse.totalCount);
+    this.totalPages.set(paginatedResponse.totalPages);
+    this.hasPreviousPage.set(paginatedResponse.hasPreviousPage);
+    this.hasNextPage.set(paginatedResponse.hasNextPage);
   }
 
   private applyFilters() {
-   
-    
-    let filtered = [...this.vehicles()];
-    
-    // Apply search filter
-    const search = this.searchTerm().toLowerCase();
-    if (search) {
-      
-      filtered = filtered.filter(vehicle => 
-        vehicle.brand.toLowerCase().includes(search) ||
-        vehicle.model.toLowerCase().includes(search) ||
-        vehicle.year.toString().includes(search) ||
-        vehicle.category.name.toLowerCase().includes(search) ||
-        vehicle.branch.name.toLowerCase().includes(search)
-      );
-      
-    }
-    
-    // Apply category filter
-    if (this.categoryFilter() !== 'all') {
-      
-      filtered = filtered.filter(vehicle => 
-        vehicle.category.name.toLowerCase() === this.categoryFilter().toLowerCase()
-      );
-      
-    }
-    
-    // Apply status filter
-    if (this.statusFilter() !== 'all') {
-      
-      filtered = filtered.filter(vehicle => 
-        vehicle.status.toLowerCase() === this.statusFilter().toLowerCase()
-      );
-       
-    }
-    
-    // Apply make filter
-    if (this.makeFilter() !== 'all') {
-     
-      filtered = filtered.filter(vehicle => 
-        vehicle.brand.toLowerCase() === this.makeFilter().toLowerCase()
-      );
-     
-    }
-    
-     this.filteredVehicles.set(filtered);
+    // For server-side pagination, we don't need client-side filtering
+    // The API should handle filtering and return the filtered results
+    this.filteredVehicles.set(this.vehicles());
   }
 
   getUniqueMakes(): string[] {
@@ -204,7 +192,61 @@ export class VehiclesListComponent implements OnInit {
   }
 
   refreshList() {
+    this.currentPage.set(1);
     this.loadVehicles();
+  }
+  
+  // Pagination methods
+  onPageChange(newPage: number) {
+    if (newPage >= 1 && newPage <= this.totalPages()) {
+      this.currentPage.set(newPage);
+      this.loadVehicles();
+    }
+  }
+
+  goToFirstPage() {
+    this.onPageChange(1);
+  }
+
+  goToPreviousPage() {
+    if (this.hasPreviousPage()) {
+      this.onPageChange(this.currentPage() - 1);
+    }
+  }
+
+  goToNextPage() {
+    if (this.hasNextPage()) {
+      this.onPageChange(this.currentPage() + 1);
+    }
+  }
+
+  goToLastPage() {
+    this.onPageChange(this.totalPages());
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.totalPages();
+    const currentPage = this.currentPage();
+    const pages: number[] = [];
+
+    // Show up to 5 page numbers around current page
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+  
+  // Helper methods for pagination display
+  getStartIndex(): number {
+    return (this.currentPage() - 1) * this.pageSize() + 1;
+  }
+
+  getEndIndex(): number {
+    return Math.min(this.currentPage() * this.pageSize(), this.totalCount());
   }
 
   formatCurrency(amount: number): string {
