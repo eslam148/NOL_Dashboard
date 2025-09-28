@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +22,9 @@ export class AdvertisementsListComponent implements OnInit {
   searchQuery = signal('');
   selectedType = signal<AdvertisementType | ''>('');
   selectedStatus = signal<AdvertisementStatus | ''>('');
+  
+  // Dropdown state management
+  openDropdowns = signal<Set<string>>(new Set());
 
   // Advertisement types and statuses
   advertisementTypes: { value: AdvertisementType | ''; label: string }[] = [
@@ -98,6 +101,35 @@ export class AdvertisementsListComponent implements OnInit {
 
   onRefresh() {
     this.loadAdvertisements();
+  }
+
+  // Dropdown methods
+  toggleDropdown(advertisementId: string) {
+    const current = new Set(this.openDropdowns());
+    if (current.has(advertisementId)) {
+      current.delete(advertisementId);
+    } else {
+      current.clear(); // Close other dropdowns
+      current.add(advertisementId);
+    }
+    this.openDropdowns.set(current);
+  }
+
+  isDropdownOpen(advertisementId: string): boolean {
+    return this.openDropdowns().has(advertisementId);
+  }
+
+  closeAllDropdowns() {
+    this.openDropdowns.set(new Set());
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    // Close dropdown if clicking outside of dropdown elements
+    if (!target.closest('.dropdown')) {
+      this.closeAllDropdowns();
+    }
   }
 
   updateAdvertisementStatus(advertisement: Advertisement, newStatus: AdvertisementStatus) {

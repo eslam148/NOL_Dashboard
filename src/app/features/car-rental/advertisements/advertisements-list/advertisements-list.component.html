@@ -230,15 +230,19 @@
           </a>
           
           <!-- Status Actions -->
-          <div class="dropdown">
-            <button class="btn btn-ghost btn-sm dropdown-toggle">
+          <div class="dropdown" [class.open]="isDropdownOpen(advertisement.id)">
+            <button 
+              class="btn btn-ghost btn-sm dropdown-toggle"
+              (click)="toggleDropdown(advertisement.id)"
+              (blur)="closeAllDropdowns()"
+            >
               <i class="bi bi-three-dots-vertical"></i>
             </button>
-            <div class="dropdown-menu">
+            <div class="dropdown-menu" [class.show]="isDropdownOpen(advertisement.id)">
               <button 
                 class="dropdown-item" 
                 *ngIf="advertisement.status === 'draft'"
-                (click)="updateAdvertisementStatus(advertisement, 'active')"
+                (click)="updateAdvertisementStatus(advertisement, 'active'); closeAllDropdowns()"
               >
                 <i class="bi bi-play-circle"></i>
                 {{ 'advertisements.activate' | translate }}
@@ -246,7 +250,7 @@
               <button 
                 class="dropdown-item" 
                 *ngIf="advertisement.status === 'active'"
-                (click)="updateAdvertisementStatus(advertisement, 'paused')"
+                (click)="updateAdvertisementStatus(advertisement, 'paused'); closeAllDropdowns()"
               >
                 <i class="bi bi-pause-circle"></i>
                 {{ 'advertisements.pause' | translate }}
@@ -254,7 +258,7 @@
               <button 
                 class="dropdown-item" 
                 *ngIf="advertisement.status === 'paused'"
-                (click)="updateAdvertisementStatus(advertisement, 'active')"
+                (click)="updateAdvertisementStatus(advertisement, 'active'); closeAllDropdowns()"
               >
                 <i class="bi bi-play-circle"></i>
                 {{ 'advertisements.resume' | translate }}
@@ -262,14 +266,14 @@
               <button 
                 class="dropdown-item" 
                 *ngIf="advertisement.status !== 'archived'"
-                (click)="updateAdvertisementStatus(advertisement, 'archived')"
+                (click)="updateAdvertisementStatus(advertisement, 'archived'); closeAllDropdowns()"
               >
                 <i class="bi bi-archive"></i>
                 {{ 'advertisements.archive' | translate }}
               </button>
               <button 
                 class="dropdown-item text-danger" 
-                (click)="deleteAdvertisement(advertisement)"
+                (click)="deleteAdvertisement(advertisement); closeAllDropdowns()"
               >
                 <i class="bi bi-trash"></i>
                 {{ 'common.delete' | translate }}
