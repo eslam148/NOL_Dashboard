@@ -102,6 +102,7 @@
 .advertisement-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  overflow: visible;
 }
 
 .advertisement-header {
