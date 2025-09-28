@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, forwardRef, signal, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, signal, ChangeDetectorRef, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslatePipe } from '../../pipes/translate.pipe';
@@ -37,7 +37,7 @@ export interface UploadedImage {
     }
   ]
 })
-export class ImageUploadComponent implements ControlValueAccessor {
+export class ImageUploadComponent implements ControlValueAccessor, OnInit {
   private cdr = inject(ChangeDetectorRef);
   
   @Input() config: ImageUploadConfig = {};
@@ -73,6 +73,10 @@ export class ImageUploadComponent implements ControlValueAccessor {
   // ControlValueAccessor implementation
   private onChange = (value: UploadedImage[]) => {};
   private onTouched = () => {};
+
+  ngOnInit() {
+    console.log('📸 ImageUploadComponent initialized');
+  }
 
   writeValue(value: UploadedImage[]): void {
     console.log('📸 ImageUpload writeValue called with:', value);
