@@ -17,7 +17,7 @@
     (click)="!disabled && canAddMoreFiles && fileInput.click()"
     [attr.tabindex]="disabled ? -1 : 0"
     role="button"
-    [attr.aria-label]="'imageUpload.selectFiles' | translate"
+    [attr.aria-label]="'common.imageUpload.selectFiles' | translate"
   >
     <!-- Hidden file input -->
     <input
@@ -36,7 +36,7 @@
       <!-- Loading State -->
       <div class="loading-state" *ngIf="isLoading()">
         <div class="spinner"></div>
-        <p class="loading-text">{{ 'imageUpload.processing' | translate }}</p>
+        <p class="loading-text">{{ 'common.imageUpload.processing' | translate }}</p>
       </div>
 
       <!-- Default Upload State -->
@@ -44,7 +44,7 @@
         <div class="upload-icon">
           <i class="bi bi-cloud-upload"></i>
         </div>
-        <h3 class="upload-title">{{ 'imageUpload.uploadTitle' | translate }}</h3>
+        <h3 class="upload-title">{{ 'common.imageUpload.uploadTitle' | translate }}</h3>
         <p class="upload-description">{{ placeholderText | translate }}</p>
         <div class="upload-actions">
           <button 
@@ -53,23 +53,23 @@
             [disabled]="disabled"
           >
             <i class="bi bi-plus-circle"></i>
-            {{ 'imageUpload.selectFiles' | translate }}
+            {{ 'common.imageUpload.selectFiles' | translate }}
           </button>
         </div>
         <div class="upload-info">
           <p class="file-info">
             <span class="accepted-formats">
-              {{ 'imageUpload.acceptedFormats' | translate }}: 
+              {{ 'common.imageUpload.acceptedFormats' | translate }}: 
               <strong>{{ allowedTypes.join(', ') }}</strong>
             </span>
           </p>
           <p class="file-limits">
             <span class="max-size">
-              {{ 'imageUpload.maxSize' | translate }}: 
+              {{ 'common.imageUpload.maxSize' | translate }}: 
               <strong>{{ maxFileSize }}MB</strong>
             </span>
             <span class="max-files" *ngIf="isMultiple">
-              • {{ 'imageUpload.maxFiles' | translate }}: 
+              • {{ 'common.imageUpload.maxFiles' | translate }}: 
               <strong>{{ maxFiles }}</strong>
             </span>
           </p>
@@ -85,7 +85,7 @@
         (click)="!disabled && fileInput.click()"
       >
         <i class="bi bi-plus-circle"></i>
-        {{ 'imageUpload.addMoreFiles' | translate }}
+        {{ 'common.imageUpload.addMoreFiles' | translate }}
       </button>
     </div>
   </div>
@@ -111,8 +111,8 @@
             class="remove-btn"
             *ngIf="showRemoveButton && !disabled"
             (click)="removeImage(image.id)"
-            [attr.aria-label]="'imageUpload.removeImage' | translate"
-            title="{{ 'imageUpload.removeImage' | translate }}"
+            [attr.aria-label]="'common.imageUpload.removeImage' | translate"
+            title="{{ 'common.imageUpload.removeImage' | translate }}"
           >
             <i class="bi bi-x-circle-fill"></i>
           </button>
@@ -136,7 +136,7 @@
   <!-- File Count Info -->
   <div class="file-count-info" *ngIf="uploadedImages().length > 0">
     <p class="count-text">
-      {{ 'imageUpload.filesSelected' | translate }}: 
+      {{ 'common.imageUpload.filesSelected' | translate }}: 
       <strong>{{ uploadedImages().length }}</strong>
       <span *ngIf="isMultiple">/ {{ maxFiles }}</span>
     </p>

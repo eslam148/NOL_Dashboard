@@ -104,7 +104,7 @@ uploadConfig = {
 | `multiple` | boolean | true | Allow multiple file selection |
 | `showPreview` | boolean | true | Show image previews |
 | `showRemoveButton` | boolean | true | Show remove buttons on previews |
-| `placeholder` | string | 'imageUpload.dragDropFiles' | Custom placeholder text |
+| `placeholder` | string | 'common.imageUpload.dragDropFiles' | Custom placeholder text |
 | `accept` | string | 'image/*' | HTML input accept attribute |
 
 ## Events

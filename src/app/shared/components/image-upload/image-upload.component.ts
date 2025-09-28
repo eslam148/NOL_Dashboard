@@ -47,7 +47,7 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
   
   @Input() config: ImageUploadConfig = {};
   @Input() disabled = false;
-  @Input() label = 'imageUpload.selectFiles';
+  @Input() label = 'common.imageUpload.selectFiles';
   @Input() errorMessage = '';
   
   @Output() filesSelected = new EventEmitter<UploadedImage[]>();
@@ -67,7 +67,7 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
     multiple: true,
     showPreview: true,
     showRemoveButton: true,
-    placeholder: 'imageUpload.dragDropFiles',
+    placeholder: 'common.imageUpload.dragDropFiles',
     accept: 'image/*'
   };
 
@@ -199,7 +199,7 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
 
     } catch (error) {
       console.error('Error handling files:', error);
-      this.uploadError.emit('imageUpload.errorProcessingFiles');
+      this.uploadError.emit('common.imageUpload.errorProcessingFiles');
     } finally {
       this.isLoading.set(false);
     }
@@ -213,24 +213,24 @@ export class ImageUploadComponent implements ControlValueAccessor, OnInit {
     const totalCount = currentCount + files.length;
     
     if (!config.multiple && files.length > 1) {
-      return { isValid: false, error: 'imageUpload.singleFileOnly' };
+      return { isValid: false, error: 'common.imageUpload.singleFileOnly' };
     }
 
     if (totalCount > config.maxFiles) {
-      return { isValid: false, error: 'imageUpload.maxFilesExceeded' };
+      return { isValid: false, error: 'common.imageUpload.maxFilesExceeded' };
     }
 
     // Validate each file
     for (const file of files) {
       // Check file type
       if (!config.allowedTypes.includes(file.type)) {
-        return { isValid: false, error: 'imageUpload.invalidFileType' };
+        return { isValid: false, error: 'common.imageUpload.invalidFileType' };
       }
 
       // Check file size
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > config.maxFileSize) {
-        return { isValid: false, error: 'imageUpload.fileTooLarge' };
+        return { isValid: false, error: 'common.imageUpload.fileTooLarge' };
       }
     }
 
