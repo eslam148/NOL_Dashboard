@@ -240,6 +240,7 @@ export class TranslationService {
       vehicles: {
         title: 'Vehicle Management',
         subtitle: 'Manage rental fleet vehicles',
+        vehicle: 'Vehicle',
         addVehicle: 'Add Vehicle',
         addFirstVehicle: 'Add First Vehicle',
         editVehicle: 'Edit Vehicle',
@@ -536,7 +537,32 @@ export class TranslationService {
         profileImagePlaceholder: 'https://example.com/avatar.jpg',
         profileImageHelp: 'URL to profile image (optional)',
         notes: 'Notes',
-        notesPlaceholder: 'Additional notes about this user'
+        notesPlaceholder: 'Additional notes about this user',
+        
+        // Admin Users List Page
+        title: 'Admin Users Management',
+        subtitle: 'Manage administrative user accounts and permissions',
+        addAdmin: 'Add Admin User',
+        adminUsers: 'Admin Users',
+        activityLogs: 'Activity Logs',
+        searchPlaceholder: 'Search admin users...',
+        showingResults: 'Showing',
+        of: 'of',
+        users: 'users',
+        allRoles: 'All Roles',
+        allStatuses: 'All Statuses',
+        superAdmin: 'Super Admin',
+        branchManager: 'Branch Manager',
+        lastLogin: 'Last Login',
+        branches: 'Branches',
+        allBranches: 'All Branches',
+        joined: 'Joined',
+        permissions: 'Permissions',
+        noUsersFound: 'No admin users found',
+        noUsersDescription: 'No admin users match your current filters',
+        addFirstAdmin: 'Add First Admin User',
+        noLogsFound: 'No activity logs found',
+        noLogsDescription: 'No activity logs available for this user'
       },
 
       // Additional Services Management
@@ -600,7 +626,30 @@ export class TranslationService {
         tagsPlaceholder: 'popular, recommended, premium',
         tagsHelp: 'Separate tags with commas for better searchability',
         notes: 'Notes',
-        notesPlaceholder: 'Additional notes about this service'
+        notesPlaceholder: 'Additional notes about this service',
+        
+        // Service List Page
+        title: 'Services Management',
+        subtitle: 'Manage additional services and offerings',
+        searchPlaceholder: 'Search services...',
+        showingResults: 'Showing',
+        of: 'of',
+        services: 'services',
+        allCategories: 'All Categories',
+        allAvailability: 'All Availability',
+        available: 'Available',
+        unavailable: 'Unavailable',
+        units: 'units',
+        noServicesFound: 'No services found',
+        noServicesDescription: 'No services match your current filters',
+        addFirstService: 'Add First Service',
+        
+        // Service Detail Page
+        serviceDetails: 'Service Details',
+        serviceDetailsDesc: 'View complete service information and pricing',
+        overview: 'Overview',
+        name: 'Name',
+        details: 'Details'
       },
 
       // Customer Management
@@ -623,6 +672,7 @@ export class TranslationService {
         documentUploadDesc: 'Upload required documents for verification',
         preferences: 'Preferences',
         preferencesDesc: 'Customer preferences and notification settings',
+        name: 'Name',
         firstName: 'First Name',
         firstNamePlaceholder: 'Enter first name',
         lastName: 'Last Name',
@@ -688,6 +738,11 @@ export class TranslationService {
         profileImageHelp: 'URL to customer profile image (optional)',
         notes: 'Notes',
         notesPlaceholder: 'Additional notes about this customer',
+        // Additional missing keys
+        metrics: 'Metrics',
+        address: 'Address',
+        verificationStatus: 'Verification Status',
+        profile: 'Profile',
         driverLicenseFront: 'Driver License (Front)',
         driverLicenseFrontPlaceholder: 'https://example.com/license-front.jpg',
         driverLicenseBack: 'Driver License (Back)',
@@ -721,6 +776,8 @@ export class TranslationService {
         customers: 'customers',
 
         // Customer Status and Types
+        allStatuses: 'All Statuses',
+        allTypes: 'All Types',
         active: 'Active',
         inactive: 'Inactive',
         blacklisted: 'Blacklisted',
@@ -844,7 +901,38 @@ export class TranslationService {
         paymentPending: 'Payment Pending',
         paymentPartial: 'Partially Paid',
         paymentPaid: 'Fully Paid',
-        paymentRefunded: 'Refunded'
+        paymentRefunded: 'Refunded',
+        // Booking Details Page
+        bookingDetails: 'Booking Details',
+        bookingDetailsDesc: 'View complete booking information and customer details',
+        overview: 'Overview',
+        bookingId: 'Booking ID',
+        totalDays: 'Total Days',
+        pickupDropoff: 'Pickup & Dropoff',
+        pickupBranch: 'Pickup Branch',
+        dropoffBranch: 'Dropoff Branch',
+        billing: 'Billing',
+        subtotal: 'Subtotal',
+        taxes: 'Taxes',
+        fees: 'Fees',
+        total: 'Total',
+        // Additional missing keys
+        changeStatus: 'Change Status',
+        confirm: 'Confirm',
+        activate: 'Activate',
+        complete: 'Complete',
+        cancel: 'Cancel',
+        noBookingsDescription: 'No bookings match your current filters',
+        createFirstBooking: 'Create First Booking',
+        calendarComingSoon: 'Calendar View Coming Soon',
+        calendarComingSoonDesc: 'We\'re working on adding a calendar view for better booking management',
+        bookingOverview: 'Booking Overview',
+        totalBookings: 'Total Bookings',
+        activeBookings: 'Active Bookings',
+        revenue: 'Revenue',
+        totalRevenue: 'Total Revenue',
+        pendingPayments: 'Pending Payments',
+        completion: 'Completion'
       },
 
     },
@@ -1075,6 +1163,7 @@ export class TranslationService {
       vehicles: {
         title: 'إدارة المركبات',
         subtitle: 'إدارة أسطول المركبات المؤجرة',
+        vehicle: 'المركبة',
         addVehicle: 'إضافة مركبة',
         addFirstVehicle: 'إضافة أول مركبة',
         editVehicle: 'تعديل المركبة',
@@ -1376,7 +1465,32 @@ export class TranslationService {
         super_admin: 'مدير عام',
         branch_manager: 'مدير فرع',
         staff: 'موظف',
-        viewer: 'مشاهد'
+        viewer: 'مشاهد',
+        
+        // صفحة قائمة المستخدمين الإداريين
+        title: 'إدارة المستخدمين الإداريين',
+        subtitle: 'إدارة حسابات المستخدمين الإداريين والصلاحيات',
+        addAdmin: 'إضافة مستخدم إداري',
+        adminUsers: 'المستخدمون الإداريون',
+        activityLogs: 'سجلات النشاط',
+        searchPlaceholder: 'البحث في المستخدمين الإداريين...',
+        showingResults: 'عرض',
+        of: 'من',
+        users: 'مستخدمين',
+        allRoles: 'جميع الأدوار',
+        allStatuses: 'جميع الحالات',
+        superAdmin: 'مدير عام',
+        branchManager: 'مدير فرع',
+        lastLogin: 'آخر تسجيل دخول',
+        branches: 'الفروع',
+        allBranches: 'جميع الفروع',
+        joined: 'انضم في',
+        permissions: 'الصلاحيات',
+        noUsersFound: 'لم يتم العثور على مستخدمين إداريين',
+        noUsersDescription: 'لا يوجد مستخدمون إداريون يطابقون المرشحات الحالية',
+        addFirstAdmin: 'إضافة أول مستخدم إداري',
+        noLogsFound: 'لم يتم العثور على سجلات نشاط',
+        noLogsDescription: 'لا توجد سجلات نشاط متاحة لهذا المستخدم'
       },
 
       // إدارة الخدمات الإضافية
@@ -1440,7 +1554,30 @@ export class TranslationService {
         tagsPlaceholder: 'شائع، موصى به، مميز',
         tagsHelp: 'افصل العلامات بفواصل لتحسين البحث',
         notes: 'ملاحظات',
-        notesPlaceholder: 'ملاحظات إضافية حول هذه الخدمة'
+        notesPlaceholder: 'ملاحظات إضافية حول هذه الخدمة',
+        
+        // صفحة قائمة الخدمات
+        title: 'إدارة الخدمات',
+        subtitle: 'إدارة الخدمات الإضافية والعروض',
+        searchPlaceholder: 'البحث في الخدمات...',
+        showingResults: 'عرض',
+        of: 'من',
+        services: 'خدمات',
+        allCategories: 'جميع الفئات',
+        allAvailability: 'جميع حالات التوفر',
+        available: 'متاح',
+        unavailable: 'غير متاح',
+        units: 'وحدات',
+        noServicesFound: 'لم يتم العثور على خدمات',
+        noServicesDescription: 'لا توجد خدمات تطابق المرشحات الحالية',
+        addFirstService: 'إضافة أول خدمة',
+        
+        // صفحة تفاصيل الخدمة
+        serviceDetails: 'تفاصيل الخدمة',
+        serviceDetailsDesc: 'عرض معلومات الخدمة الكاملة والأسعار',
+        overview: 'نظرة عامة',
+        name: 'الاسم',
+        details: 'التفاصيل'
       },
 
       // إدارة العملاء
@@ -1463,6 +1600,7 @@ export class TranslationService {
         documentUploadDesc: 'رفع المستندات المطلوبة للتحقق',
         preferences: 'التفضيلات',
         preferencesDesc: 'تفضيلات العميل وإعدادات الإشعارات',
+        name: 'الاسم',
         firstName: 'الاسم الأول',
         firstNamePlaceholder: 'أدخل الاسم الأول',
         lastName: 'اسم العائلة',
@@ -1528,6 +1666,11 @@ export class TranslationService {
         profileImageHelp: 'رابط صورة الملف الشخصي للعميل (اختياري)',
         notes: 'ملاحظات',
         notesPlaceholder: 'ملاحظات إضافية حول هذا العميل',
+        // مفاتيح إضافية مفقودة
+        metrics: 'المقاييس',
+        address: 'العنوان',
+        verificationStatus: 'حالة التحقق',
+        profile: 'الملف الشخصي',
         driverLicenseFront: 'رخصة القيادة (الوجه الأمامي)',
         driverLicenseFrontPlaceholder: 'https://example.com/license-front.jpg',
         driverLicenseBack: 'رخصة القيادة (الوجه الخلفي)',
@@ -1561,6 +1704,8 @@ export class TranslationService {
         customers: 'عملاء',
 
         // حالة وأنواع العملاء
+        allStatuses: 'جميع الحالات',
+        allTypes: 'جميع الأنواع',
         active: 'نشط',
         inactive: 'غير نشط',
         blacklisted: 'في القائمة السوداء',
@@ -1684,7 +1829,38 @@ export class TranslationService {
         paymentPending: 'الدفع في الانتظار',
         paymentPartial: 'مدفوع جزئياً',
         paymentPaid: 'مدفوع بالكامل',
-        paymentRefunded: 'مسترد'
+        paymentRefunded: 'مسترد',
+        // صفحة تفاصيل الحجز
+        bookingDetails: 'تفاصيل الحجز',
+        bookingDetailsDesc: 'عرض معلومات الحجز الكاملة وتفاصيل العميل',
+        overview: 'نظرة عامة',
+        bookingId: 'رقم الحجز',
+        totalDays: 'إجمالي الأيام',
+        pickupDropoff: 'الاستلام والتسليم',
+        pickupBranch: 'فرع الاستلام',
+        dropoffBranch: 'فرع التسليم',
+        billing: 'الفوترة',
+        subtotal: 'المجموع الفرعي',
+        taxes: 'الضرائب',
+        fees: 'الرسوم',
+        total: 'الإجمالي',
+        // مفاتيح إضافية مفقودة
+        changeStatus: 'تغيير الحالة',
+        confirm: 'تأكيد',
+        activate: 'تفعيل',
+        complete: 'إكمال',
+        cancel: 'إلغاء',
+        noBookingsDescription: 'لا توجد حجوزات تطابق المرشحات الحالية',
+        createFirstBooking: 'إنشاء أول حجز',
+        calendarComingSoon: 'عرض التقويم قريباً',
+        calendarComingSoonDesc: 'نعمل على إضافة عرض التقويم لإدارة أفضل للحجوزات',
+        bookingOverview: 'نظرة عامة على الحجوزات',
+        totalBookings: 'إجمالي الحجوزات',
+        activeBookings: 'الحجوزات النشطة',
+        revenue: 'الإيرادات',
+        totalRevenue: 'إجمالي الإيرادات',
+        pendingPayments: 'المدفوعات المعلقة',
+        completion: 'الإكمال'
       }
     }
   };
