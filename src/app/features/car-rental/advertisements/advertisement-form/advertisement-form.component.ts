@@ -6,11 +6,14 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { Advertisement, AdvertisementType, AdvertisementStatus, Branch } from '../../../../core/models/car-rental.models';
+import { ImageUploadComponent, UploadedImage, ImageUploadConfig } from '../../../../shared/components/image-upload';
+import { FileUploadService } from '../../../../core/services/file-upload.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-advertisement-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslatePipe, ImageUploadComponent],
   templateUrl: './advertisement-form.component.html',
   styleUrls: ['./advertisement-form.component.css']
 })
@@ -20,6 +23,8 @@ export class AdvertisementFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private translationService = inject(TranslationService);
+  private fileUploadService = inject(FileUploadService);
+  private cdr = inject(ChangeDetectorRef);
 
   advertisementForm!: FormGroup;
   branches = signal<Branch[]>([]);
@@ -27,6 +32,19 @@ export class AdvertisementFormComponent implements OnInit {
   isSubmitting = signal(false);
   isEditMode = signal(false);
   advertisementId = signal<string | null>(null);
+
+  // Image upload properties
+  uploadedImages = signal<UploadedImage[]>([]);
+  isUploadingImage = signal(false);
+  uploadError = signal<string | null>(null);
+  
+  imageUploadConfig: ImageUploadConfig = {
+    maxFiles: 1,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    showPreview: true,
+    showRemoveButton: true
+  };
 
   // Advertisement types and options
   // Use server enums for type to match API exactly
@@ -66,7 +84,7 @@ export class AdvertisementFormComponent implements OnInit {
       endDate: [this.formatDateForInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), Validators.required],
       
       // Media
-      imageUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\//)]],
+      imageUrl: ['', Validators.required],
       targetUrl: [''],
       
       // Budget & Priority
@@ -149,6 +167,25 @@ export class AdvertisementFormComponent implements OnInit {
       interests: advertisement.targetAudience?.interests?.join(', ') || '',
       branchIds: advertisement.branchIds?.join(',') || ''
     });
+
+    // Initialize uploaded images if imageUrl exists
+    this.initializeUploadedImages(advertisement.imageUrl);
+  }
+
+  private initializeUploadedImages(imageUrl: string) {
+    if (imageUrl) {
+      const fileName = this.fileUploadService.getFileNameFromUrl(imageUrl);
+      const uploadedImage: UploadedImage = {
+        id: 'existing',
+        url: imageUrl,
+        name: fileName || 'Existing Image',
+        size: 0,
+        preview: imageUrl,
+        type: 'image/jpeg'
+      };
+      this.uploadedImages.set([uploadedImage]);
+      this.cdr.detectChanges();
+    }
   }
 
   private formatDateForInput(date: Date): string {
@@ -257,5 +294,52 @@ export class AdvertisementFormComponent implements OnInit {
 
   onCancel() {
     this.router.navigate(['/car-rental/advertisements']);
+  }
+
+  // Image upload event handlers
+  onImageFilesSelected(images: UploadedImage[]) {
+    if (images.length > 0 && images[0].file) {
+      this.isUploadingImage.set(true);
+      this.uploadError.set(null);
+      
+      this.fileUploadService.uploadFile(images[0].file, 'advertisements').subscribe({
+        next: (result) => {
+          if (result && result.fileUrl) {
+            // Update form control with the uploaded image URL
+            this.advertisementForm.patchValue({ imageUrl: result.fileUrl });
+            this.uploadedImages.set([{
+              id: result.fileName,
+              url: result.fileUrl,
+              name: result.originalFileName,
+              size: result.fileSize,
+              file: images[0].file,
+              preview: result.fileUrl,
+              type: images[0].file?.type || 'image/jpeg'
+            }]);
+            this.isUploadingImage.set(false);
+            this.cdr.detectChanges();
+          }
+        },
+        error: (error) => {
+          console.error('Image upload error:', error);
+          this.uploadError.set('Failed to upload image. Please try again.');
+          this.isUploadingImage.set(false);
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  onImageFileRemoved() {
+    this.advertisementForm.patchValue({ imageUrl: '' });
+    this.uploadedImages.set([]);
+    this.uploadError.set(null);
+    this.cdr.detectChanges();
+  }
+
+  onImageUploadError(error: string) {
+    this.uploadError.set(error);
+    this.isUploadingImage.set(false);
+    this.cdr.detectChanges();
   }
 }

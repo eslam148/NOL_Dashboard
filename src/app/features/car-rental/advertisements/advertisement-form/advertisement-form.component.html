@@ -216,19 +216,20 @@
         </div>
         
         <div class="form-grid">
-          <!-- Image URL -->
+          <!-- Advertisement Image -->
           <div class="form-group full-width">
-            <label class="form-label" for="imageUrl">
+            <label class="form-label">
               {{ 'advertisements.imageUrl' | translate }} <span class="required">*</span>
             </label>
-            <input
-              type="url"
-              id="imageUrl"
+            <app-image-upload
               formControlName="imageUrl"
-              class="form-input"
-              [class.error]="isFieldInvalid('imageUrl')"
-              [placeholder]="'advertisements.imageUrlPlaceholder' | translate"
-            />
+              [config]="imageUploadConfig"
+              [disabled]="isSubmitting() || isUploadingImage()"
+              [errorMessage]="uploadError() || ''"
+              (filesSelected)="onImageFilesSelected($event)"
+              (fileRemoved)="onImageFileRemoved()"
+              (uploadError)="onImageUploadError($event)">
+            </app-image-upload>
             <div class="form-help">{{ 'advertisements.imageUrlHelp' | translate }}</div>
             <div class="error-message" *ngIf="isFieldInvalid('imageUrl')">
               {{ getFieldError('imageUrl') }}
