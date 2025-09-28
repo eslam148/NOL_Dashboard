@@ -45,13 +45,19 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
  * Add Authorization header to request
  */
 function addAuthHeader(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
+  const headers: { [key: string]: string } = {
+    'Authorization': `Bearer ${token}`,
+    'Accept-Language': localStorage.getItem(environment.auth.languageKey) || 'en',
+    'Accept': 'application/json'
+  };
+
+  // Only set Content-Type if it's not FormData (for file uploads)
+  if (!(req.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   return req.clone({
-    setHeaders: {
-      'Authorization': `Bearer ${token}`,
-      'Accept-Language': localStorage.getItem(environment.auth.languageKey) || 'en',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
+    setHeaders: headers
   });
 }
 

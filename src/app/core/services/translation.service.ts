@@ -111,6 +111,23 @@ export class TranslationService {
           min: 'Value is too low',
           max: 'Value is too high',
           passwordMismatch: 'Passwords do not match'
+        },
+        imageUpload: {
+          selectFiles: 'Select Files',
+          dragDropFiles: 'Drag and drop files here or click to select',
+          uploadTitle: 'Upload Images',
+          processing: 'Processing files...',
+          addMoreFiles: 'Add More Files',
+          removeImage: 'Remove Image',
+          filesSelected: 'Files Selected',
+          acceptedFormats: 'Accepted formats',
+          maxSize: 'Max size',
+          maxFiles: 'Max files',
+          singleFileOnly: 'Only one file is allowed',
+          maxFilesExceeded: 'Maximum number of files exceeded',
+          invalidFileType: 'Invalid file type. Please select an image file.',
+          fileTooLarge: 'File size exceeds the maximum limit',
+          errorProcessingFiles: 'Error processing files. Please try again.'
         }
       },
       // Car Rental Dashboard
@@ -280,6 +297,7 @@ export class TranslationService {
         documentationDesc: 'Insurance and registration information',
         additionalInfo: 'Additional Information',
         additionalInfoDesc: 'Extra features and notes',
+        selectVehicleImage: 'Select Vehicle Image',
         makePlaceholder: 'e.g., Toyota, BMW, Mercedes',
         modelPlaceholder: 'e.g., Camry, X5, C-Class',
         yearPlaceholder: 'e.g., 2023',
@@ -905,6 +923,23 @@ export class TranslationService {
           min: 'القيمة منخفضة جداً',
           max: 'القيمة عالية جداً',
           passwordMismatch: 'كلمات المرور غير متطابقة'
+        },
+        imageUpload: {
+          selectFiles: 'اختيار الملفات',
+          dragDropFiles: 'اسحب وأفلت الملفات هنا أو انقر للاختيار',
+          uploadTitle: 'رفع الصور',
+          processing: 'جاري معالجة الملفات...',
+          addMoreFiles: 'إضافة ملفات أخرى',
+          removeImage: 'حذف الصورة',
+          filesSelected: 'الملفات المختارة',
+          acceptedFormats: 'الصيغ المقبولة',
+          maxSize: 'الحجم الأقصى',
+          maxFiles: 'الحد الأقصى للملفات',
+          singleFileOnly: 'يُسمح بملف واحد فقط',
+          maxFilesExceeded: 'تم تجاوز الحد الأقصى لعدد الملفات',
+          invalidFileType: 'نوع ملف غير صحيح. يرجى اختيار ملف صورة.',
+          fileTooLarge: 'حجم الملف يتجاوز الحد الأقصى المسموح',
+          errorProcessingFiles: 'خطأ في معالجة الملفات. يرجى المحاولة مرة أخرى.'
         }
       },
       // لوحة تحكم تأجير السيارات
@@ -1073,6 +1108,7 @@ export class TranslationService {
         documentationDesc: 'معلومات التأمين والتسجيل',
         additionalInfo: 'معلومات إضافية',
         additionalInfoDesc: 'ميزات إضافية وملاحظات',
+        selectVehicleImage: 'اختيار صورة المركبة',
         makePlaceholder: 'مثل: تويوتا، بي إم دبليو، مرسيدس',
         modelPlaceholder: 'مثل: كامري، X5، C-Class',
         yearPlaceholder: 'مثل: 2023',

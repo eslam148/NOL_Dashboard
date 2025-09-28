@@ -1,6 +1,18 @@
 // API Response Models based on the Admin API Documentation
 
 /**
+ * File Upload Models
+ */
+export interface FileUploadResultDto {
+  fileName: string;
+  originalFileName: string;
+  fileSize: number;
+  fileUrl: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
+/**
  * Enums matching C# backend
  */
 export enum FuelType {

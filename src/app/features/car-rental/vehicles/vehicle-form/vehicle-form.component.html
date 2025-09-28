@@ -557,17 +557,18 @@
         </div>
         
         <div class="form-grid">
-          <!-- Image URL -->
+          <!-- Vehicle Image Upload -->
           <div class="form-group full-width">
-            <label class="form-label" for="imageUrl">
-              {{ 'vehicles.imageUrl' | translate }}
-            </label>
-            <input
-              type="url"
-              id="imageUrl"
-              formControlName="imageUrl"
-              class="form-input"
-              [placeholder]="'vehicles.imageUrlPlaceholder' | translate">
+            <app-image-upload
+              [ngModel]="uploadedImages()"
+              (ngModelChange)="onUploadedImagesChange($event)"
+              [config]="imageUploadConfig"
+              [disabled]="isSubmitting() || isUploadingImage()"
+              [errorMessage]="uploadError()"
+              (filesSelected)="onImageFilesSelected($event)"
+              (fileRemoved)="onImageFileRemoved($event)"
+              (uploadError)="onImageUploadError($event)">
+            </app-image-upload>
           </div>
 
           <!-- Description Arabic -->

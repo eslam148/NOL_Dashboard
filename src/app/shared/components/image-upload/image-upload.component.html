@@ -1,0 +1,144 @@
+<div class="image-upload-container" [class.disabled]="disabled">
+  <!-- Label -->
+  <label class="image-upload-label" *ngIf="label">
+    {{ label | translate }}
+    <span class="required" *ngIf="!isMultiple">*</span>
+  </label>
+
+  <!-- Upload Area -->
+  <div 
+    class="upload-area"
+    [class.drag-over]="isDragOver()"
+    [class.has-files]="uploadedImages().length > 0"
+    [class.disabled]="disabled"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="!disabled && canAddMoreFiles && fileInput.click()"
+    [attr.tabindex]="disabled ? -1 : 0"
+    role="button"
+    [attr.aria-label]="'imageUpload.selectFiles' | translate"
+  >
+    <!-- Hidden file input -->
+    <input
+      #fileInput
+      type="file"
+      [accept]="acceptTypes"
+      [multiple]="isMultiple"
+      [disabled]="disabled || !canAddMoreFiles"
+      (change)="onFileSelected($event)"
+      class="hidden-input"
+      aria-hidden="true"
+    />
+
+    <!-- Upload Content -->
+    <div class="upload-content" *ngIf="uploadedImages().length === 0">
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading()">
+        <div class="spinner"></div>
+        <p class="loading-text">{{ 'imageUpload.processing' | translate }}</p>
+      </div>
+
+      <!-- Default Upload State -->
+      <div class="default-state" *ngIf="!isLoading()">
+        <div class="upload-icon">
+          <i class="bi bi-cloud-upload"></i>
+        </div>
+        <h3 class="upload-title">{{ 'imageUpload.uploadTitle' | translate }}</h3>
+        <p class="upload-description">{{ placeholderText | translate }}</p>
+        <div class="upload-actions">
+          <button 
+            type="button" 
+            class="btn btn-primary btn-sm"
+            [disabled]="disabled"
+          >
+            <i class="bi bi-plus-circle"></i>
+            {{ 'imageUpload.selectFiles' | translate }}
+          </button>
+        </div>
+        <div class="upload-info">
+          <p class="file-info">
+            <span class="accepted-formats">
+              {{ 'imageUpload.acceptedFormats' | translate }}: 
+              <strong>{{ allowedTypes.join(', ') }}</strong>
+            </span>
+          </p>
+          <p class="file-limits">
+            <span class="max-size">
+              {{ 'imageUpload.maxSize' | translate }}: 
+              <strong>{{ maxFileSize }}MB</strong>
+            </span>
+            <span class="max-files" *ngIf="isMultiple">
+              • {{ 'imageUpload.maxFiles' | translate }}: 
+              <strong>{{ maxFiles }}</strong>
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add More Files Button (when files exist) -->
+    <div class="add-more-container" *ngIf="uploadedImages().length > 0 && canAddMoreFiles && !disabled">
+      <button 
+        type="button" 
+        class="btn btn-secondary btn-sm add-more-btn"
+        (click)="!disabled && fileInput.click()"
+      >
+        <i class="bi bi-plus-circle"></i>
+        {{ 'imageUpload.addMoreFiles' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Image Previews -->
+  <div class="image-previews" *ngIf="showPreview && uploadedImages().length > 0">
+    <div class="preview-grid" [class.single]="!isMultiple">
+      <div 
+        class="image-preview" 
+        *ngFor="let image of uploadedImages(); trackBy: trackByImageId"
+      >
+        <div class="preview-image-container">
+          <img 
+            [src]="image.preview" 
+            [alt]="image.name"
+            class="preview-image"
+            loading="lazy"
+          />
+          
+          <!-- Remove Button -->
+          <button 
+            type="button"
+            class="remove-btn"
+            *ngIf="showRemoveButton && !disabled"
+            (click)="removeImage(image.id)"
+            [attr.aria-label]="'imageUpload.removeImage' | translate"
+            title="{{ 'imageUpload.removeImage' | translate }}"
+          >
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+        
+        <!-- Image Info -->
+        <div class="image-info">
+          <p class="image-name" [title]="image.name">{{ image.name }}</p>
+          <p class="image-size">{{ formatFileSize(image.size) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <i class="bi bi-exclamation-circle"></i>
+    <span>{{ errorMessage | translate }}</span>
+  </div>
+
+  <!-- File Count Info -->
+  <div class="file-count-info" *ngIf="uploadedImages().length > 0">
+    <p class="count-text">
+      {{ 'imageUpload.filesSelected' | translate }}: 
+      <strong>{{ uploadedImages().length }}</strong>
+      <span *ngIf="isMultiple">/ {{ maxFiles }}</span>
+    </p>
+  </div>
+</div>

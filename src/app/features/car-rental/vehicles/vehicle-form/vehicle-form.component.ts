@@ -1,11 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { CarApiService } from '../../../../core/services/car-api.service';
+import { FileUploadService } from '../../../../core/services/file-upload.service';
 import { Vehicle, VehicleCategory, VehicleStatus, Branch } from '../../../../core/models/car-rental.models';
 import { 
   AdminCreateCarDto, 
@@ -14,13 +15,15 @@ import {
   TransmissionType, 
   CarStatus, 
   CAR_VALIDATION, 
-  DEFAULT_CAR_VALUES 
+  DEFAULT_CAR_VALUES,
+  FileUploadResultDto
 } from '../../../../core/models/api.models';
+import { ImageUploadComponent, UploadedImage, ImageUploadConfig } from '../../../../shared/components/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-vehicle-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslatePipe, ImageUploadComponent],
   templateUrl: './vehicle-form.component.html',
   styleUrls: ['./vehicle-form.component.css']
 })
@@ -28,9 +31,11 @@ export class VehicleFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private carRentalService = inject(CarRentalService);
   private carApiService = inject(CarApiService);
+  private fileUploadService = inject(FileUploadService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private translationService = inject(TranslationService);
+  private cdr = inject(ChangeDetectorRef);
 
   vehicleForm!: FormGroup;
   branches = signal<Branch[]>([]);
@@ -38,6 +43,23 @@ export class VehicleFormComponent implements OnInit {
   isSubmitting = signal(false);
   isEditMode = signal(false);
   vehicleId = signal<string | null>(null);
+
+  // Image upload properties
+  uploadedImages = signal<UploadedImage[]>([]);
+  isUploadingImage = signal(false);
+  uploadError = signal<string>('');
+  
+  // Image upload configuration
+  imageUploadConfig: ImageUploadConfig = {
+    maxFiles: 1,
+    maxFileSize: 5, // 5MB
+    multiple: false,
+    showPreview: true,
+    showRemoveButton: true,
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    placeholder: 'vehicles.selectVehicleImage',
+    accept: 'image/*'
+  };
 
   // Vehicle categories and options
   categories: { value: VehicleCategory; label: string }[] = [
@@ -354,6 +376,9 @@ export class VehicleFormComponent implements OnInit {
       'Form fuelType': this.vehicleForm.get('fuelType')?.value,
       'Form transmissionType': this.vehicleForm.get('transmissionType')?.value
     });
+
+    // Initialize uploaded images if imageUrl exists
+    this.initializeUploadedImages();
   }
 
   // Helper methods to map API values to form enum values
@@ -560,5 +585,106 @@ export class VehicleFormComponent implements OnInit {
 
   onCancel() {
     this.router.navigate(['/car-rental/vehicles']);
+  }
+
+  // Image upload methods
+  onImageFilesSelected(images: UploadedImage[]): void {
+    this.uploadError.set('');
+    
+    if (images.length === 0) {
+      this.uploadedImages.set([]);
+      this.vehicleForm.patchValue({ imageUrl: '' });
+      return;
+    }
+
+    const image = images[0]; // Since we only allow single image
+    this.isUploadingImage.set(true);
+
+    // Upload the file to the server
+    this.fileUploadService.uploadFile(image.file, 'vehicles').subscribe({
+      next: (uploadResult) => {
+        console.log('✅ Image uploaded successfully:', uploadResult);
+        
+        // Update the form with the uploaded image URL
+        this.vehicleForm.patchValue({ imageUrl: uploadResult.fileUrl });
+        
+        // Create updated image object with server data
+        const updatedImage: UploadedImage = {
+          ...image,
+          id: uploadResult.fileName,
+          name: uploadResult.originalFileName,
+          preview: uploadResult.fileUrl, // This should be the full URL from the service
+          size: uploadResult.fileSize,
+          type: image.type
+        };
+        
+        // Update the uploaded images signal
+        this.uploadedImages.set([updatedImage]);
+        
+        console.log('📸 Updated uploadedImages:', this.uploadedImages());
+        console.log('📸 Form imageUrl:', this.vehicleForm.get('imageUrl')?.value);
+        
+        // Trigger change detection to update the UI
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('❌ Image upload failed:', error);
+        this.uploadError.set(error instanceof Error ? error.message : 'Upload failed');
+        this.uploadedImages.set([]);
+        
+        // Trigger change detection to update the UI
+        this.cdr.detectChanges();
+      },
+      complete: () => {
+        this.isUploadingImage.set(false);
+        
+        // Trigger change detection to hide the loader
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onImageFileRemoved(imageId: string): void {
+    this.uploadedImages.set([]);
+    this.vehicleForm.patchValue({ imageUrl: '' });
+    this.uploadError.set('');
+    this.cdr.detectChanges();
+  }
+
+  onImageUploadError(error: string): void {
+    this.uploadError.set(error);
+    console.error('Image upload error:', error);
+    this.cdr.detectChanges();
+  }
+
+  onUploadedImagesChange(images: UploadedImage[]): void {
+    this.uploadedImages.set(images);
+    this.cdr.detectChanges();
+  }
+
+  // Initialize uploaded images from existing imageUrl
+  private initializeUploadedImages(): void {
+    const imageUrl = this.vehicleForm.get('imageUrl')?.value;
+    
+    if (imageUrl && this.fileUploadService.isValidFileUrl(imageUrl)) {
+      // Create a mock UploadedImage for existing image
+      const fileName = this.fileUploadService.getFileNameFromUrl(imageUrl);
+      const mockImage: UploadedImage = {
+        id: fileName,
+        file: new File([], fileName, { type: 'image/jpeg' }), // Mock file
+        preview: imageUrl,
+        name: fileName,
+        size: 0,
+        type: 'image/jpeg'
+      };
+      
+      this.uploadedImages.set([mockImage]);
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Format file size for display
+  formatFileSize(bytes: number): string {
+    return this.fileUploadService.formatFileSize(bytes);
   }
 }
