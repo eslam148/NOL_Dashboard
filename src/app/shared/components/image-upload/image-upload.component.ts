@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { FileUploadService } from '../../../core/services/file-upload.service';
+import { TranslationService } from '../../../core/services/translation.service';
 
 export interface ImageUploadConfig {
   maxFiles?: number;
@@ -42,6 +43,7 @@ export interface UploadedImage {
 export class ImageUploadComponent implements ControlValueAccessor, OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fileUploadService = inject(FileUploadService);
+  private translationService = inject(TranslationService);
   
   @Input() config: ImageUploadConfig = {};
   @Input() disabled = false;

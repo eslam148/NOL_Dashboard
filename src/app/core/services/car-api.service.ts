@@ -55,10 +55,7 @@ export class CarApiService {
 
     return this.http.get<ApiResponse<PaginatedResponse<AdminCarDto>>>(this.baseUrl, { params }).pipe(
       map(response => {
-        // Add debugging logs
-        if (environment.logging.enableApiLogging) {
-          console.log('Car API Response:', response);
-        }
+        
 
         if (!response) {
           throw new Error('No response received from car API');
@@ -69,8 +66,7 @@ export class CarApiService {
         }
 
         if (!response.data) {
-          console.warn('Car API response succeeded but data is null/undefined:', response);
-          // Return empty paginated response structure
+        
           return {
             data: [],
             totalCount: 0,

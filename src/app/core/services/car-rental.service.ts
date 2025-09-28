@@ -196,35 +196,24 @@ export class CarRentalService {
     this.isLoading.set(true);
 
     if (this.useRealApi) {
-      console.log('📊 Fetching dashboard stats with filter:', filter);
+     
 
       return this.dashboardApiService.getDashboardStats(filter).pipe(
         map((dashboardStatsDto) => {
           this.isLoading.set(false);
 
-          console.log('📦 Dashboard Stats API Response:', dashboardStatsDto);
+        
           this.isLoading.set(false);
 
           // Convert DashboardStatsDto to DashboardStats
           const convertedStats = this.convertDashboardStatsDtoToStats(dashboardStatsDto);
-          console.log('🔄 Converted dashboard stats:', convertedStats);
+         
 
           return convertedStats;
         }),
         catchError((error) => {
           this.isLoading.set(false);
-          console.error('❌ Error fetching dashboard stats:', error);
-
-          // Log the full error for debugging
-          if (error.error) {
-            console.error('🔍 Dashboard API Error Details:', error.error);
-          }
-
-          // Check if it's a network error
-          if (error.status === 0) {
-            console.error('🌐 Network error - Dashboard API might be unreachable');
-          }
-
+        
           // Return fallback mock data instead of throwing error to prevent app crash
           return of(this.getMockDashboardStats());
         }),
@@ -345,46 +334,29 @@ export class CarRentalService {
       // Convert BranchFilter to BranchFilterDto
       const branchFilter = this.convertBranchFilterToDto(filter);
 
-      console.log('🏢 Fetching branches with filter:', branchFilter);
-
+ 
       return this.branchApiService.getBranches(branchFilter).pipe(
         map((paginatedResponse) => {
           this.isLoading.set(false);
 
-          console.log('📦 Branch API Paginated Response:', paginatedResponse);
-
+ 
           // Add null checks for the response data
           if (!paginatedResponse || !paginatedResponse.data) {
-            console.warn('⚠️ Invalid branch paginated response structure:', paginatedResponse);
-            return [];
+             return [];
           }
 
           // Ensure data is an array
           if (!Array.isArray(paginatedResponse.data)) {
-            console.warn('⚠️ Branch response data is not an array:', paginatedResponse.data);
-            return [];
+             return [];
           }
 
-          console.log(`✅ Converting ${paginatedResponse.data.length} branch DTOs to Branch objects`);
-
+ 
           const convertedBranches = this.convertBranchDtosToBranches(paginatedResponse.data);
-          console.log('🔄 Converted branches:', convertedBranches);
-
+ 
           return convertedBranches;
         }),
         catchError((error) => {
           this.isLoading.set(false);
-          console.error('❌ Error fetching branches:', error);
-
-          // Log the full error for debugging
-          if (error.error) {
-            console.error('🔍 Branch API Error Details:', error.error);
-          }
-
-          // Check if it's a network error
-          if (error.status === 0) {
-            console.error('🌐 Network error - Branch API might be unreachable');
-          }
 
           // Return empty array instead of throwing error to prevent app crash
           return of([]);
@@ -422,16 +394,13 @@ export class CarRentalService {
 
       return this.branchApiService.getBranchById(parseInt(id)).pipe(
         map((branchDto) => {
-          console.log('✅ Branch API response:', branchDto);
-          return this.convertBranchDtoToBranch(branchDto);
+           return this.convertBranchDtoToBranch(branchDto);
         }),
         catchError((error) => {
-          console.error('❌ Error fetching branch by ID:', error);
-
+ 
           // Check if it's a 404 error (branch not found)
           if (error.status === 404) {
-            console.warn('🔍 Branch not found with ID:', id);
-            return of(null);
+             return of(null);
           }
 
           // For other errors, return null instead of throwing to prevent app crash
@@ -581,16 +550,13 @@ export class CarRentalService {
   // Paginated branch methods
   getBranchesPaginated(filter?: any): Observable<PaginatedResponse<Branch>> {
     if (this.useRealApi) {
-      console.log('🏢 Fetching paginated branches with filter:', filter);
-
+ 
       return this.branchApiService.getBranches(filter).pipe(
         map((paginatedResponse) => {
-          console.log('📦 Branch API Paginated Response:', paginatedResponse);
-
+ 
           // Add null checks for the response data
           if (!paginatedResponse || !paginatedResponse.data) {
-            console.warn('⚠️ Invalid branch paginated response structure:', paginatedResponse);
-            return {
+             return {
               data: [],
               totalCount: 0,
               currentPage: 1,
@@ -603,8 +569,7 @@ export class CarRentalService {
 
           // Ensure data is an array
           if (!Array.isArray(paginatedResponse.data)) {
-            console.warn('⚠️ Branch response data is not an array:', paginatedResponse.data);
-            return {
+             return {
               data: [],
               totalCount: 0,
               currentPage: 1,
@@ -615,11 +580,9 @@ export class CarRentalService {
             };
           }
 
-          console.log(`✅ Converting ${paginatedResponse.data.length} branch DTOs to Branch objects`);
-
+ 
           const convertedBranches = this.convertBranchDtosToBranches(paginatedResponse.data);
-          console.log('🔄 Converted branches:', convertedBranches);
-
+ 
           return {
             data: convertedBranches,
             totalCount: paginatedResponse.totalCount,
@@ -718,8 +681,7 @@ export class CarRentalService {
             return [];
           }
 
-          console.log(`✅ Converting ${paginatedResponse.data.length} car DTOs to Vehicle objects`);
-
+ 
           const convertedVehicles = this.convertAdminCarDtosToVehicles(paginatedResponse.data);
           console.log('🔄 Converted vehicles:', convertedVehicles);
 
@@ -1339,24 +1301,21 @@ export class CarRentalService {
         userRole: filter?.userRole || undefined // Let the API return all admin roles if not specified
       };
 
-      console.log('🔍 Fetching admins with filter:', adminFilter);
-
+ 
       return this.adminApiService.getAdmins(adminFilter).pipe(
         map((paginatedResponse: PaginatedResponse<AdminUserDto>) => {
           this.isLoading.set(false);
 
-          console.log('📦 Paginated API Response:', paginatedResponse);
+        
 
           // Add null checks for the response data
           if (!paginatedResponse || !paginatedResponse.data) {
-            console.warn('⚠️ Invalid paginated response structure:', paginatedResponse);
-            return [];
+             return [];
           }
 
           // Ensure data is an array
           if (!Array.isArray(paginatedResponse.data)) {
-            console.warn('⚠️ Response data is not an array:', paginatedResponse.data);
-            return [];
+             return [];
           }
 
           // Filter out customers - only keep admin users
@@ -1364,28 +1323,13 @@ export class CarRentalService {
             user.userRole && user.userRole !== 'Customer'
           );
 
-          console.log(`✅ Found ${paginatedResponse.data.length} total users, ${adminUsers.length} admin users`);
-          console.log('🔍 Admin users to convert:', adminUsers);
-
+         
           const convertedAdmins = this.convertAdminUserDtosToAdminUsers(adminUsers);
-          console.log('🔄 Converted admins:', convertedAdmins);
-
+ 
           return convertedAdmins;
         }),
         catchError((error) => {
           this.isLoading.set(false);
-          console.error('❌ Error fetching admins:', error);
-
-          // Log the full error for debugging
-          if (error.error) {
-            console.error('🔍 API Error Details:', error.error);
-          }
-
-          // Check if it's a network error
-          if (error.status === 0) {
-            console.error('🌐 Network error - API might be unreachable');
-          }
-
           // Return empty array instead of throwing error to prevent app crash
           return of([]);
         })
@@ -1393,7 +1337,7 @@ export class CarRentalService {
     }
 
     // Fallback to mock data
-    console.log('🎭 Using mock data for admins');
+   
     return of([...this.mockAdminUsers]).pipe(
       delay(800),
       map(users => {
@@ -1408,7 +1352,7 @@ export class CarRentalService {
       return this.adminApiService.getAdminById(id).pipe(
         map((adminDto: AdminUserDto) => this.convertAdminUserDtoToAdminUser(adminDto)),
         catchError((error) => {
-          console.error('Error fetching admin by ID:', error);
+          
           return of(null);
         })
       );
@@ -1429,7 +1373,7 @@ export class CarRentalService {
           return this.convertAdminUserDtoToAdminUser(createdAdmin);
         }),
         catchError((error) => {
-          console.error('Error creating admin:', error);
+          
           return throwError(() => error);
         })
       );
@@ -1457,7 +1401,7 @@ export class CarRentalService {
           return this.convertAdminUserDtoToAdminUser(updatedAdmin);
         }),
         catchError((error) => {
-          console.error('Error updating admin:', error);
+          
           return of(null);
         })
       );
@@ -1802,47 +1746,30 @@ export class CarRentalService {
       // Convert filter to CustomerFilterDto
       const customerFilter = this.convertCustomerFilterToDto(filter);
 
-      console.log('👥 Fetching customers with filter:', customerFilter);
-
+ 
       return this.customerApiService.getCustomers(customerFilter).pipe(
         map((paginatedResponse) => {
           this.isLoading.set(false);
 
-          console.log('📦 Customer API Paginated Response:', paginatedResponse);
-
+         
           // Add null checks for the response data
           if (!paginatedResponse || !paginatedResponse.data) {
-            console.warn('⚠️ Invalid customer paginated response structure:', paginatedResponse);
-            return [];
+             return [];
           }
 
           // Ensure data is an array
           if (!Array.isArray(paginatedResponse.data)) {
-            console.warn('⚠️ Customer response data is not an array:', paginatedResponse.data);
-            return [];
+             return [];
           }
 
-          console.log(`✅ Converting ${paginatedResponse.data.length} customer DTOs to Customer objects`);
-
+ 
           const convertedCustomers = this.convertAdminCustomerDtosToCustomers(paginatedResponse.data);
-          console.log('🔄 Converted customers:', convertedCustomers);
-
+ 
           return convertedCustomers;
         }),
         catchError((error) => {
           this.isLoading.set(false);
-          console.error('❌ Error fetching customers:', error);
-
-          // Log the full error for debugging
-          if (error.error) {
-            console.error('🔍 Customer API Error Details:', error.error);
-          }
-
-          // Check if it's a network error
-          if (error.status === 0) {
-            console.error('🌐 Network error - Customer API might be unreachable');
-          }
-
+           
           // Return empty array instead of throwing error to prevent app crash
           return of([]);
         })
@@ -1850,7 +1777,7 @@ export class CarRentalService {
     }
 
     // Fallback to mock data
-    console.log('🎭 Using mock data for customers');
+     
     return of([...this.mockCustomers]).pipe(
       delay(800),
       map(customers => {
@@ -2329,48 +2256,30 @@ export class CarRentalService {
     this.isLoading.set(true);
 
     if (this.useRealApi) {
-      console.log('📅 Fetching bookings with filter:', filter);
-
+ 
       return this.bookingApiService.getBookings(filter).pipe(
         map((paginatedResponse: PaginatedResponse<AdminBookingDto>) => {
           this.isLoading.set(false);
 
-          console.log('📦 Booking API Paginated Response:', paginatedResponse);
-
+ 
           // Add null checks for the response data
           if (!paginatedResponse || !paginatedResponse.data) {
-            console.warn('⚠️ Invalid booking paginated response structure:', paginatedResponse);
-            return [];
+             return [];
           }
 
           // Ensure data is an array
           if (!Array.isArray(paginatedResponse.data)) {
-            console.warn('⚠️ Booking response data is not an array:', paginatedResponse.data);
-            return [];
+             return [];
           }
 
-          console.log(`✅ Converting ${paginatedResponse.data.length} booking DTOs to Booking objects`);
-
+ 
           const convertedBookings = this.convertAdminBookingDtosToBookings(paginatedResponse.data);
-          console.log('🔄 Converted bookings:', convertedBookings);
-
+ 
           return convertedBookings;
         }),
         catchError((error) => {
           this.isLoading.set(false);
-          console.error('❌ Error fetching bookings:', error);
-
-          // Log the full error for debugging
-          if (error.error) {
-            console.error('🔍 Booking API Error Details:', error.error);
-          }
-
-          // Check if it's a network error
-          if (error.status === 0) {
-            console.error('🌐 Network error - Booking API might be unreachable');
-          }
-
-          // Return empty array instead of throwing error to prevent app crash
+  
           return of([]);
         })
       );
@@ -2590,46 +2499,31 @@ export class CarRentalService {
       // Convert AdvertisementFilter to AdvertisementFilterDto
       const advertisementFilter = this.convertAdvertisementFilterToDto(filter);
 
-      console.log('📢 Fetching advertisements with filter:', advertisementFilter);
-
+ 
       return this.advertisementApiService.getAdvertisements(advertisementFilter).pipe(
         map((paginatedResponse) => {
           this.isLoading.set(false);
 
-          console.log('📦 Advertisement API Paginated Response:', paginatedResponse);
-
+ 
           // Add null checks for the response data
           if (!paginatedResponse || !paginatedResponse.data) {
-            console.warn('⚠️ Invalid advertisement paginated response structure:', paginatedResponse);
-            return [];
+             return [];
           }
 
           // Ensure data is an array
           if (!Array.isArray(paginatedResponse.data)) {
-            console.warn('⚠️ Advertisement response data is not an array:', paginatedResponse.data);
-            return [];
+             return [];
           }
 
-          console.log(`✅ Converting ${paginatedResponse.data.length} advertisement DTOs to Advertisement objects`);
-
+ 
           const convertedAdvertisements = this.convertAdminAdvertisementDtosToAdvertisements(paginatedResponse.data);
-          console.log('🔄 Converted advertisements:', convertedAdvertisements);
-
+ 
           return convertedAdvertisements;
         }),
         catchError((error) => {
           this.isLoading.set(false);
-          console.error('❌ Error fetching advertisements:', error);
-
-          // Log the full error for debugging
-          if (error.error) {
-            console.error('🔍 Advertisement API Error Details:', error.error);
-          }
-
-          // Check if it's a network error
-          if (error.status === 0) {
-            console.error('🌐 Network error - Advertisement API might be unreachable');
-          }
+ 
+          
 
           // Return empty array instead of throwing error to prevent app crash
           return of([]);
@@ -2838,8 +2732,7 @@ export class CarRentalService {
       try {
         return this.convertAdminCarDtoToVehicle(car);
       } catch (error) {
-        console.error('Error converting car DTO:', car, error);
-        // Return null for failed conversions and filter them out
+       
         return null;
       }
     }).filter(vehicle => vehicle !== null) as Vehicle[];
@@ -3058,8 +2951,7 @@ export class CarRentalService {
       try {
         return this.convertAdminUserDtoToAdminUser(admin);
       } catch (error) {
-        console.error('Error converting admin DTO:', admin, error);
-        // Return a fallback admin object or skip this admin
+         // Return a fallback admin object or skip this admin
         return null;
       }
     }).filter(admin => admin !== null) as AdminUser[];
@@ -3163,8 +3055,7 @@ export class CarRentalService {
       try {
         return this.convertAdminBookingDtoToBooking(booking);
       } catch (error) {
-        console.error('Error converting booking DTO:', booking, error);
-        // Return null for failed conversions and filter them out
+        
         return null;
       }
     }).filter(booking => booking !== null) as Booking[];
@@ -3344,8 +3235,7 @@ export class CarRentalService {
       try {
         return this.convertAdminAdvertisementDtoToAdvertisement(advertisement);
       } catch (error) {
-        console.error('Error converting advertisement DTO:', advertisement, error);
-        // Return null for failed conversions and filter them out
+        
         return null;
       }
     }).filter(advertisement => advertisement !== null) as Advertisement[];
@@ -3496,8 +3386,7 @@ export class CarRentalService {
       try {
         return this.convertBranchDtoToBranch(branch);
       } catch (error) {
-        console.error('Error converting branch DTO:', branch, error);
-        // Return null for failed conversions and filter them out
+      
         return null;
       }
     }).filter(branch => branch !== null) as Branch[];
@@ -3510,8 +3399,7 @@ export class CarRentalService {
       throw new Error('Branch DTO is null or undefined');
     }
 
-    console.log('🔄 Converting branch DTO:', branch);
-
+ 
     return {
       id: branch.id?.toString() || '',
       name: branch.name || '', // API returns single name field
@@ -3640,8 +3528,7 @@ export class CarRentalService {
       try {
         return this.convertAdminCustomerDtoToCustomer(customer);
       } catch (error) {
-        console.error('Error converting customer DTO:', customer, error);
-        // Return null for failed conversions and filter them out
+         // Return null for failed conversions and filter them out
         return null;
       }
     }).filter(customer => customer !== null) as Customer[];

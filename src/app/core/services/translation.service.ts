@@ -1942,4 +1942,36 @@ export class TranslationService {
     console.log('OutOfService:', vehicles?.['outOfService']);
     console.log('=== End Test ===');
   }
+
+  // Test method to verify image upload translations
+  testImageUploadTranslations(): void {
+    console.log('=== Image Upload Translation Test ===');
+    console.log('Current language:', this.currentLanguage());
+    console.log('imageUpload.selectFiles:', this.translate('imageUpload.selectFiles'));
+    console.log('imageUpload.uploadTitle:', this.translate('imageUpload.uploadTitle'));
+    console.log('imageUpload.processing:', this.translate('imageUpload.processing'));
+    console.log('imageUpload.acceptedFormats:', this.translate('imageUpload.acceptedFormats'));
+    console.log('imageUpload.maxSize:', this.translate('imageUpload.maxSize'));
+    console.log('imageUpload.maxFiles:', this.translate('imageUpload.maxFiles'));
+    console.log('imageUpload.addMoreFiles:', this.translate('imageUpload.addMoreFiles'));
+    console.log('imageUpload.removeImage:', this.translate('imageUpload.removeImage'));
+    console.log('imageUpload.filesSelected:', this.translate('imageUpload.filesSelected'));
+    console.log('imageUpload.dragDropFiles:', this.translate('imageUpload.dragDropFiles'));
+    
+    // Test direct access with proper type casting
+    const lang = this.currentLanguage();
+    const imageUpload = this.translations[lang]?.['imageUpload'] as any;
+    console.log('Direct access test:');
+    console.log('selectFiles:', imageUpload?.['selectFiles']);
+    console.log('uploadTitle:', imageUpload?.['uploadTitle']);
+    console.log('processing:', imageUpload?.['processing']);
+    console.log('acceptedFormats:', imageUpload?.['acceptedFormats']);
+    console.log('maxSize:', imageUpload?.['maxSize']);
+    console.log('maxFiles:', imageUpload?.['maxFiles']);
+    console.log('addMoreFiles:', imageUpload?.['addMoreFiles']);
+    console.log('removeImage:', imageUpload?.['removeImage']);
+    console.log('filesSelected:', imageUpload?.['filesSelected']);
+    console.log('dragDropFiles:', imageUpload?.['dragDropFiles']);
+    console.log('=== End Test ===');
+  }
 }

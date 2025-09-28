@@ -33,10 +33,7 @@ export class DashboardApiService {
 
     return this.http.get<ApiResponse<DashboardStatsDto>>(`${this.baseUrl}/stats`, { params }).pipe(
       map(response => {
-        // Add debugging logs
-        if (environment.logging.enableApiLogging) {
-          console.log('Dashboard Stats API Response:', response);
-        }
+        
 
         if (!response) {
           throw new Error('No response received from dashboard stats API');

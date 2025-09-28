@@ -113,9 +113,7 @@ export class AdminApiService {
     return this.http.get<ApiResponse<AdminUserDto[]>>(this.baseUrl, { params }).pipe(
       map(response => {
         // Add debugging logs
-        if (environment.logging.enableApiLogging) {
-          console.log('Admin API Response:', response);
-        }
+     
 
         if (!response) {
           throw new Error('No response received from admin API');
@@ -126,9 +124,7 @@ export class AdminApiService {
         }
 
         if (!response.data) {
-          console.warn('API response succeeded but data is null/undefined:', response);
-          // Return empty paginated response structure
-          return {
+            return {
             data: [],
             totalCount: 0,
             currentPage: 1,

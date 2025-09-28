@@ -66,20 +66,16 @@ export class VehiclesListComponent implements OnInit {
     
     this.carApiService.getCars(filter).subscribe({
       next: (paginatedResponse) => {
-        console.log('🚗 Vehicles API Response:', paginatedResponse);
-        console.log('🚗 Vehicles Data Array:', paginatedResponse.data);
-        console.log('🚗 Total Count:', paginatedResponse.totalCount);
-        
+     
         this.vehicles.set(paginatedResponse.data || []);
         this.paginationInfo.set(paginatedResponse);
         this.applyFilters();
         this.isLoading.set(false);
         
-        console.log('🚗 Vehicles Set:', this.vehicles());
-        console.log('🚗 Filtered Vehicles:', this.filteredVehicles());
+      
       },
       error: (error) => {
-        console.error('❌ Error loading vehicles:', error);
+        
         this.isLoading.set(false);
       }
     });
@@ -106,15 +102,14 @@ export class VehiclesListComponent implements OnInit {
   }
 
   private applyFilters() {
-    console.log('🔍 Applying filters...');
-    console.log('🔍 Original vehicles count:', this.vehicles().length);
+   
     
     let filtered = [...this.vehicles()];
     
     // Apply search filter
     const search = this.searchTerm().toLowerCase();
     if (search) {
-      console.log('🔍 Applying search filter:', search);
+      
       filtered = filtered.filter(vehicle => 
         vehicle.brand.toLowerCase().includes(search) ||
         vehicle.model.toLowerCase().includes(search) ||
@@ -122,38 +117,37 @@ export class VehiclesListComponent implements OnInit {
         vehicle.category.name.toLowerCase().includes(search) ||
         vehicle.branch.name.toLowerCase().includes(search)
       );
-      console.log('🔍 After search filter:', filtered.length);
+      
     }
     
     // Apply category filter
     if (this.categoryFilter() !== 'all') {
-      console.log('🔍 Applying category filter:', this.categoryFilter());
+      
       filtered = filtered.filter(vehicle => 
         vehicle.category.name.toLowerCase() === this.categoryFilter().toLowerCase()
       );
-      console.log('🔍 After category filter:', filtered.length);
+      
     }
     
     // Apply status filter
     if (this.statusFilter() !== 'all') {
-      console.log('🔍 Applying status filter:', this.statusFilter());
+      
       filtered = filtered.filter(vehicle => 
         vehicle.status.toLowerCase() === this.statusFilter().toLowerCase()
       );
-      console.log('🔍 After status filter:', filtered.length);
+       
     }
     
     // Apply make filter
     if (this.makeFilter() !== 'all') {
-      console.log('🔍 Applying make filter:', this.makeFilter());
+     
       filtered = filtered.filter(vehicle => 
         vehicle.brand.toLowerCase() === this.makeFilter().toLowerCase()
       );
-      console.log('🔍 After make filter:', filtered.length);
+     
     }
     
-    console.log('🔍 Final filtered count:', filtered.length);
-    this.filteredVehicles.set(filtered);
+     this.filteredVehicles.set(filtered);
   }
 
   getUniqueMakes(): string[] {

@@ -160,9 +160,7 @@ export class AdvertisementApiService {
 
     return this.http.get<ApiResponse<PaginatedResponse<AdminAdvertisementDto>>>(this.baseUrl, { params }).pipe(
       map(response => {
-        if (environment.logging.enableApiLogging) {
-          console.log('Advertisement API Response:', response);
-        }
+        
         if (!response) {
           throw new Error('No response received from advertisement API');
         }

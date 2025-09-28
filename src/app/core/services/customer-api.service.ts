@@ -143,9 +143,7 @@ export class CustomerApiService {
     return this.http.get<ApiResponse<AdminCustomerDto[]>>(this.baseUrl, { params }).pipe(
       map(response => {
         // Add debugging logs
-        if (environment.logging.enableApiLogging) {
-          console.log('Customer API Response:', response);
-        }
+      
         
         if (!response) {
           throw new Error('No response received from customer API');
@@ -156,8 +154,7 @@ export class CustomerApiService {
         }
         
         if (!response.data) {
-          console.warn('Customer API response succeeded but data is null/undefined:', response);
-          // Return empty paginated response structure
+           // Return empty paginated response structure
           return {
             data: [],
             totalCount: 0,

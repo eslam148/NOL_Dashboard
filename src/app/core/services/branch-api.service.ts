@@ -161,10 +161,7 @@ export class BranchApiService {
 
     return this.http.get<ApiResponse<any>>(this.baseUrl, { params }).pipe(
       map(response => {
-        // Add debugging logs
-        if (environment.logging.enableApiLogging) {
-          console.log('Branch API Response:', response);
-        }
+       
         
         if (!response) {
           throw new Error('No response received from branch API');
@@ -175,8 +172,7 @@ export class BranchApiService {
         }
         
         if (!response.data) {
-          console.warn('Branch API response succeeded but data is null/undefined:', response);
-          // Return empty paginated response structure
+           // Return empty paginated response structure
           return {
             data: [],
             totalCount: 0,
@@ -190,10 +186,8 @@ export class BranchApiService {
 
         // Check if the response.data contains pagination info (new API structure)
         if (response.data && typeof response.data === 'object' && 'data' in response.data && Array.isArray(response.data.data)) {
-          console.log('🎉 API supports server-side pagination with proper structure!');
-          const paginatedData = response.data as BranchPaginatedApiResponse;
-          console.log(`📊 Page ${paginatedData.currentPage}/${paginatedData.totalPages} with ${paginatedData.data.length} items (total: ${paginatedData.totalCount})`);
-
+           const paginatedData = response.data as BranchPaginatedApiResponse;
+ 
           return {
             data: paginatedData.data,
             totalCount: paginatedData.totalCount,
@@ -210,8 +204,7 @@ export class BranchApiService {
         const pageSize = filter?.pageSize || 10;
         const currentPage = filter?.page || 1;
 
-        console.log(`📊 Branch API returned ${branchArray.length} branches for page ${currentPage}, pageSize ${pageSize} (legacy structure)`);
-
+ 
         // Check if API supports server-side pagination
         let paginatedData: any[];
         let totalCount: number;
