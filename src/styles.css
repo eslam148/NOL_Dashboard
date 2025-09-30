@@ -1085,3 +1085,24 @@ a:hover {
   color: var(--brand-accent);
   text-decoration: underline;
 }
+
+/* ===== GLOBAL VERIFICATION/VALIDATION MESSAGES ===== */
+/* Ensure all verification/validation helper texts use consistent red color */
+.form-error,
+.error-message,
+.validation-message,
+.validation-error,
+.error-text,
+.form-validation-error {
+  color: var(--error) !important;
+}
+
+/* Optional: ensure any icon inside error messages inherits the red tone */
+.form-error i,
+.error-message i,
+.validation-message i,
+.validation-error i,
+.error-text i,
+.form-validation-error i {
+  color: var(--error) !important;
+}
