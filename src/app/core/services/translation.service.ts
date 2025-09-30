@@ -130,6 +130,25 @@ export class TranslationService {
           invalidFileType: 'Invalid file type. Please select an image file.',
           fileTooLarge: 'File size exceeds the maximum limit',
           errorProcessingFiles: 'Error processing files. Please try again.'
+        },
+        status: {
+          active: 'Active',
+          inactive: 'Inactive',
+          pending: 'Pending',
+          completed: 'Completed',
+          cancelled: 'Cancelled',
+        },
+        actions: {
+          edit: 'Edit',
+          delete: 'Delete',
+          view: 'View',
+          add: 'Add',
+        },
+        time: {
+          minutesAgo: 'minutes ago',
+          hoursAgo: 'hours ago',
+          daysAgo: 'days ago',
+          weeksAgo: 'weeks ago',
         }
       },
       // Car Rental Dashboard
@@ -162,6 +181,7 @@ export class TranslationService {
       },
       // Branch Management
    branches: {
+    cityPlaceholder: 'City',
     addBranchDesc: 'Add a new branch to your rental network',
     title: 'Branch Management',
     subtitle: 'Car Rental Branch Management',
@@ -1054,6 +1074,19 @@ export class TranslationService {
           invalidFileType: 'نوع ملف غير صحيح. يرجى اختيار ملف صورة.',
           fileTooLarge: 'حجم الملف يتجاوز الحد الأقصى المسموح',
           errorProcessingFiles: 'خطأ في معالجة الملفات. يرجى المحاولة مرة أخرى.'
+        },
+        status: {
+          active: 'نشط',
+          inactive: 'غير نشط',
+          pending: 'قيد الإنتظار',
+          completed: 'مكتمل',
+          cancelled: 'ملغي',
+        },
+        actions: {
+          edit: 'تعديل',
+          delete: 'حذف',
+          view: 'عرض',
+          add: 'إضافة',
         }
       },
       // لوحة تحكم تأجير السيارات
@@ -1086,6 +1119,8 @@ export class TranslationService {
       },
       // إدارة الفروع
       branches: {
+        branches: 'الفروع',
+        cityPlaceholder: 'المدينة',
         addBranchDesc: 'إضافة فرع جديد إلى شبكة التأجير',
         title: 'إدارة الفروع',
         subtitle: 'إدارة فروع تأجير السيارات',
@@ -1103,7 +1138,6 @@ export class TranslationService {
         maintenance: 'صيانة',
         showingResults: 'عرض',
         of: 'من',
-        branches: 'فرع',
         noBranchesFound: 'لم يتم العثور على فروع',
         noBranchesDescription: 'لا توجد فروع تطابق معايير البحث الخاصة بك',
         branchManager: 'مدير الفرع',
