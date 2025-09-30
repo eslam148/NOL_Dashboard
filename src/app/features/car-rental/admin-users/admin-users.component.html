@@ -7,7 +7,7 @@
         <p class="page-subtitle">{{ 'adminUsers.subtitle' | translate }}</p>
       </div>
       <div class="flex gap-3">
-        <button class="btn btn-ghost btn-sm" (click)="selectedTab() === 'users' ? refreshUsers() : refreshLogs()">
+        <button class="btn btn-ghost btn-sm" (click)="refreshUsers()">
           <i class="bi bi-arrow-clockwise"></i>
           {{ 'common.refresh' | translate }}
         </button>
@@ -30,14 +30,7 @@
         <i class="bi bi-people"></i>
         {{ 'adminUsers.adminUsers' | translate }}
       </button>
-      <button 
-        class="tab-button" 
-        [class.active]="selectedTab() === 'logs'"
-        (click)="switchTab('logs')"
-      >
-        <i class="bi bi-activity"></i>
-        {{ 'adminUsers.activityLogs' | translate }}
-      </button>
+      
     </div>
   </div>
 
@@ -224,52 +217,5 @@
     </div>
   </div>
 
-  <!-- Activity Logs Tab -->
-  <div class="tab-content" *ngIf="selectedTab() === 'logs'">
-    <!-- Loading State -->
-    <div class="loading-container" *ngIf="isLoadingLogs()">
-      <div class="spinner"></div>
-      <p class="text-muted">{{ 'common.loading' | translate }}</p>
-    </div>
-
-    <!-- Activity Logs -->
-    <div class="activity-logs" *ngIf="!isLoadingLogs() && activityLogs().length > 0">
-      <div class="log-item" *ngFor="let log of activityLogs()">
-        <div class="log-icon">
-          <i [class]="'bi ' + getActionIcon(log.action)"></i>
-        </div>
-        <div class="log-content">
-          <div class="log-header">
-            <div class="log-user">
-              <strong>{{ log.user.firstName }} {{ log.user.lastName }}</strong>
-              <span class="log-username">{{ '@' + log.user.username }}</span>
-            </div>
-            <div class="log-meta">
-              <span [class]="getActionBadgeClass(log.action)">
-                {{ log.action }}
-              </span>
-              <span class="log-time">{{ getTimeSince(log.timestamp) }}</span>
-            </div>
-          </div>
-          <div class="log-description">
-            <span class="log-action">{{ log.action }}</span>
-            <span class="log-resource">{{ log.resource }}</span>
-            <span class="log-resource-id">#{{ log.resourceId }}</span>
-          </div>
-          <div class="log-details" *ngIf="log.details">
-            <small class="text-muted">{{ log.details | json }}</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty Logs State -->
-    <div class="empty-state" *ngIf="!isLoadingLogs() && activityLogs().length === 0">
-      <div class="empty-icon">
-        <i class="bi bi-activity"></i>
-      </div>
-      <h3 class="empty-title">{{ 'adminUsers.noLogsFound' | translate }}</h3>
-      <p class="empty-description">{{ 'adminUsers.noLogsDescription' | translate }}</p>
-    </div>
-  </div>
+  
 </div>

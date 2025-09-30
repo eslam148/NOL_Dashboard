@@ -1318,13 +1318,14 @@ export class CarRentalService {
              return [];
           }
 
-          // Filter out customers - only keep admin users
-          const adminUsers = paginatedResponse.data.filter(user =>
-            user.userRole && user.userRole !== 'Customer'
-          );
+          // Prefer non-customer admin roles if present; otherwise keep all
+          const sourceUsers = paginatedResponse.data;
+          const hasNonCustomer = sourceUsers.some(user => user.userRole && user.userRole !== 'Customer');
+          const usersToConvert = hasNonCustomer
+            ? sourceUsers.filter(user => user.userRole && user.userRole !== 'Customer')
+            : sourceUsers;
 
-         
-          const convertedAdmins = this.convertAdminUserDtosToAdminUsers(adminUsers);
+          const convertedAdmins = this.convertAdminUserDtosToAdminUsers(usersToConvert);
  
           return convertedAdmins;
         }),

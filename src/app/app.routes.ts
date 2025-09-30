@@ -200,9 +200,10 @@ export const routes: Routes = [
         path: 'admin-users/new',
         loadComponent: () => import('./features/car-rental/admin-users/admin-user-form/admin-user-form.component').then(m => m.AdminUserFormComponent)
       },
+      // Use the implemented AdminDetailComponent for user view
       {
         path: 'admin-users/:id',
-        loadComponent: () => import('./features/car-rental/admin-users/admin-user-detail/admin-user-detail.component').then(m => m.AdminUserDetailComponent)
+        loadComponent: () => import('./features/car-rental/admin-users/admin-detail/admin-detail.component').then(m => m.AdminDetailComponent)
       },
       {
         path: 'admin-users/:id/edit',
@@ -212,14 +213,7 @@ export const routes: Routes = [
         path: 'admin-users/new',
         loadComponent: () => import('./features/car-rental/admin-users/admin-form/admin-form.component').then(m => m.AdminFormComponent)
       },
-      {
-        path: 'admin-users/:id',
-        loadComponent: () => import('./features/car-rental/admin-users/admin-detail/admin-detail.component').then(m => m.AdminDetailComponent)
-      },
-      {
-        path: 'admin-users/:id/edit',
-        loadComponent: () => import('./features/car-rental/admin-users/admin-form/admin-form.component').then(m => m.AdminFormComponent)
-      }
+      // Duplicate legacy routes removed
     ]
   },
 

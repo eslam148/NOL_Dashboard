@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { CarRentalService } from '../../../core/services/car-rental.service';
 import { AdminUser, AdminRole, ActivityLog } from '../../../core/models/car-rental.models';
+import { AdminFilterDto } from '../../../core/models/api.models';
 
 @Component({
   selector: 'app-admin-users',
@@ -43,12 +44,11 @@ export class AdminUsersComponent implements OnInit {
 
   ngOnInit() {
     this.loadAdminUsers();
-    this.loadActivityLogs();
   }
 
-  private loadAdminUsers() {
+  private loadAdminUsers(filter?: AdminFilterDto) {
     this.isLoading.set(true);
-    this.carRentalService.getAdminUsers().subscribe({
+    this.carRentalService.getAdminUsers(filter).subscribe({
       next: (users) => {
         this.adminUsers.set(users);
         this.applyFilters();
@@ -61,19 +61,7 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  private loadActivityLogs() {
-    this.isLoadingLogs.set(true);
-    this.carRentalService.getActivityLogs().subscribe({
-      next: (logs) => {
-        this.activityLogs.set(logs);
-        this.isLoadingLogs.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading activity logs:', error);
-        this.isLoadingLogs.set(false);
-      }
-    });
-  }
+  // Activity logs disabled/hidden
 
   onSearchChange(term: string) {
     this.searchTerm.set(term);
@@ -82,12 +70,45 @@ export class AdminUsersComponent implements OnInit {
 
   onRoleFilterChange(role: string) {
     this.roleFilter.set(role);
-    this.applyFilters();
+    const apiFilter: AdminFilterDto = {};
+    // Map UI role to API role
+    if (role !== 'all') {
+      apiFilter.userRole = this.mapUiRoleToApiRole(role);
+    }
+    // Preserve current status filter in the API request
+    if (this.statusFilter() !== 'all') {
+      apiFilter.isActive = this.statusFilter() === 'active';
+    }
+    this.loadAdminUsers(apiFilter);
   }
 
   onStatusFilterChange(status: string) {
     this.statusFilter.set(status);
-    this.applyFilters();
+    const apiFilter: AdminFilterDto = {};
+    // Preserve current role filter in the API request
+    if (this.roleFilter() !== 'all') {
+      apiFilter.userRole = this.mapUiRoleToApiRole(this.roleFilter());
+    }
+    if (status !== 'all') {
+      apiFilter.isActive = status === 'active';
+    }
+    this.loadAdminUsers(apiFilter);
+  }
+
+  private mapUiRoleToApiRole(role: string | undefined): AdminFilterDto['userRole'] | undefined {
+    switch (role) {
+      case 'super_admin':
+        return 'SuperAdmin';
+      case 'branch_manager':
+        return 'BranchManager';
+      case 'staff':
+        return 'Employee';
+      case 'viewer':
+        // No direct API role; treat as Employee or omit to broaden results
+        return 'Employee';
+      default:
+        return undefined;
+    }
   }
 
   private applyFilters() {
@@ -198,9 +219,7 @@ export class AdminUsersComponent implements OnInit {
     this.loadAdminUsers();
   }
 
-  refreshLogs() {
-    this.loadActivityLogs();
-  }
+  // refreshLogs removed with activity logs feature hidden
 
   formatDate(date: Date): string {
     return new Intl.DateTimeFormat('en-US', {
