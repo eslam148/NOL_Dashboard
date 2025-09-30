@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { CarRentalService } from '../../../core/services/car-rental.service';
 import { AdminUser, AdminRole, ActivityLog } from '../../../core/models/car-rental.models';
+import { ConfirmService } from '../../../shared/services/confirm.service';
 import { AdminFilterDto } from '../../../core/models/api.models';
 
 @Component({
@@ -16,6 +17,7 @@ import { AdminFilterDto } from '../../../core/models/api.models';
 })
 export class AdminUsersComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private confirm = inject(ConfirmService);
 
   adminUsers = signal<AdminUser[]>([]);
   filteredUsers = signal<AdminUser[]>([]);
@@ -196,19 +198,19 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  deleteUser(user: AdminUser) {
-    if (confirm(`Are you sure you want to delete user "${user.username}"?`)) {
-      this.carRentalService.deleteAdminUser(user.id).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadAdminUsers();
-          }
-        },
-        error: (error) => {
-          console.error('Error deleting user:', error);
-        }
-      });
-    }
+  async deleteUser(user: AdminUser) {
+    const ok = await this.confirm.confirm({
+      title: 'common.confirmDeletion',
+      message: 'common.areYouSure',
+      confirmText: 'common.delete',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carRentalService.deleteAdminUser(user.id).subscribe({
+      next: (success) => { if (success) this.loadAdminUsers(); },
+      error: (error) => console.error('Error deleting user:', error)
+    });
   }
 
   switchTab(tab: 'users' | 'logs') {

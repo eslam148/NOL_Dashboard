@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { CarApiService } from '../../../../core/services/car-api.service';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { AdminCarDto } from '../../../../core/models/api.models';
 
 @Component({
@@ -16,6 +17,7 @@ export class VehicleDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private carApiService = inject(CarApiService);
+  private confirm = inject(ConfirmService);
 
   car = signal<AdminCarDto | null>(null);
   isLoading = signal(false);
@@ -101,22 +103,23 @@ export class VehicleDetailComponent implements OnInit {
     }
   }
 
-  onDelete() {
+  async onDelete() {
     const car = this.car();
     const id = this.carId();
     
-    if (car && id && confirm(`Are you sure you want to delete ${car.brand} ${car.model}?`)) {
-      this.carApiService.deleteCar(id).subscribe({
-        next: () => {
-          console.log('✅ Car deleted successfully');
-          this.router.navigate(['/car-rental/vehicles']);
-        },
-        error: (error) => {
-          console.error('❌ Error deleting car:', error);
-          this.errorMessage.set('Failed to delete car');
-        }
-      });
-    }
+    if (!car || !id) return;
+    const ok = await this.confirm.confirm({
+      title: 'Confirm Deletion',
+      message: `Are you sure you want to delete ${car.brand} ${car.model}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carApiService.deleteCar(id).subscribe({
+      next: () => this.router.navigate(['/car-rental/vehicles']),
+      error: () => this.errorMessage.set('Failed to delete car')
+    });
   }
 
   onBack() {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { Branch, BranchFilter } from '../../../../core/models/car-rental.models';
@@ -17,6 +18,7 @@ import { PaginatedResponse } from '../../../../core/models/api.models';
 })
 export class BranchesListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private confirm = inject(ConfirmService);
   private translationService = inject(TranslationService);
 
   branches = signal<Branch[]>([]);
@@ -185,19 +187,19 @@ export class BranchesListComponent implements OnInit {
     }
   }
 
-  deleteBranch(branch: Branch) {
-    if (confirm(`Are you sure you want to delete ${branch.name}?`)) {
-      this.carRentalService.deleteBranch(branch.id).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadBranches();
-          }
-        },
-        error: (error) => {
-          console.error('Error deleting branch:', error);
-        }
-      });
-    }
+  async deleteBranch(branch: Branch) {
+    const ok = await this.confirm.confirm({
+      title: 'common.confirmDeletion',
+      message: 'common.areYouSure',
+      confirmText: 'common.delete',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carRentalService.deleteBranch(branch.id).subscribe({
+      next: (success) => { if (success) this.loadBranches(); },
+      error: (error) => console.error('Error deleting branch:', error)
+    });
   }
 
   refreshList() {

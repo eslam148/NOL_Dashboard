@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { ConfirmService } from '../../../shared/services/confirm.service';
 import { CarRentalService } from '../../../core/services/car-rental.service';
 import { AdditionalService, ServiceCategory } from '../../../core/models/car-rental.models';
 
@@ -15,6 +16,7 @@ import { AdditionalService, ServiceCategory } from '../../../core/models/car-ren
 })
 export class ServicesComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private confirm = inject(ConfirmService);
 
   services = signal<AdditionalService[]>([]);
   filteredServices = signal<AdditionalService[]>([]);
@@ -139,19 +141,19 @@ export class ServicesComponent implements OnInit {
     });
   }
 
-  deleteService(service: AdditionalService) {
-    if (confirm(`Are you sure you want to delete "${service.name}"?`)) {
-      this.carRentalService.deleteService(service.id).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadServices();
-          }
-        },
-        error: (error) => {
-          console.error('Error deleting service:', error);
-        }
-      });
-    }
+  async deleteService(service: AdditionalService) {
+    const ok = await this.confirm.confirm({
+      title: 'Confirm Deletion',
+      message: `Are you sure you want to delete "${service.name}"?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carRentalService.deleteService(service.id).subscribe({
+      next: (success) => { if (success) this.loadServices(); },
+      error: (error) => console.error('Error deleting service:', error)
+    });
   }
 
   refreshList() {

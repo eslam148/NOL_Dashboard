@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { Advertisement, AdvertisementFilter, AdvertisementType, AdvertisementStatus } from '../../../../core/models/car-rental.models';
 
@@ -15,6 +16,7 @@ import { Advertisement, AdvertisementFilter, AdvertisementType, AdvertisementSta
 })
 export class AdvertisementsListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private confirm = inject(ConfirmService);
 
   advertisements = signal<Advertisement[]>([]);
   filteredAdvertisements = signal<Advertisement[]>([]);
@@ -151,21 +153,27 @@ export class AdvertisementsListComponent implements OnInit {
     });
   }
 
-  deleteAdvertisement(advertisement: Advertisement) {
-    if (confirm(`Are you sure you want to delete "${advertisement.title}"?`)) {
-      this.carRentalService.deleteAdvertisement(advertisement.id).subscribe({
-        next: (success) => {
-          if (success) {
-            const ads = this.advertisements().filter(ad => ad.id !== advertisement.id);
-            this.advertisements.set(ads);
-            this.applyFilters();
-          }
-        },
-        error: (error) => {
-          console.error('Error deleting advertisement:', error);
+  async deleteAdvertisement(advertisement: Advertisement) {
+    const ok = await this.confirm.confirm({
+      title: 'common.confirmDeletion',
+      message: 'common.areYouSure',
+      confirmText: 'common.delete',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carRentalService.deleteAdvertisement(advertisement.id).subscribe({
+      next: (success) => {
+        if (success) {
+          const ads = this.advertisements().filter(ad => ad.id !== advertisement.id);
+          this.advertisements.set(ads);
+          this.applyFilters();
         }
-      });
-    }
+      },
+      error: (error) => {
+        console.error('Error deleting advertisement:', error);
+      }
+    });
   }
 
   getStatusBadgeClass(status: AdvertisementStatus): string {

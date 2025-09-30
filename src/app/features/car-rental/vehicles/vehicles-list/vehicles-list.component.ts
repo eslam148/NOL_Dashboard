@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { CarRentalService } from '../../../../core/services/car-rental.service';
 import { CarApiService } from '../../../../core/services/car-api.service';
 import { TranslationService } from '../../../../core/services/translation.service';
@@ -19,6 +20,7 @@ import { AdminCarDto, CarFilterDto, PaginatedResponse } from '../../../../core/m
 export class VehiclesListComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
   private carApiService = inject(CarApiService);
+  private confirm = inject(ConfirmService);
   private translationService = inject(TranslationService);
   
   vehicles = signal<AdminCarDto[]>([]);
@@ -179,18 +181,19 @@ export class VehiclesListComponent implements OnInit {
     this.loadVehicles();
   }
 
-  deleteVehicle(vehicle: AdminCarDto) {
-    if (confirm(`Are you sure you want to delete ${vehicle.brand} ${vehicle.model}?`)) {
-      this.carApiService.deleteCar(vehicle.id).subscribe({
-        next: () => {
-          console.log('Vehicle deleted successfully');
-          this.loadVehicles();
-        },
-        error: (error) => {
-          console.error('Error deleting vehicle:', error);
-        }
-      });
-    }
+  async deleteVehicle(vehicle: AdminCarDto) {
+    const ok = await this.confirm.confirm({
+      title: 'common.confirmDeletion',
+      message: 'common.areYouSure',
+      confirmText: 'common.delete',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carApiService.deleteCar(vehicle.id).subscribe({
+      next: () => this.loadVehicles(),
+      error: (error) => console.error('Error deleting vehicle:', error)
+    });
   }
 
   refreshList() {

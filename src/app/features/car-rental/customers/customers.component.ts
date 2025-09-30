@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { ConfirmService } from '../../../shared/services/confirm.service';
 import { CarRentalService } from '../../../core/services/car-rental.service';
 import { Customer, CustomerType, RentalHistory } from '../../../core/models/car-rental.models';
 
@@ -15,6 +16,7 @@ import { Customer, CustomerType, RentalHistory } from '../../../core/models/car-
 })
 export class CustomersComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private confirm = inject(ConfirmService);
 
   customers = signal<Customer[]>([]);
   filteredCustomers = signal<Customer[]>([]);
@@ -144,8 +146,15 @@ export class CustomersComponent implements OnInit {
     });
   }
 
-  toggleCustomerBlacklist(customer: Customer) {
-    if (confirm(`Are you sure you want to ${customer.status === 'blocked' ? 'unblock' : 'block'} this customer?`)) {
+  async toggleCustomerBlacklist(customer: Customer) {
+    const ok = await this.confirm.confirm({
+      title: customer.status === 'blocked' ? 'common.confirm' : 'common.confirm',
+      message: 'common.areYouSure',
+      confirmText: customer.status === 'blocked' ? 'common.confirm' : 'common.confirm',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (ok) {
       this.carRentalService.toggleCustomerBlacklist(customer.id).subscribe({
         next: (updatedCustomer) => {
           // Update the customer in the list
@@ -184,8 +193,15 @@ export class CustomersComponent implements OnInit {
     this.selectedCustomerHistory.set([]);
   }
 
-  deleteCustomer(customer: Customer) {
-    if (confirm(`Are you sure you want to delete customer "${customer.firstName} ${customer.lastName}"?`)) {
+  async deleteCustomer(customer: Customer) {
+    const ok = await this.confirm.confirm({
+      title: 'common.confirmDeletion',
+      message: 'common.areYouSure',
+      confirmText: 'common.delete',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
       this.carRentalService.deleteCustomer(customer.id).subscribe({
         next: (success) => {
           if (success) {
@@ -196,7 +212,7 @@ export class CustomersComponent implements OnInit {
           console.error('Error deleting customer:', error);
         }
       });
-    }
+    
   }
 
   switchTab(tab: 'customers' | 'analytics') {

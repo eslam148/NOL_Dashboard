@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { ConfirmService } from '../../../shared/services/confirm.service';
 import { CarRentalService } from '../../../core/services/car-rental.service';
 import { Booking, BookingStatus, PaymentStatus } from '../../../core/models/car-rental.models';
 
@@ -15,6 +16,7 @@ import { Booking, BookingStatus, PaymentStatus } from '../../../core/models/car-
 })
 export class BookingsComponent implements OnInit {
   private carRentalService = inject(CarRentalService);
+  private confirm = inject(ConfirmService);
 
   bookings = signal<Booking[]>([]);
   filteredBookings = signal<Booking[]>([]);
@@ -181,19 +183,19 @@ export class BookingsComponent implements OnInit {
     });
   }
 
-  deleteBooking(booking: Booking) {
-    if (confirm(`Are you sure you want to delete booking "${booking.bookingNumber}"?`)) {
-      this.carRentalService.deleteBooking(booking.id).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadBookings();
-          }
-        },
-        error: (error) => {
-          console.error('Error deleting booking:', error);
-        }
-      });
-    }
+  async deleteBooking(booking: Booking) {
+    const ok = await this.confirm.confirm({
+      title: 'common.confirmDeletion',
+      message: 'common.areYouSure',
+      confirmText: 'common.delete',
+      cancelText: 'common.cancel',
+      variant: 'danger'
+    });
+    if (!ok) return;
+    this.carRentalService.deleteBooking(booking.id).subscribe({
+      next: (success) => { if (success) this.loadBookings(); },
+      error: (error) => console.error('Error deleting booking:', error)
+    });
   }
 
   switchTab(tab: 'bookings' | 'calendar' | 'analytics') {

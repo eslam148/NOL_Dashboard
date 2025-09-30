@@ -3,10 +3,11 @@ import { Router, RouterEvent, RouterOutlet, NavigationEnd, NavigationCancel, Nav
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { CarRentalService } from './core/services/car-rental.service';
+import { ConfirmModalComponent } from "./shared/components/confirm-modal/confirm-modal.component";
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ConfirmModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
