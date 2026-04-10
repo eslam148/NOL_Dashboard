@@ -4,7 +4,7 @@ export const environment = {
   // API Configuration
   api: {
     // baseUrl: 'https://localhost:44384/api',
-    baseUrl: 'http://api.nolcarrental.com/api',
+    baseUrl: 'https://api.nolcarrental.com/api',
     timeout: 30000,
     retryAttempts: 3,
     retryDelay: 1000
